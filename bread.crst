@@ -1,0 +1,22 @@
+setup {
+	angular_vel = 0
+	speed = 0.5
+	# print(backdrop())
+	# frame = 0
+}
+
+update {
+	# print(concat("New frame! [Frame: ", frame, "]"))
+	goto("mouse")
+	# glide(mouse_x(), mouse_y(), 1, "ease-in")
+	if key_down("right") {
+		angular_vel += speed
+	}
+	if key_down("left") {
+		angular_vel -= speed
+	}
+	angular_vel *= 0.95
+	point(direction() + angular_vel)
+	# move(speed * 3)
+	# frame += 1
+}
