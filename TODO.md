@@ -1,6 +1,4 @@
-# Functions
-
-## Motion
+# Motion
 
 - [x] `move(steps)`
 - [x] `turn_cw(angle)`
@@ -22,7 +20,7 @@
 - [x] `x()`
 - [x] `y()`
 
-## Looks
+# Looks
 
 - [ ] `say(string, time)`
 - [ ] `say(string)`
@@ -47,7 +45,7 @@
 - [x] `size()`
 - [ ] `effect(effect)`
 
-## Sound
+# Sound
 
 - [ ] `play_sound(sound, stop-other-sounds)`
 - [ ] `play_sound_until_done(sound)`
@@ -60,7 +58,7 @@
 - [ ] `volume()`
 - [ ] `sound_effect(effect)`
 
-## Events
+# Events
 
 - [x] `setup {}`
 - [x] `update {}`
@@ -72,7 +70,8 @@
 - [ ] `broadcast(broadcast)`
 - [ ] `broadcast_and_wait(broadcast)`
 
-## Control
+# Control
+
 - [x] `wait(sec)`
 - [ ] `repeat x {}`
 - [ ] `forever {}`
