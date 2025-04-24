@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 use macroquad::audio::*;
@@ -605,6 +606,35 @@ impl Sprite {
                             effect_image.set_pixel(
                                 i as u32, j as u32,
                                 Color::new(pixel.r, pixel.g, pixel.b, pixel.a * alpha)
+                            );
+                        }
+                    }
+                },
+                "hue" => {
+                    let hue = value;
+                    let cos_a = (hue*PI/180.).cos();
+                    let sin_a = (hue*PI/180.).sin();
+                    let onethird: f32 = 1./3.;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r*(cos_a+(1. - cos_a)/3.) + 
+                                    pixel.g*(onethird * (1. - cos_a) - onethird.sqrt() * sin_a) + 
+                                    pixel.b*(onethird * (1. - cos_a) + onethird.sqrt() * sin_a),
+
+                                    pixel.r*(onethird * (1. - cos_a) + onethird.sqrt() * sin_a) +
+                                    pixel.g*(cos_a + onethird*(1. - cos_a)) +
+                                    pixel.b*(onethird * (1. - cos_a) - onethird.sqrt() * sin_a),
+
+                                    pixel.r*(onethird * (1. - cos_a) - onethird.sqrt() * sin_a) +
+                                    pixel.g*(onethird * (1. - cos_a) + onethird.sqrt() * sin_a) +
+                                    pixel.b*(cos_a + onethird * (1. - cos_a)),
+
+                                    pixel.a
+                                )
                             );
                         }
                     }

@@ -1,21 +1,20 @@
 setup {
 	angular_vel = 0
+	rainbow = 0
 	speed = 0.5
 	set_sound_effect("volume", 20)
 }
 
 update {
+	rainbow += 1
 	goto("mouse")
 	if key_down("right") {
 		angular_vel += speed
-	} else if key_down("left") {
+	}
+	if key_down("left") {
 		angular_vel -= speed
 	}
-	if key_down("z") {
-		play_sound("Nom")
-	}
 	angular_vel *= 0.95
-	set_effect("ghost", math_fn("abs", (50 + angular_vel * 25)))
-	set_effect("brightness", math_fn("abs", (angular_vel * 8)))
+	set_effect("hue", rainbow)
 	point(direction() + angular_vel)
 }
