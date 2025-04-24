@@ -39,6 +39,20 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "costume" => Value::Number(sprite.costume() as f32),
                 "backdrop" => Value::Number(project.stage.backdrop() as f32),
                 "size" => Value::Number(sprite.scale * 100.0),
+                "effect" => {
+                    if let [Value::String(effect)] = args.as_slice() {
+                        Value::Number(sprite.effects.get(effect).cloned().unwrap_or(0.0))
+                    } else {
+                        Value::Number(0.0)
+                    }
+                }
+                "sound_effect" => {
+                    if let [Value::String(effect)] = args.as_slice() {
+                        Value::Number(sprite.sound_effects.get(effect).cloned().unwrap_or(0.0))
+                    } else {
+                        Value::Number(0.0)
+                    }
+                }
                 "key_down" => {
                     if let [Value::String(key)] = args.as_slice() {
                         Value::Boolean(is_key_down(string_to_keycode(key).unwrap_or(KeyCode::Unknown)))

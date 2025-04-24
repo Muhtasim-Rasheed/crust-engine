@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use macroquad::prelude::*;
+use macroquad::audio::*;
 
 use super::{Expression, Project, Statement, Value};
 
@@ -43,6 +44,7 @@ pub struct Glide {
 pub struct Sprite {
     pub name: String,
     pub costumes: Vec<Texture2D>,
+    pub sounds: HashMap<String, Sound>,
     pub center: Vec2,
     pub size: Vec2,
     pub direction: f32,
@@ -50,6 +52,8 @@ pub struct Sprite {
     pub scale: f32,
     pub layer: usize,
     pub variables: HashMap<String, Value>,
+    pub effects: HashMap<String, f32>,
+    pub sound_effects: HashMap<String, f32>,
     current_costume: usize,
     crawler: usize,
     setup_ast: Vec<Statement>,
@@ -60,7 +64,7 @@ pub struct Sprite {
 }
 
 impl Sprite {
-    pub fn new(name: String, costumes: Vec<Texture2D>, ast: Vec<Statement>, w: f32, h: f32, x: f32, y: f32) -> Self {
+    pub fn new(name: String, costumes: Vec<Texture2D>, sounds: HashMap<String, Sound>, ast: Vec<Statement>, w: f32, h: f32, x: f32, y: f32) -> Self {
         let costumes = costumes
             .into_iter()
             .map(|texture| {
@@ -91,11 +95,14 @@ impl Sprite {
             center: vec2(x, y),
             size: vec2(w, h),
             current_costume: 0,
+            sounds,
             scale: 1.0,
             layer: 0,
             direction: 0.0,
             rotation_style: RotationStyle::AllAround,
             variables: HashMap::new(),
+            effects: HashMap::new(),
+            sound_effects: HashMap::new(),
             time_waiting: 0,
             glide: None,
         }
@@ -208,10 +215,11 @@ impl Sprite {
                         .map(|arg| super::resolve_expression(arg, project, self))
                         .collect::<Vec<_>>();
                     match function.as_str() {
+                        // ============= MISC ============= \\
                         "print" => {
                             println!("{} => {}", self.name, args[0].to_string());
                         }
-                        // ============= MOTION =============
+                        // ============= MOTION ============= \\
                         "move" => {
                             if let [Value::Number(step)] = args.as_slice() {
                                 self.move_by(*step);
@@ -353,7 +361,7 @@ impl Sprite {
                                 println!("Invalid arguments for rotation_style");
                             }
                         }
-                        // ============= LOOKS =============
+                        // ============= LOOKS ============= \\
                         "switch_costume" => {
                             if let [Value::Number(index)] = args.as_slice() {
                                 self.set_costume(*index as usize);
@@ -394,6 +402,33 @@ impl Sprite {
                                 println!("Invalid arguments for set_size");
                             }
                         }
+                        "change_effect" => {
+                            if let [Value::String(effect), Value::Number(value)] = args.as_slice() {
+                                self.effects
+                                    .entry(effect.clone())
+                                    .and_modify(|v| *v += *value)
+                                    .or_insert(*value);
+                            } else {
+                                println!("Invalid arguments for change_effect");
+                            }
+                        }
+                        "set_effect" => {
+                            if let [Value::String(effect), Value::Number(value)] = args.as_slice() {
+                                self.effects.insert(effect.clone(), *value);
+                            } else {
+                                println!("Invalid arguments for set_effect");
+                            }
+                        }
+                        "clear_effects" => {
+                            self.effects.clear();
+                        }
+                        "clear_effect" => {
+                            if let [Value::String(effect)] = args.as_slice() {
+                                self.effects.remove(effect);
+                            } else {
+                                println!("Invalid arguments for clear_effect");
+                            }
+                        }
                         "go_to_layer" => {
                             if let [Value::Number(layer)] = args.as_slice() {
                                 self.layer = *layer as usize;
@@ -412,6 +447,71 @@ impl Sprite {
                                 println!("Invalid arguments for go_by_layers");
                             }
                         }
+                        // ============= SOUND ============= \\
+                        "play_sound" => {
+                            match args.as_slice() {
+                                [Value::String(name)] => {
+                                    if let Some(sound) = self.sounds.get(name) {
+                                        play_sound(&sound, PlaySoundParams {
+                                            looped: false,
+                                            volume: self.sound_effects.get("volume").cloned().unwrap_or(1.0) / 100.0,
+                                        });
+                                    } else {
+                                        println!("Sound '{}' not found", name);
+                                    }
+                                }
+                                [Value::String(name), Value::Boolean(stop_other)] => {
+                                    if *stop_other {
+                                        for sound in self.sounds.values() {
+                                            stop_sound(sound);
+                                        }
+                                    }
+                                    if let Some(sound) = self.sounds.get(name) {
+                                        play_sound(&sound, PlaySoundParams {
+                                            looped: false,
+                                            volume: self.sound_effects.get("volume").cloned().unwrap_or(1.0) / 100.0,
+                                        });
+                                    } else {
+                                        println!("Sound '{}' not found", name);
+                                    }
+                                }
+                                _ => println!("Invalid arguments for play_sound"),
+                            }
+                        }
+                        "stop_all_sounds" => {
+                            for sound in self.sounds.values() {
+                                stop_sound(sound);
+                            }
+                        }
+                        "stop_sound" => {
+                            if let [Value::String(name)] = args.as_slice() {
+                                if let Some(sound) = self.sounds.get(name) {
+                                    stop_sound(sound);
+                                } else {
+                                    println!("Sound '{}' not found", name);
+                                }
+                            } else {
+                                println!("Invalid arguments for stop_sound");
+                            }
+                        }
+                        "change_sound_effect" => {
+                            if let [Value::String(effect), Value::Number(value)] = args.as_slice() {
+                                self.sound_effects
+                                    .entry(effect.clone())
+                                    .and_modify(|v| *v += *value)
+                                    .or_insert(*value);
+                            } else {
+                                println!("Invalid arguments for change_sound_effect");
+                            }
+                        }
+                        "set_sound_effect" => {
+                            if let [Value::String(effect), Value::Number(value)] = args.as_slice() {
+                                self.sound_effects.insert(effect.clone(), *value);
+                            } else {
+                                println!("Invalid arguments for set_sound_effect");
+                            }
+                        }
+                        // ============= CONTROL ============= \\
                         "wait" => {
                             if let [Value::Number(seconds)] = args.as_slice() {
                                 self.time_waiting = (*seconds * 60.0) as u32;
@@ -468,9 +568,42 @@ impl Sprite {
     pub fn draw(&self) {
         let scaled_size = self.size * self.scale;
         let top_left = self.center - scaled_size / 2.0;
+        
+        // Apply effects on a new texture
+        let mut effect_image = self.costumes[self.current_costume].get_texture_data();
+        for (effect, value) in &self.effects {
+            match effect.as_str() {
+                "brightness" => {
+                    let brightness = (value / 100.0).clamp(-1.0, 1.0);
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(pixel.r + brightness, pixel.g + brightness, pixel.b + brightness, pixel.a)
+                            );
+                        }
+                    }
+                }
+                "ghost" => {
+                    let alpha = (value / 100.0).clamp(0.0, 1.0);
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(pixel.r, pixel.g, pixel.b, pixel.a * alpha)
+                            );
+                        }
+                    }
+                }
+                _ => {} // Do absolutely nothing
+            }
+        }
+        let processed_texture = Texture2D::from_image(&effect_image);
 
         draw_texture_ex(
-            &self.costumes[self.current_costume],
+            &processed_texture,
             top_left.x,
             top_left.y,
             WHITE,

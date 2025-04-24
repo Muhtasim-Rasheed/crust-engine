@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+
 use macroquad::prelude::*;
+use macroquad::audio::*;
 
 use serde::Deserialize;
 
@@ -12,10 +15,17 @@ struct StageConfig {
 }
 
 #[derive(Deserialize)]
+struct SoundConfig {
+    name: String,
+    file: String,
+}
+
+#[derive(Deserialize)]
 struct SpriteConfig {
     name: String,
     code: String,
     costumes: Vec<String>,
+    sounds: Vec<SoundConfig>,
     x: f32,
     y: f32,
     w: f32,
@@ -41,9 +51,21 @@ impl Runtime {
         for sprite in config.sprites {
             let mut textures = vec![];
             for path in sprite.costumes {
-                let tex = load_texture(&path).await.unwrap();
+                let tex = load_texture(&path).await.unwrap_or_else(|_| {
+                    panic!("Failed to load texture: {}. Make sure the path is correct. Relative paths are allowed.", path)
+                });
                 textures.push(tex);
             }
+
+            let mut sounds = vec![];
+            for sound in sprite.sounds {
+                let sound_data = load_sound(&sound.file).await.unwrap_or_else(|_| {
+                    panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", sound.file)
+                });
+                sounds.push((sound.name, sound_data));
+            }
+
+            let sounds = sounds.into_iter().collect::<HashMap<_, _>>();
 
             let code = std::fs::read_to_string(&sprite.code).expect("Failed to read sprite code");
 
@@ -52,7 +74,7 @@ impl Runtime {
             let mut parser = Parser::new(tokens);
             let ast = parser.parse();
 
-            let s = Sprite::new(sprite.name.clone(), textures, ast, sprite.w, sprite.h, sprite.x, sprite.y);
+            let s = Sprite::new(sprite.name.clone(), textures, sounds, ast, sprite.w, sprite.h, sprite.x, sprite.y);
 
             project.sprites.push(s);
         }
@@ -73,7 +95,7 @@ impl Runtime {
             
             let mut sprites = std::mem::take(&mut self.project.sprites);
             
-            let snapshots: Vec<SpriteSnapshot> = self.project.sprites.iter().map(|s| s.into()).collect();
+            let snapshots: Vec<SpriteSnapshot> = sprites.iter().map(|s| s.into()).collect();
 
             for sprite in &mut sprites {
                 sprite.step(&mut self.project, &snapshots);

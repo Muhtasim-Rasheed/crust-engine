@@ -1,3 +1,8 @@
+# Misc
+
+- `print(string)`
+- `concat(strings..)`
+
 # Motion
 
 - [x] `move(steps)`
@@ -34,35 +39,32 @@
 - [x] `previous_backdrop()`
 - [x] `change_size(increment)`
 - [x] `set_size(size)`
-- [ ] `change_effect(effect, increment)`
-- [ ] `set_effect(effect, value)`
-- [ ] `clear_effects()`
-- [ ] `clear_effect(effect)`
+- [x] `change_effect(effect, increment)`
+- [x] `set_effect(effect, value)`
+- [x] `clear_effects()`
+- [x] `clear_effect(effect)`
 - [x] `go_to_layer(layer)`
 - [x] `go_by_layers(forward | backward, steps)`
 - [x] `costume()`
 - [x] `backdrop()`
 - [x] `size()`
-- [ ] `effect(effect)`
+- [x] `effect(effect)`
 
 # Sound
 
-- [ ] `play_sound(sound, stop-other-sounds)`
+- [x] `play_sound(sound, stop-other-sounds)`
 - [ ] `play_sound_until_done(sound)`
-- [ ] `stop_all_sounds()`
-- [ ] `stop_sound(sound)`
-- [ ] `change_sound_effect(effect, increment)`
-- [ ] `set_sound_effect(effect, value)`
-- [ ] `change_volume(increment)`
-- [ ] `set_volume(value)`
-- [ ] `volume()`
-- [ ] `sound_effect(effect)`
+- [x] `stop_all_sounds()`
+- [x] `stop_sound(sound)`
+- [x] `change_sound_effect(effect, increment)`
+- [x] `set_sound_effect(effect, value)`
+- [x] `sound_effect(effect)`
 
 # Events
 
 - [x] `setup {}`
 - [x] `update {}`
-- [ ] `key_press key  {}`
+- [ ] `key_press key {}`
 - [ ] `sprite_clicked {}`
 - [ ] `backdrop_switch backdrop  {}`
 - [ ] `when bool {}`
