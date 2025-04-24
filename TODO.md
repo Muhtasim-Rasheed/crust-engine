@@ -86,3 +86,22 @@
 - [ ] `when_start_as_clone {}`
 - [ ] `clone()`
 - [ ] `destroy_clone()`
+
+# Window
+
+- [ ] `set_window_width(width)`
+- [ ] `set_window_height(height)`
+- [ ] `set_window_size(width, height)`
+- [ ] `set_window_state(state)`
+    - [ ] `normal`
+    - [ ] `windowed-fullscreen`
+    - [ ] `fullscreen`
+    - [ ] `borderless-windowed`
+    - [ ] `minimized`
+- [ ] `set_window_x(x)`
+- [ ] `set_window_y(y)`
+- [ ] `set_window_position(x, y)`
+- [ ] `window_width()`
+- [ ] `window_height()`
+- [ ] `screen_width()`
+- [ ] `screen_height()`
