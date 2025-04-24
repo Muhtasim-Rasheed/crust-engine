@@ -67,6 +67,23 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                     }
                     Value::String(result)
                 }
+                "math_fn" => {
+                    if let [Value::String(func), Value::Number(num)] = args.as_slice() {
+                        match func.as_str() {
+                            "abs" => Value::Number(num.abs()),
+                            "sqrt" => Value::Number(num.sqrt()),
+                            "sin" => Value::Number(num.sin()),
+                            "cos" => Value::Number(num.cos()),
+                            "tan" => Value::Number(num.tan()),
+                            "asin" => Value::Number(num.asin()),
+                            "acos" => Value::Number(num.acos()),
+                            "atan" => Value::Number(num.atan()),
+                            _ => Value::Null,
+                        }
+                    } else {
+                        Value::Null
+                    }
+                }
                 _ => Value::Null
             }
         }

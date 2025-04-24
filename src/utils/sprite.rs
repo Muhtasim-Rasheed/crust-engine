@@ -208,6 +208,18 @@ impl Sprite {
                     }
                 }
             }
+            Statement::Repeat { times, body } => {
+                let times_value = super::resolve_expression(times, project, self);
+                if let Value::Number(times) = times_value {
+                    for _ in 0..times as usize {
+                        for statement in body {
+                            self.execute_statement(statement, project, snapshots);
+                        }
+                    }
+                } else {
+                    println!("Invalid argument for repeat");
+                }
+            }
             Statement::Call(c) => {
                 if let Expression::Call { function, args } = c {
                     let args = args

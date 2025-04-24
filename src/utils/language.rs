@@ -72,7 +72,7 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "if", "else", "while", "for", "global", "setup", "update",
+            "if", "else", "while", "repeat", "global", "setup", "update",
         ];
 
         if self.pointer >= self.code.len() {
@@ -248,6 +248,10 @@ pub enum Statement {
         condition: Expression,
         body: Vec<Statement>,
     },
+    Repeat {
+        times: Expression,
+        body: Vec<Statement>,
+    },
     Setup {
         body: Vec<Statement>,
     },
@@ -263,6 +267,7 @@ impl std::fmt::Debug for Statement {
             Statement::Assignment { is_global, identifier, value } => write!(f, "ASSIGN[{} {} = {}]", if *is_global { "global" } else { "" }, identifier, value.to_string()),
             Statement::If { condition, body, else_body } => write!(f, "IF[{}] {{ {:?} }} ELSE {{ {:?} }}", condition.to_string(), body, else_body),
             Statement::While { condition, body } => write!(f, "WHILE[{}] {{ {:?} }}", condition.to_string(), body),
+            Statement::Repeat { times, body } => write!(f, "REPEAT[{}] {{ {:?} }}", times.to_string(), body),
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
@@ -431,7 +436,19 @@ impl Parser {
                 let condition = self.parse_binary_expr(0);
                 let body = self.parse_block();
                 let else_body = if self.eat(&Token::Keyword("else".to_string())) {
-                    Some(self.parse_block())
+                    if self.eat(&Token::Keyword("if".to_string())) {
+                        let condition = self.parse_binary_expr(0);
+                        let body = self.parse_block();
+                        let else_body = if self.eat(&Token::Keyword("else".to_string())) {
+                            Some(self.parse_block())
+                        } else {
+                            None
+                        };
+                        Some(vec![Statement::If { condition, body, else_body }])
+                    } else {
+                        let body = self.parse_block();
+                        Some(body)
+                    }
                 } else {
                     None
                 };
@@ -442,6 +459,12 @@ impl Parser {
                 let condition = self.parse_binary_expr(0);
                 let body = self.parse_block();
                 Statement::While { condition, body }
+            }
+            Token::Keyword(k) if k == "repeat" => {
+                self.next();
+                let times = self.parse_binary_expr(0);
+                let body = self.parse_block();
+                Statement::Repeat { times, body }
             }
             Token::Keyword(k) if k == "setup" => {
                 self.next();

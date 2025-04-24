@@ -8,15 +8,14 @@ update {
 	goto("mouse")
 	if key_down("right") {
 		angular_vel += speed
-	}
-	if key_down("left") {
+	} else if key_down("left") {
 		angular_vel -= speed
 	}
 	if key_down("z") {
 		play_sound("Nom")
 	}
 	angular_vel *= 0.95
-	set_effect("ghost", 50 + angular_vel * 25)
-	set_effect("brightness", angular_vel * 8)
+	set_effect("ghost", math_fn("abs", (50 + angular_vel * 25)))
+	set_effect("brightness", math_fn("abs", (angular_vel * 8)))
 	point(direction() + angular_vel)
 }

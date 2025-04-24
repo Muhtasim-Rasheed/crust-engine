@@ -2,6 +2,7 @@
 
 - `print(string)`
 - `concat(strings..)`
+- `math_fn(op, x)`
 
 # Motion
 
@@ -75,12 +76,11 @@
 # Control
 
 - [x] `wait(sec)`
-- [ ] `repeat x {}`
-- [ ] `forever {}`
+- [ ] `wait_until(bool)`
+- [x] `repeat x {}`
 - [x] `if bool {}`
 - [x] `if bool {} else {}`
-- [ ] `if bool {} else if bool {}`
-- [ ] `wait_until bool {}`
+- [x] `if bool {} else if bool {}`
 - [x] `while bool {}`
 - [ ] `stop(all | self | script | other-scripts | other-sprites-and-scripts)`
 - [ ] `when_start_as_clone {}`
