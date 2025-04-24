@@ -1,0 +1,24 @@
+setup {
+	x_vel = 0
+	y_vel = 0
+	speed = 1
+}
+
+update {
+	if key_down("w") {
+		y_vel -= speed
+	}
+	if key_down("a") {
+		x_vel -= speed
+	}
+	if key_down("s") {
+		y_vel += speed
+	}
+	if key_down("d") {
+		x_vel += speed
+	}
+	x_vel *= 0.9
+	y_vel *= 0.9
+	change_x(x_vel)
+	change_y(y_vel)
+}

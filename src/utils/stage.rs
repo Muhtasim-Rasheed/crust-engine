@@ -7,13 +7,6 @@ pub struct Stage {
 
 impl Stage {
     pub fn new(backdrops: Vec<Texture2D>) -> Self {
-        let backdrops = backdrops
-            .into_iter()
-            .map(|texture| {
-                texture.set_filter(FilterMode::Nearest);
-                texture
-            })
-            .collect();
         Self {
             backdrops,
             current_backdrop: 0,
@@ -44,17 +37,20 @@ impl Stage {
 
     pub fn draw(&self) {
         let texture = &self.backdrops[self.current_backdrop];
+        texture.set_filter(FilterMode::Nearest);
         let sw = screen_width();
         let sh = screen_height();
         let tw = texture.width();
         let th = texture.height();
         let size = if tw / th > sw / sh {
-            vec2(sw, th * (sw / tw))
+            vec2(sw, th * (sw / tw)) * 2.0
         } else {
-            vec2(tw * (sh / th), sh)
+            vec2(tw * (sh / th), sh) * 2.0
         };
-        let x = (sw - size.x) / 2.0;
-        let y = (sh - size.y) / 2.0;
+        // let x = (sw - size.x) / 2.0;
+        // let y = (sh - size.y) / 2.0;
+        let x = -size.x / 2.0;
+        let y = -size.y / 2.0;
         draw_texture_ex(
             texture,
             x,

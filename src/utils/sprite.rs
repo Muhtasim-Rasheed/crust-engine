@@ -66,13 +66,6 @@ pub struct Sprite {
 
 impl Sprite {
     pub fn new(name: String, costumes: Vec<Texture2D>, sounds: HashMap<String, Sound>, ast: Vec<Statement>, w: f32, h: f32, x: f32, y: f32) -> Self {
-        let costumes = costumes
-            .into_iter()
-            .map(|texture| {
-                texture.set_filter(FilterMode::Nearest);
-                texture
-            })
-            .collect();
         let mut setup_ast = vec![];
         let mut update_ast = vec![];
         for statement in ast {
@@ -643,6 +636,7 @@ impl Sprite {
             }
         }
         let processed_texture = Texture2D::from_image(&effect_image);
+        processed_texture.set_filter(FilterMode::Nearest);
 
         draw_texture_ex(
             &processed_texture,

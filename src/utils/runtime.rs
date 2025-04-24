@@ -90,7 +90,13 @@ impl Runtime {
     }
 
     pub async fn run(&mut self) {
+        let camera = Camera2D {
+            target: vec2(0.0, 0.0),
+            zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()),
+            ..Default::default()
+        };
         loop {
+            set_camera(&camera);
             clear_background(WHITE);
             
             let mut sprites = std::mem::take(&mut self.project.sprites);
@@ -106,7 +112,7 @@ impl Runtime {
 
             self.project.draw();
 
-            draw_text(format!("FPS: {}", get_fps()).as_str(), 10.0, 20.0, 36.0, BLACK);
+            draw_text(format!("FPS: {}", get_fps()).as_str(), -screen_width() + 20.0, -screen_height() + 70.0, 64.0, BLACK);
 
             next_frame().await;
         }

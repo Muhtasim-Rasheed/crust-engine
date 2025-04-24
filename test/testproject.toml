@@ -1,0 +1,12 @@
+[stage]
+backdrops = [ "test/logo_background.png" ]
+
+[[sprites]]
+name = "Glungus"
+code = "test/glungus.crst"
+costumes = [ "test/glungus.png" ]
+sounds = []
+x = 0
+y = 0
+w = 100
+h = 100
