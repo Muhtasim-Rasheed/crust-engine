@@ -16,6 +16,7 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "-" => Value::Number(left_value.to_number() - right_value.to_number()),
                 "*" => Value::Number(left_value.to_number() * right_value.to_number()),
                 "/" => Value::Number(left_value.to_number() / right_value.to_number()),
+                "%" => Value::Number(left_value.to_number() % right_value.to_number()),
                 "==" => Value::Boolean(left_value == right_value),
                 "!=" => Value::Boolean(left_value != right_value),
                 "<" => Value::Boolean(left_value.to_number() < right_value.to_number()),

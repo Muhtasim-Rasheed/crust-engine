@@ -133,7 +133,7 @@ impl Tokenizer {
 
         // Single-char operators
         let one = &self.code[self.pointer..self.pointer + 1];
-        if ["=", "+", "-", "*", "/", "<", ">"].contains(&one) {
+        if ["=", "+", "-", "*", "/", "%", "<", ">"].contains(&one) {
             self.pointer += 1;
             return Some(Token::Operator(one.to_string()));
         }
@@ -308,7 +308,7 @@ impl Parser {
     
     fn precedence(op: &str) -> u8 {
         match op {
-            "*" | "/" => 4,
+            "*" | "/" | "%" => 4,
             "+" | "-" => 3,
             "==" | "!=" | "<" | ">" | "<=" | ">=" => 2,
             "=" => 1,
