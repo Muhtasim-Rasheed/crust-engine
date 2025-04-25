@@ -79,19 +79,17 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                     }
                     Value::String(result)
                 }
-                "math_fn" => {
-                    if let [Value::String(func), Value::Number(num)] = args.as_slice() {
-                        match func.as_str() {
-                            "abs" => Value::Number(num.abs()),
-                            "sqrt" => Value::Number(num.sqrt()),
-                            "sin" => Value::Number(num.sin()),
-                            "cos" => Value::Number(num.cos()),
-                            "tan" => Value::Number(num.tan()),
-                            "asin" => Value::Number(num.asin()),
-                            "acos" => Value::Number(num.acos()),
-                            "atan" => Value::Number(num.atan()),
-                            _ => Value::Null,
-                        }
+                "abs" => Value::Number(args[0].to_number().abs()),
+                "sqrt" => Value::Number(args[0].to_number().sqrt()),
+                "sin" => Value::Number(args[0].to_number().sin()),
+                "cos" => Value::Number(args[0].to_number().cos()),
+                "tan" => Value::Number(args[0].to_number().tan()),
+                "asin" => Value::Number(args[0].to_number().asin()),
+                "acos" => Value::Number(args[0].to_number().acos()),
+                "atan" => Value::Number(args[0].to_number().atan()),
+                "lerp" => {
+                    if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args.as_slice() {
+                        Value::Number(lerp(*a, *b, *t))
                     } else {
                         Value::Null
                     }

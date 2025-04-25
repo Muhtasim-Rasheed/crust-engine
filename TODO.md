@@ -3,7 +3,15 @@
 - `print(string)`
 - `time()`
 - `concat(strings..)`
-- `math_fn(op, x)`
+- `abs(num)`
+- `sqrt(num)`
+- `sin(num)`
+- `cos(num)`
+- `tan(num)`
+- `asin(num)`
+- `acos(num)`
+- `atan(num)`
+- `lerp(a, b, t)`
 
 # Motion
 
