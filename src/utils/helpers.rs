@@ -23,6 +23,8 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 ">" => Value::Boolean(left_value.to_number() > right_value.to_number()),
                 "<=" => Value::Boolean(left_value.to_number() <= right_value.to_number()),
                 ">=" => Value::Boolean(left_value.to_number() >= right_value.to_number()),
+                "&&" => Value::Boolean(left_value.to_boolean() && right_value.to_boolean()),
+                "||" => Value::Boolean(left_value.to_boolean() || right_value.to_boolean()),
                 _ => panic!("Unknown operator: {}", operator),
             }
         }
@@ -177,3 +179,4 @@ fn string_to_keycode(s: &str) -> Option<KeyCode> {
         _ => None,
     }
 }
+
