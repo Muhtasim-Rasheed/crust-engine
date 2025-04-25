@@ -1,10 +1,10 @@
 [stage]
-backdrops = [ "test/logo_background.png" ]
+backdrops = [ "logo_background.png" ]
 
 [[sprites]]
 name = "Glungus"
-code = "test/glungus.crst"
-costumes = [ "test/glungus.png" ]
+code = "glungus.crst"
+costumes = [ "glungus.png" ]
 sounds = []
 x = 0
 y = 0

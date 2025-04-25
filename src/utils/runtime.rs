@@ -44,6 +44,7 @@ pub struct Runtime {
 
 impl Runtime {
     pub async fn new(file_path: &str) -> Self {
+        let dir = std::path::Path::new(file_path).parent().unwrap();
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
 
@@ -51,23 +52,26 @@ impl Runtime {
         for sprite in config.sprites {
             let mut textures = vec![];
             for path in sprite.costumes {
-                let tex = load_texture(&path).await.unwrap_or_else(|_| {
-                    panic!("Failed to load texture: {}. Make sure the path is correct. Relative paths are allowed.", path)
+                let path = dir.join(path);
+                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or_else(|_| {
+                    panic!("Failed to load texture: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
                 });
                 textures.push(tex);
             }
 
             let mut sounds = vec![];
             for sound in sprite.sounds {
-                let sound_data = load_sound(&sound.file).await.unwrap_or_else(|_| {
-                    panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", sound.file)
+                let path = dir.join(&sound.file);
+                let sound_data = load_sound(&path.to_string_lossy()).await.unwrap_or_else(|_| {
+                    panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
                 });
                 sounds.push((sound.name, sound_data));
             }
 
             let sounds = sounds.into_iter().collect::<HashMap<_, _>>();
-
-            let code = std::fs::read_to_string(&sprite.code).expect("Failed to read sprite code");
+            
+            let sprite_code_file = dir.join(&sprite.code);
+            let code = std::fs::read_to_string(&sprite_code_file).expect("Failed to read sprite code");
 
             let mut tokenizer = Tokenizer::new(code.clone());
             let tokens = tokenizer.tokenize_full();
