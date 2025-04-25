@@ -107,7 +107,7 @@ pub fn evaluate_bezier(t: f32, ctrl1_y: f32, ctrl2_y: f32) -> f32 {
 
     for i in 0..=steps {
         let guess = i as f32 / steps as f32;
-        let x = cubic_bezier(guess, 0.0, 0.42, 0.58, 1.0); // or ctrl1_x, ctrl2_x
+        let x = cubic_bezier(guess, 0.0, ctrl1_y, ctrl2_y, 1.0);
         let diff = (x - t).abs();
 
         if diff < min_diff {
