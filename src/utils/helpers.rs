@@ -26,6 +26,14 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 _ => panic!("Unknown operator: {}", operator),
             }
         }
+        Expression::Unary { operator, operand } => {
+            let operand_value = resolve_expression(operand, project, sprite);
+            match operator.as_str() {
+                "-" => Value::Number(-operand_value.to_number()),
+                "!" => Value::Boolean(!operand_value.to_boolean()),
+                _ => panic!("Unknown operator: {}", operator),
+            }
+        }
         Expression::Call { function, args } => {
             // let sprite = project.get_sprite(&sprite).unwrap().clone();
             let args = args.iter()
@@ -35,8 +43,6 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "direction" => Value::Number(sprite.direction),
                 "x" => Value::Number(sprite.center.x),
                 "y" => Value::Number(sprite.center.y),
-                "mouse_x" => Value::Number(mouse_position().0),
-                "mouse_y" => Value::Number(mouse_position().1),
                 "costume" => Value::Number(sprite.costume() as f32),
                 "backdrop" => Value::Number(project.stage.backdrop() as f32),
                 "size" => Value::Number(sprite.scale * 100.0),
@@ -61,6 +67,9 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                         Value::Null
                     }
                 }
+                "mouse_x" => Value::Number(mouse_position().0),
+                "mouse_y" => Value::Number(mouse_position().1),
+                "time" => Value::Number(get_time() as f32),
                 "concat" => {
                     let mut result = String::new();
                     for arg in args {

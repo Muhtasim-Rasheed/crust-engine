@@ -1,6 +1,7 @@
 # Misc
 
 - `print(string)`
+- `time()`
 - `concat(strings..)`
 - `math_fn(op, x)`
 
