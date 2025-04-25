@@ -1,0 +1,8 @@
+setup {}
+update {
+	switch_costume(1)
+
+	when_recv_broadcast "move" {
+		switch_costume(0)
+	}
+}

@@ -7,15 +7,19 @@ setup {
 update {
 	if key_down("w") {
 		y_vel -= speed
+		broadcast("move")
 	}
 	if key_down("a") {
 		x_vel -= speed
+		broadcast("move")
 	}
 	if key_down("s") {
 		y_vel += speed
+		broadcast("move")
 	}
 	if key_down("d") {
 		x_vel += speed
+		broadcast("move")
 	}
 	x_vel *= 0.9
 	y_vel *= 0.9

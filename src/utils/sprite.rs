@@ -214,6 +214,16 @@ impl Sprite {
                     println!("Invalid argument for repeat");
                 }
             }
+            Statement::WhenRecvBroadcast { message, body } => {
+                // Check if the broadcast is broadcasted
+                if let Some(broadcasted_message) = &project.broadcasted_message {
+                    if broadcasted_message == message {
+                        for statement in body {
+                            self.execute_statement(statement, project, snapshots);
+                        }
+                    }
+                }
+            }
             Statement::Call(c) => {
                 if let Expression::Call { function, args } = c {
                     let args = args
@@ -515,6 +525,14 @@ impl Sprite {
                                 self.sound_effects.insert(effect.clone(), *value);
                             } else {
                                 println!("Invalid arguments for set_sound_effect");
+                            }
+                        }
+                        // ============= EVENTS ============= \\
+                        "broadcast" => {
+                            if let [Value::String(message)] = args.as_slice() {
+                                project.broadcasted_message = Some(message.clone());
+                            } else {
+                                println!("Invalid arguments for broadcast");
                             }
                         }
                         // ============= CONTROL ============= \\

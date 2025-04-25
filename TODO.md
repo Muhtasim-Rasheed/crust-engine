@@ -69,8 +69,8 @@
 - [ ] `sprite_clicked {}`
 - [ ] `backdrop_switch backdrop  {}`
 - [ ] `when bool {}`
-- [ ] `when_recv_broadcast broadcast {}`
-- [ ] `broadcast(broadcast)`
+- [x] `when_recv_broadcast broadcast {}`
+- [x] `broadcast(broadcast)`
 - [ ] `broadcast_and_wait(broadcast)`
 
 # Control

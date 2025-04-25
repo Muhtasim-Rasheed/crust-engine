@@ -72,7 +72,7 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "if", "else", "while", "repeat", "global", "setup", "update",
+            "if", "else", "while", "repeat", "global", "setup", "update", "when_recv_broadcast",
         ];
 
         if self.pointer >= self.code.len() {
@@ -258,6 +258,10 @@ pub enum Statement {
     Update {
         body: Vec<Statement>,
     },
+    WhenRecvBroadcast {
+        message: String,
+        body: Vec<Statement>,
+    },
     Call(Expression),
 }
 
@@ -270,6 +274,7 @@ impl std::fmt::Debug for Statement {
             Statement::Repeat { times, body } => write!(f, "REPEAT[{}] {{ {:?} }}", times.to_string(), body),
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
+            Statement::WhenRecvBroadcast { message, body } => write!(f, "WHEN_RECV_BROADCAST[{}] {{ {:?} }}", message, body),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
         }
     }
@@ -518,6 +523,17 @@ impl Parser {
                 } else {
                     panic!("Expected '=' after 'global'");
                 }
+            }
+            Token::Keyword(k) if k == "when_recv_broadcast" => {
+                self.next();
+                let message = if let Token::Value(Value::String(msg)) = self.current() {
+                    msg.clone()
+                } else {
+                    panic!("Expected string after 'when_recv_broadcast'");
+                };
+                self.next();
+                let body = self.parse_block();
+                Statement::WhenRecvBroadcast { message, body }
             }
             Token::Identifier(name) => {
                 let name = name.clone();

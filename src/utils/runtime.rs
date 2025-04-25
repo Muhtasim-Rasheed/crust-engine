@@ -102,6 +102,8 @@ impl Runtime {
         loop {
             set_camera(&camera);
             clear_background(WHITE);
+
+            self.project.broadcasted_message = None;
             
             let mut sprites = std::mem::take(&mut self.project.sprites);
             

@@ -8,5 +8,15 @@ costumes = [ "glungus.png" ]
 sounds = []
 x = 0
 y = 0
+w = 150
+h = 150
+
+[[sprites]]
+name = "Broadcast Trigger"
+code = "broadcast_trigger.crst"
+costumes = [ "ok.png", "noway.png" ]
+sounds = []
+x = 0
+y = 0
 w = 100
 h = 100
