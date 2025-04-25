@@ -649,7 +649,215 @@ impl Sprite {
                             );
                         }
                     }
-                }
+                },
+                "saturation" => {
+                    let saturation = (value / 100.0).clamp(0.0, 100.0);
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    super::lerp(pixel.r*0.299 + pixel.g*0.587 + pixel.b*0.114, pixel.r, saturation), 
+                                    super::lerp(pixel.r*0.299 + pixel.g*0.587 + pixel.b*0.114, pixel.g, saturation),  
+                                    super::lerp(pixel.r*0.299 + pixel.g*0.587 + pixel.b*0.114, pixel.b, saturation),  
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "sepia" => {
+                    let sepia = (value / 100.0).clamp(0.0, 1.0);
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    super::lerp(pixel.r, (pixel.r*0.393 + pixel.g*0.769 + pixel.b*0.189), sepia), 
+                                    super::lerp(pixel.g, (pixel.g*0.349 + pixel.b*0.686 + pixel.r*0.168), sepia), 
+                                    super::lerp(pixel.b, (pixel.b*0.272 + pixel.r*0.534 + pixel.g*0.131), sepia), 
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "grayscale-averaged" => {
+                    let grayscale = (value / 100.0).clamp(0.0, 1.0);
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    super::lerp(pixel.r, pixel.r/3. + pixel.g/3. + pixel.b/3., grayscale), 
+                                    super::lerp(pixel.g, pixel.r/3. + pixel.g/3. + pixel.b/3., grayscale), 
+                                    super::lerp(pixel.b, pixel.r/3. + pixel.g/3. + pixel.b/3., grayscale), 
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "grayscale-weighted" => {
+                    let grayscale = (value / 100.0).clamp(0.0, 1.0);
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    super::lerp(pixel.r, pixel.r*0.299 + pixel.g*0.587 + pixel.b*0.114, grayscale), 
+                                    super::lerp(pixel.g, pixel.r*0.299 + pixel.g*0.587 + pixel.b*0.114, grayscale),  
+                                    super::lerp(pixel.b, pixel.r*0.299 + pixel.g*0.587 + pixel.b*0.114, grayscale),  
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "invert" => {
+                    let invert = (value / 100.0).clamp(0.0, 1.0);
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    super::lerp(pixel.r, 1.0 - pixel.r, invert), 
+                                    super::lerp(pixel.g, 1.0 - pixel.g, invert), 
+                                    super::lerp(pixel.b, 1.0 - pixel.b, invert), 
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "multiply" => {
+                    let multiply = value / 1.0;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r*multiply,
+                                    pixel.g*multiply, 
+                                    pixel.b*multiply,
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "multiply-r" => {
+                    let multiply = value / 1.0;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r*multiply,
+                                    pixel.g, 
+                                    pixel.b,
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "multiply-g" => {
+                    let multiply = value / 1.0;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r,
+                                    pixel.g*multiply, 
+                                    pixel.b,
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "multiply-b" => {
+                    let multiply = value / 1.0;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r,
+                                    pixel.g, 
+                                    pixel.b*multiply,
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "add" => {
+                    let add = value / 1.0;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r+add,
+                                    pixel.g+add, 
+                                    pixel.b+add,
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "add-r" => {
+                    let add = value / 1.0;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r+add,
+                                    pixel.g, 
+                                    pixel.b,
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "add-g" => {
+                    let add = value / 1.0;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r,
+                                    pixel.g+add, 
+                                    pixel.b,
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
+                "add-b" => {
+                    let add = value / 1.0;
+                    for i in 0..effect_image.width() {
+                        for j in 0..effect_image.height() {
+                            let pixel = effect_image.get_pixel(i as u32, j as u32);
+                            effect_image.set_pixel(
+                                i as u32, j as u32,
+                                Color::new(
+                                    pixel.r,
+                                    pixel.g, 
+                                    pixel.b+add,
+                                    pixel.a)
+                            );
+                        }
+                    }
+                },
                 _ => {} // Do absolutely nothing
             }
         }
