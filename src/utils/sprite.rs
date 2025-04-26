@@ -214,16 +214,6 @@ impl Sprite {
                     println!("Invalid argument for repeat");
                 }
             }
-            Statement::WhenRecvBroadcast { message, body } => {
-                // Check if the broadcast is broadcasted
-                if let Some(broadcasted_message) = &project.broadcasted_message {
-                    if broadcasted_message == message {
-                        for statement in body {
-                            self.execute_statement(statement, project, snapshots);
-                        }
-                    }
-                }
-            }
             Statement::Call(c) => {
                 if let Expression::Call { function, args } = c {
                     let args = args
@@ -470,7 +460,7 @@ impl Sprite {
                                     if let Some(sound) = self.sounds.get(name) {
                                         play_sound(&sound, PlaySoundParams {
                                             looped: false,
-                                            volume: self.sound_effects.get("volume").cloned().unwrap_or(1.0) / 100.0,
+                                            volume: self.sound_effects.get("volume").cloned().unwrap_or(100.0) / 100.0,
                                         });
                                     } else {
                                         println!("Sound '{}' not found", name);
@@ -485,7 +475,7 @@ impl Sprite {
                                     if let Some(sound) = self.sounds.get(name) {
                                         play_sound(&sound, PlaySoundParams {
                                             looped: false,
-                                            volume: self.sound_effects.get("volume").cloned().unwrap_or(1.0) / 100.0,
+                                            volume: self.sound_effects.get("volume").cloned().unwrap_or(100.0) / 100.0,
                                         });
                                     } else {
                                         println!("Sound '{}' not found", name);

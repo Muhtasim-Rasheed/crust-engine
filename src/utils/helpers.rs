@@ -33,6 +33,7 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
             match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
                 "!" => Value::Boolean(!operand_value.to_boolean()),
+                "." => Value::Number(format!("0.{}", operand_value.to_number() as i64).parse::<f32>().unwrap()),
                 _ => panic!("Unknown operator: {}", operator),
             }
         }
@@ -69,6 +70,31 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                         Value::Null
                     }
                 }
+                "key_pressed" => {
+                    if let [Value::String(key)] = args.as_slice() {
+                        Value::Boolean(is_key_pressed(string_to_keycode(key).unwrap_or(KeyCode::Unknown)))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "key_released" => {
+                    if let [Value::String(key)] = args.as_slice() {
+                        Value::Boolean(is_key_released(string_to_keycode(key).unwrap_or(KeyCode::Unknown)))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "did_get_clicked" => {
+                    let xy = mouse_position();
+                    let top_left = sprite.center - vec2(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
+                    let bottom_right = sprite.center + vec2(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
+                    let rect = Rect::new(top_left.x, top_left.y, top_left.x - bottom_right.x, top_left.y - bottom_right.y);
+                    if rect.contains(xy.into()) {
+                        Value::Boolean(true)
+                    } else {
+                        Value::Boolean(false)
+                    }
+                }
                 "mouse_x" => Value::Number(mouse_position().0),
                 "mouse_y" => Value::Number(mouse_position().1),
                 "time" => Value::Number(get_time() as f32),
@@ -90,6 +116,13 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "lerp" => {
                     if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args.as_slice() {
                         Value::Number(lerp(*a, *b, *t))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "is_broadcasted" => {
+                    if let [Value::String(broadcast)] = args.as_slice() {
+                        Value::Boolean(project.broadcasted_message.is_some() && project.broadcasted_message.as_ref().unwrap() == broadcast)
                     } else {
                         Value::Null
                     }

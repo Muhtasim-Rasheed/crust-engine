@@ -74,11 +74,13 @@
 
 - [x] `setup {}`
 - [x] `update {}`
-- [ ] `key_press key {}`
-- [ ] `sprite_clicked {}`
-- [ ] `backdrop_switch backdrop  {}`
+- [x] `key_down(key)`
+- [x] `key_pressed(key)`
+- [x] `key_release(key)`
+- [x] `did_get_clicked()`
+- [ ] `backdrop_switch backdrop {}`
 - [ ] `when bool {}`
-- [x] `when_recv_broadcast broadcast {}`
+- [x] `is_broadcasted(broadcast)`
 - [x] `broadcast(broadcast)`
 - [ ] `broadcast_and_wait(broadcast)`
 
