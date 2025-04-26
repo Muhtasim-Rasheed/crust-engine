@@ -55,6 +55,7 @@ pub struct Sprite {
     pub variables: HashMap<String, Value>,
     pub effects: HashMap<String, f32>,
     pub sound_effects: HashMap<String, f32>,
+    pub draw_color: Color,
     current_costume: usize,
     crawler: usize,
     setup_ast: Vec<Statement>,
@@ -99,6 +100,7 @@ impl Sprite {
             sound_effects: HashMap::new(),
             time_waiting: 0,
             glide: None,
+            draw_color: BLACK,
         }
     }
 
@@ -531,6 +533,111 @@ impl Sprite {
                                 self.time_waiting = (*seconds * 60.0) as u32;
                             } else {
                                 println!("Invalid arguments for wait");
+                            }
+                        }
+                        // ============= DRAWING ============= \\
+                        "set_color" => {
+                            if let [Value::Number(r), Value::Number(g), Value::Number(b)] = args.as_slice() {
+                                self.draw_color = Color::new(r / 255.0, g / 255.0, b / 255.0, 1.0);
+                            } else {
+                                println!("Invalid arguments for set_color");
+                            }
+                        }
+                        "change_r" => {
+                            if let [Value::Number(r)] = args.as_slice() {
+                                self.draw_color.r += r.clamp(-1.0, 1.0)
+                            } else {
+                                println!("Invalid arguments for change_r");
+                            }
+                        }
+                        "change_g" => {
+                            if let [Value::Number(g)] = args.as_slice() {
+                                self.draw_color.g += g.clamp(-1.0, 1.0)
+                            } else {
+                                println!("Invalid arguments for change_g");
+                            }
+                        }
+                        "change_b" => {
+                            if let [Value::Number(b)] = args.as_slice() {
+                                self.draw_color.b += b.clamp(-1.0, 1.0)
+                            } else {
+                                println!("Invalid arguments for change_b");
+                            }
+                        }
+                        "line" => {
+                            if let [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2), Value::Number(thickness)] = args.as_slice() {
+                                draw_line(*x1, *y1, *x2, *y2, *thickness, self.draw_color);
+                            } else {
+                                println!("Invalid arguments for line");
+                            }
+                        }
+                        "rect" => {
+                            if let [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2)] = args.as_slice() {
+                                let w = x2 - x1;
+                                let h = y2 - y1;
+                                draw_rectangle(*x1, *y1, w, h, self.draw_color);
+                            } else {
+                                println!("Invalid arguments for rect");
+                            }
+                        }
+                        "hrect" => {
+                            if let [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2), Value::Number(thickness)] = args.as_slice() {
+                                let w = x2 - x1;
+                                let h = y2 - y1;
+                                draw_rectangle_lines(*x1, *y1, w, h, *thickness, self.draw_color);
+
+                            } else {
+                                println!("Invalid arguments for hrect");
+                            }
+                        }
+                        "circle" => {
+                            if let [Value::Number(x1), Value::Number(y1), Value::Number(radius)] = args.as_slice() {
+                                draw_circle(*x1, *y1, *radius, self.draw_color);
+                            } else {
+                                println!("Invalid arguments for circle");
+                            }
+                        }
+                        "hcircle" => {
+                            if let [Value::Number(x1), Value::Number(y1), Value::Number(radius), Value::Number(thickness)] = args.as_slice() {
+                                draw_circle_lines(*x1, *y1, *radius, *thickness, self.draw_color);
+                            } else {
+                                println!("Invalid arguments for hcircle");
+                            }
+                        }
+                        "polygon" => {
+                            let mut xs: Vec<f32> = vec![];
+                            let mut ys: Vec<f32> = vec![];
+                            let mut even = false;
+                            for arg in args {
+                                if !even {
+                                    xs.push(arg.to_number());
+                                } else {
+                                    ys.push(arg.to_number());
+                                }
+                                even = !even;
+                            }
+                            if xs.len() != ys.len() {
+                                println!("Inequal number of x's and y's")
+                            } else {
+                                super::draw_convex_polygon(&xs, &ys, self.draw_color);
+                            }
+                        }
+                        "hpolygon" => {
+                            let mut xs: Vec<f32> = vec![];
+                            let mut ys: Vec<f32> = vec![];
+                            let mut even = false;
+                            for arg in args {
+                                if !even {
+                                    xs.push(arg.to_number());
+                                } else {
+                                    ys.push(arg.to_number());
+                                }
+                                even = !even;
+                            }
+                            if xs.len() != ys.len() {
+                                println!("Inequal number of x's and y's")
+                            } else {
+                                super::draw_convex_polygon_lines(&xs, &ys, self.draw_color);
                             }
                         }
                         // ============= WINDOW ============= \\

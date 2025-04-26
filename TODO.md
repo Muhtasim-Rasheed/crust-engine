@@ -98,6 +98,25 @@
 - [ ] `clone()`
 - [ ] `destroy_clone()`
 
+# Drawing
+
+- [x] `set_color(r, g, b)`
+- [x] `change_r(increment)`
+- [x] `change_g(increment)`
+- [x] `change_b(increment)`
+- [x] `line(x1, y1, x2, y2, thickness)`
+- [x] `rect(x1, y1, x2, y2)`
+- [x] `hrect(x1, y1, x2, y2, thickness)`
+- [x] `circle(x, y, radius)`
+- [x] `hcircle(x, y, radius, thickness)`
+- [ ] `ellipse(x, y, width, height)`
+- [ ] `hellipse(x, y, width, height, thickness)`
+- [x] `polygon(x1, y1..., xN, yN)`
+- [x] `hpolygon(thickness, x1, y1..., xN, yN)`
+- [x] `r()`
+- [x] `g()`
+- [x] `b()`
+
 # Window
 
 - [x] `set_window_width(width)`

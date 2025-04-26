@@ -127,11 +127,41 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                         Value::Null
                     }
                 }
+                "r" => Value::Number(sprite.draw_color.r),
+                "g" => Value::Number(sprite.draw_color.g),
+                "b" => Value::Number(sprite.draw_color.b),
                 "window_width" => Value::Number(screen_width()),
                 "window_height" => Value::Number(screen_height()),
                 _ => Value::Null
             }
         }
+    }
+}
+
+pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, color: Color) {
+    assert_eq!(xs.len(), ys.len());
+    assert!(xs.len() >= 3, "Need at least 3 points to form a polygon!");
+
+    let center_x = xs.iter().sum::<f32>() / xs.len() as f32;
+    let center_y = ys.iter().sum::<f32>() / ys.len() as f32;
+
+    for i in 0..xs.len() {
+        let next_i = (i + 1) % xs.len();
+        draw_triangle(
+            Vec2::new(center_x, center_y),
+            Vec2::new(xs[i], ys[i]),
+            Vec2::new(xs[next_i], ys[next_i]),
+            color,
+        );
+    }
+}
+
+pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, color: Color) {
+    assert_eq!(xs.len(), ys.len());
+
+    for i in 0..xs.len() {
+        let next_i = (i + 1) % xs.len();
+        draw_line(xs[i], ys[i], xs[next_i], ys[next_i], 2.0, color);
     }
 }
 
