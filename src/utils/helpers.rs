@@ -127,6 +127,8 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                         Value::Null
                     }
                 }
+                "window_width" => Value::Number(screen_width()),
+                "window_height" => Value::Number(screen_height()),
                 _ => Value::Null
             }
         }

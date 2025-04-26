@@ -100,19 +100,19 @@
 
 # Window
 
-- [ ] `set_window_width(width)`
-- [ ] `set_window_height(height)`
-- [ ] `set_window_size(width, height)`
-- [ ] `set_window_state(state)`
-    - [ ] `normal`
+- [x] `set_window_width(width)`
+- [x] `set_window_height(height)`
+- [x] `set_window_size(width, height)`
+- [x] `set_window_state(state)`
+    - [x] `normal`
     - [ ] `windowed-fullscreen`
-    - [ ] `fullscreen`
+    - [x] `fullscreen`
     - [ ] `borderless-windowed`
     - [ ] `minimized`
 - [ ] `set_window_x(x)`
 - [ ] `set_window_y(y)`
 - [ ] `set_window_position(x, y)`
-- [ ] `window_width()`
-- [ ] `window_height()`
+- [x] `window_width()`
+- [x] `window_height()`
 - [ ] `screen_width()`
 - [ ] `screen_height()`

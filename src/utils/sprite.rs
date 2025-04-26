@@ -533,6 +533,39 @@ impl Sprite {
                                 println!("Invalid arguments for wait");
                             }
                         }
+                        // ============= WINDOW ============= \\
+                        "set_window_width" => {
+                            if let [Value::Number(width)] = args.as_slice() {
+                                request_new_screen_size(*width, screen_height());
+                            } else {
+                                println!("Invalid arguments for set_window_width");
+                            }
+                        }
+                        "set_window_height" => {
+                            if let [Value::Number(height)] = args.as_slice() {
+                                request_new_screen_size(screen_width(), *height);
+                            } else {
+                                println!("Invalid arguments for set_window_height");
+                            }
+                        }
+                        "set_window_size" => {
+                            if let [Value::Number(width), Value::Number(height)] = args.as_slice() {
+                                request_new_screen_size(*width, *height);
+                            } else {
+                                println!("Invalid arguments for set_window_size");
+                            }
+                        }
+                        "set_window_state" => {
+                            if let [Value::String(state)] = args.as_slice() {
+                                match state.as_str() {
+                                    "normal" => set_fullscreen(false),
+                                    "fullscreen" => set_fullscreen(true),
+                                    _ => println!("Invalid arguments for set_window_state")
+                                }
+                            } else {
+                                println!("Invalid arguments for set_window_state");
+                            }
+                        }
                         _ => {
                             println!("Unknown function: {}", function);
                         }
@@ -664,9 +697,9 @@ impl Sprite {
                             effect_image.set_pixel(
                                 i as u32, j as u32,
                                 Color::new(
-                                    super::lerp(pixel.r, (pixel.r*0.393 + pixel.g*0.769 + pixel.b*0.189), sepia), 
-                                    super::lerp(pixel.g, (pixel.g*0.349 + pixel.b*0.686 + pixel.r*0.168), sepia), 
-                                    super::lerp(pixel.b, (pixel.b*0.272 + pixel.r*0.534 + pixel.g*0.131), sepia), 
+                                    super::lerp(pixel.r, pixel.r*0.393 + pixel.g*0.769 + pixel.b*0.189, sepia), 
+                                    super::lerp(pixel.g, pixel.g*0.349 + pixel.b*0.686 + pixel.r*0.168, sepia), 
+                                    super::lerp(pixel.b, pixel.b*0.272 + pixel.r*0.534 + pixel.g*0.131, sepia), 
                                     pixel.a)
                             );
                         }
