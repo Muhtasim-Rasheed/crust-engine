@@ -156,12 +156,12 @@ pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, color: Color) {
     }
 }
 
-pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, color: Color) {
+pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, color: Color) {
     assert_eq!(xs.len(), ys.len());
 
     for i in 0..xs.len() {
         let next_i = (i + 1) % xs.len();
-        draw_line(xs[i], ys[i], xs[next_i], ys[next_i], 2.0, color);
+        draw_line(xs[i], ys[i], xs[next_i], ys[next_i], thickness, color);
     }
 }
 

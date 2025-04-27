@@ -604,6 +604,40 @@ impl Sprite {
                                 println!("Invalid arguments for hcircle");
                             }
                         }
+                        "ellipse" => {
+                            match args.as_slice() {
+                                [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2)] => {
+                                    let w = x2 - x1;
+                                    let h = y2 - y1;
+                                    draw_ellipse(*x1, *y1, w, h, 0.0, self.draw_color);
+                                }
+                                [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2), Value::Number(rotation)] => {
+                                    let w = x2 - x1;
+                                    let h = y2 - y1;
+                                    draw_ellipse(*x1, *y1, w, h, *rotation, self.draw_color);
+                                }
+                                _ => {
+                                    println!("Invalid arguments for ellipse");
+                                }
+                            }
+                        }
+                        "hellipse" => {
+                            match args.as_slice() {
+                                [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2), Value::Number(thickness)] => {
+                                    let w = x2 - x1;
+                                    let h = y2 - y1;
+                                    draw_ellipse_lines(*x1, *y1, w, h, 0.0, *thickness, self.draw_color);
+                                }
+                                [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2), Value::Number(rotation), Value::Number(thickness)] => {
+                                    let w = x2 - x1;
+                                    let h = y2 - y1;
+                                    draw_ellipse_lines(*x1, *y1, w, h, *rotation, *thickness, self.draw_color);
+                                }
+                                _ => {
+                                    println!("Invalid arguments for hellipse");
+                                }
+                            }
+                        }
                         "polygon" => {
                             let mut xs: Vec<f32> = vec![];
                             let mut ys: Vec<f32> = vec![];
@@ -626,7 +660,8 @@ impl Sprite {
                             let mut xs: Vec<f32> = vec![];
                             let mut ys: Vec<f32> = vec![];
                             let mut even = false;
-                            for arg in args {
+                            for i in 1..args.len() {
+                                let arg = &args[i];
                                 if !even {
                                     xs.push(arg.to_number());
                                 } else {
@@ -637,7 +672,8 @@ impl Sprite {
                             if xs.len() != ys.len() {
                                 println!("Inequal number of x's and y's")
                             } else {
-                                super::draw_convex_polygon_lines(&xs, &ys, self.draw_color);
+                                let thickness = args[0].to_number();
+                                super::draw_convex_polygon_lines(&xs, &ys, thickness, self.draw_color);
                             }
                         }
                         // ============= WINDOW ============= \\
