@@ -188,6 +188,17 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + t * (b - a)
 }
 
+pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
+    let mut flat = vec![0; pixels.len() * 4];
+    for (i, pixel) in pixels.iter().enumerate() {
+        flat[i * 4] = pixel[0];
+        flat[i * 4 + 1] = pixel[1];
+        flat[i * 4 + 2] = pixel[2];
+        flat[i * 4 + 3] = pixel[3];
+    }
+    flat
+}
+
 // Helper functions that help other helper functions!!
 fn cubic_bezier(t: f32, p0: f32, p1: f32, p2: f32, p3: f32) -> f32 {
     let u = 1.0 - t;
