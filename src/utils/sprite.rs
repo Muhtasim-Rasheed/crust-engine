@@ -110,7 +110,7 @@ impl Sprite {
 
     pub fn goto_cursor(&mut self) {
         let (x, y) = mouse_position();
-        self.goto(x, y);
+        self.goto(x*2.-screen_width(), y*2.-screen_height());
     }
 
     pub fn goto_other(&mut self, snapshots: &[SpriteSnapshot], name: &str) {
