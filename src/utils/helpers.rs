@@ -43,6 +43,29 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 .map(|arg| resolve_expression(arg, project, sprite))
                 .collect::<Vec<_>>();
             match function.as_str() {
+                "time" => Value::Number(get_time() as f32),
+                "concat" => {
+                    let mut result = String::new();
+                    for arg in args {
+                        result.push_str(&arg.to_string());
+                    }
+                    Value::String(result)
+                }
+                "abs" => Value::Number(args[0].to_number().abs()),
+                "sqrt" => Value::Number(args[0].to_number().sqrt()),
+                "sin" => Value::Number(args[0].to_number().sin()),
+                "cos" => Value::Number(args[0].to_number().cos()),
+                "tan" => Value::Number(args[0].to_number().tan()),
+                "asin" => Value::Number(args[0].to_number().asin()),
+                "acos" => Value::Number(args[0].to_number().acos()),
+                "atan" => Value::Number(args[0].to_number().atan()),
+                "lerp" => {
+                    if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args.as_slice() {
+                        Value::Number(lerp(*a, *b, *t))
+                    } else {
+                        Value::Null
+                    }
+                }
                 "direction" => Value::Number(sprite.direction),
                 "x" => Value::Number(sprite.center.x),
                 "y" => Value::Number(sprite.center.y),
@@ -97,29 +120,6 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 }
                 "mouse_x" => Value::Number(mouse_position().0),
                 "mouse_y" => Value::Number(mouse_position().1),
-                "time" => Value::Number(get_time() as f32),
-                "concat" => {
-                    let mut result = String::new();
-                    for arg in args {
-                        result.push_str(&arg.to_string());
-                    }
-                    Value::String(result)
-                }
-                "abs" => Value::Number(args[0].to_number().abs()),
-                "sqrt" => Value::Number(args[0].to_number().sqrt()),
-                "sin" => Value::Number(args[0].to_number().sin()),
-                "cos" => Value::Number(args[0].to_number().cos()),
-                "tan" => Value::Number(args[0].to_number().tan()),
-                "asin" => Value::Number(args[0].to_number().asin()),
-                "acos" => Value::Number(args[0].to_number().acos()),
-                "atan" => Value::Number(args[0].to_number().atan()),
-                "lerp" => {
-                    if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args.as_slice() {
-                        Value::Number(lerp(*a, *b, *t))
-                    } else {
-                        Value::Null
-                    }
-                }
                 "is_broadcasted" => {
                     if let [Value::String(broadcast)] = args.as_slice() {
                         Value::Boolean(project.broadcasted_message.is_some() && project.broadcasted_message.as_ref().unwrap() == broadcast)
