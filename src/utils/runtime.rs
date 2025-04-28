@@ -100,7 +100,6 @@ impl Runtime {
             ..Default::default()
         };
         loop {
-            set_camera(&camera);
             clear_background(WHITE);
 
             self.project.broadcasted_message = None;
@@ -110,12 +109,13 @@ impl Runtime {
             let snapshots: Vec<SpriteSnapshot> = sprites.iter().map(|s| s.into()).collect();
 
             for sprite in &mut sprites {
-                sprite.step(&mut self.project, &snapshots);
+                sprite.step(&mut self.project, &snapshots, &camera);
             }
 
             self.project.sprites = sprites;
             self.project.sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
 
+            set_camera(&camera);
             self.project.draw();
 
             draw_text(format!("FPS: {}", get_fps()).as_str(), -screen_width() + 20.0, -screen_height() + 70.0, 64.0, BLACK);

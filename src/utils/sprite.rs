@@ -171,7 +171,7 @@ impl Sprite {
         }
     }
 
-    fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot]) {
+    fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
         match statement {
             Statement::Assignment { is_global, identifier, value } => {
                 let value = super::resolve_expression(value, project, self);
@@ -189,18 +189,18 @@ impl Sprite {
                 let condition_value = super::resolve_expression(condition, project, self);
                 if condition_value.to_boolean() {
                     for statement in body {
-                        self.execute_statement(statement, project, snapshots);
+                        self.execute_statement(statement, project, snapshots, camera);
                     }
                 } else if let Some(else_body) = else_body {
                     for statement in else_body {
-                        self.execute_statement(statement, project, snapshots);
+                        self.execute_statement(statement, project, snapshots, camera);
                     }
                 }
             }
             Statement::While { condition, body } => {
                 while super::resolve_expression(condition, project, self).to_boolean() {
                     for statement in body {
-                        self.execute_statement(statement, project, snapshots);
+                        self.execute_statement(statement, project, snapshots, camera);
                     }
                 }
             }
@@ -209,7 +209,7 @@ impl Sprite {
                 if let Value::Number(times) = times_value {
                     for _ in 0..times as usize {
                         for statement in body {
-                            self.execute_statement(statement, project, snapshots);
+                            self.execute_statement(statement, project, snapshots, camera);
                         }
                     }
                 } else {
@@ -676,6 +676,13 @@ impl Sprite {
                                 super::draw_convex_polygon_lines(&xs, &ys, thickness, self.draw_color);
                             }
                         }
+                        "stamp" => {
+                            set_camera(&project.stage.stamp_layer);
+                            self.draw();
+                        }
+                        "clear_all_stamps" => {
+                            project.stage.clear_stamps();
+                        }
                         // ============= WINDOW ============= \\
                         "set_window_width" => {
                             if let [Value::Number(width)] = args.as_slice() {
@@ -719,7 +726,7 @@ impl Sprite {
         }
     }
 
-    pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot]) {
+    pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
         if let Some(glide) = &mut self.glide {
             let t = 1.0 - (glide.remaining as f32 / glide.duration as f32);
             if glide.remaining > 0 {
@@ -741,14 +748,14 @@ impl Sprite {
         
         if !self.setup_finished {
             while self.crawler < self.setup_ast.len() {
-                self.execute_statement(&self.setup_ast[self.crawler].clone(), project, snapshots);
+                self.execute_statement(&self.setup_ast[self.crawler].clone(), project, snapshots, camera);
                 self.crawler += 1;
             }
             self.setup_finished = true;
             self.crawler = 0;
         } else {
             while self.crawler < self.update_ast.len() {
-                self.execute_statement(&self.update_ast[self.crawler].clone(), project, snapshots);
+                self.execute_statement(&self.update_ast[self.crawler].clone(), project, snapshots, camera);
                 self.crawler += 1;
             }
             self.crawler = 0;

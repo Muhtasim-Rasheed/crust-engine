@@ -98,7 +98,7 @@
 - [ ] `clone()`
 - [ ] `destroy_clone()`
 
-# Drawing [FINISHED]
+# Drawing
 
 - [x] `set_color(r, g, b)`
 - [x] `change_r(increment)`
@@ -109,10 +109,14 @@
 - [x] `hrect(x1, y1, x2, y2, thickness)`
 - [x] `circle(x, y, radius)`
 - [x] `hcircle(x, y, radius, thickness)`
+- [x] `ellipse(x, y, width, height)`
 - [x] `ellipse(x, y, width, height, rotation)`
-- [x] `hellipse(x, y, width, height, thickness, rotation)`
+- [x] `hellipse(x, y, width, height, thickness)`
+- [x] `hellipse(x, y, width, height, rotation, thickness)`
 - [x] `polygon(x1, y1..., xN, yN)`
 - [x] `hpolygon(thickness, x1, y1..., xN, yN)`
+- [x] `stamp()`
+- [x] `clear_all_stamps()`
 - [x] `r()`
 - [x] `g()`
 - [x] `b()`
