@@ -84,7 +84,8 @@ impl Runtime {
         }
         
         for path in config.stage.backdrops {
-            let tex = load_texture(&path).await.unwrap();
+            let path = dir.join(path);
+            let tex = load_texture(&path.to_string_lossy()).await.unwrap();
             project.stage.backdrops.push(tex);
         }
 
