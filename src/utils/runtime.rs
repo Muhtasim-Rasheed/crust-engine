@@ -101,7 +101,9 @@ impl Runtime {
             ..Default::default()
         };
         loop {
+            set_camera(&camera);
             clear_background(WHITE);
+            self.project.stage.draw();
 
             self.project.broadcasted_message = None;
             
@@ -116,8 +118,9 @@ impl Runtime {
             self.project.sprites = sprites;
             self.project.sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
 
-            set_camera(&camera);
-            self.project.draw();
+            for sprite in &mut self.project.sprites {
+                sprite.draw();
+            }
 
             draw_text(format!("FPS: {}", get_fps()).as_str(), -screen_width() + 20.0, -screen_height() + 70.0, 64.0, BLACK);
 

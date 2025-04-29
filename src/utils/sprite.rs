@@ -679,6 +679,7 @@ impl Sprite {
                         "stamp" => {
                             set_camera(&project.stage.stamp_layer);
                             self.draw();
+                            set_camera(camera);
                         }
                         "clear_all_stamps" => {
                             project.stage.clear_stamps();
