@@ -296,26 +296,96 @@ impl Parser {
         }
     }
 
-    fn current(&self) -> &Token {
-        &self.tokens[self.current]
+    fn peek(&self) -> Option<&Token> {
+        if self.current < self.tokens.len() {
+            Some(&self.tokens[self.current])
+        } else {
+            None
+        }
     }
 
-    fn next(&mut self) {
+    fn advance(&mut self) {
         if self.current < self.tokens.len() {
             self.current += 1;
         }
     }
 
-    fn eat(&mut self, token_type: &Token) -> bool {
-        if self.current() == token_type {
-            self.next();
+    fn eat(&mut self, token: &Token) -> bool {
+        if self.peek() == Some(token) {
+            self.advance();
             return true;
         }
         false
     }
+
+    fn eat_any(&mut self, tokens: &[Token]) -> Option<Token> {
+        for token in tokens {
+            if self.eat(token) {
+                return Some(token.clone());
+            }
+        }
+        None
+    }
+
+    pub fn parse(&mut self) -> Vec<Statement> {
+        let mut statements = vec![];
+
+        while self.peek() != Some(&Token::EOF) {
+            if self.eat(&Token::Newline) {
+                continue;
+            }
+            let statement = self.parse_statement().unwrap();
+            statements.push(statement);
+        }
+
+        statements
+    }
+
+    fn parse_statement(&mut self) -> Result<Statement, String> {
+        match self.peek().unwrap_or(&Token::EOF) {
+            Token::Keyword(k) if k == "if" => self.parse_if(),
+            Token::Keyword(k) if k == "while" => self.parse_while(),
+            Token::Keyword(k) if k == "repeat" => self.parse_repeat(),
+            Token::Keyword(k) if k == "setup" => {
+                self.advance();
+                let body = self.parse_block()?;
+                Ok(Statement::Setup { body })
+            }
+            Token::Keyword(k) if k == "update" => {
+                self.advance();
+                let body = self.parse_block()?;
+                Ok(Statement::Update { body })
+            }
+            Token::Identifier(_) => self.parse_assignment_or_call(),
+            _ => Err(format!("Unexpected token: {:?}", self.peek())),
+        }
+    }
+
+    fn parse_block(&mut self) -> Result<Vec<Statement>, String> {
+        let mut statements = vec![];
+
+        if !self.eat(&Token::Symbol("{".to_string())) {
+            return Err("Expected '{' at the start of block".to_string());
+        }
+
+        while self.peek() != Some(&Token::Symbol("}".to_string())) {
+            if self.eat(&Token::Newline) {
+                continue;
+            }
+            let statement = self.parse_statement()?;
+            statements.push(statement);
+        }
+
+        if !self.eat(&Token::Symbol("}".to_string())) {
+            return Err("Expected '}' at the end of block".to_string());
+        }
+
+        Ok(statements)
+    }
     
     fn precedence(op: &str) -> u8 {
         match op {
+            "." => 7,
             "*" | "/" | "%" => 6,
             "+" | "-" => 5,
             "==" | "!=" | "<" | ">" | "<=" | ">=" => 4,
@@ -325,54 +395,20 @@ impl Parser {
             _ => 0,
         }
     }
+    
+    fn parse_binary(&mut self, min_prec: u8) -> Result<Expression, String> {
+        let mut left = self.parse_primary()?;
 
-    fn parse_expr(&mut self) -> Expression {
-        let mut expr = self.parse_primary();
-
-        loop {
-            match self.current() {
-                Token::Symbol(s) if s == "(" => {
-                    self.next();
-                    let mut args = vec![];
-                    if self.current() != &Token::Symbol(")".to_string()) {
-                        loop {
-                            args.push(self.parse_expr());
-                            if self.current() == &Token::Symbol(",".to_string()) {
-                                self.next();
-                            } else {
-                                break;
-                            }
-                        }
-                    }
-                    if !self.eat(&Token::Symbol(")".to_string())) {
-                        panic!("Expected ')'");
-                    }
-
-                    expr = Expression::Call {
-                        function: expr.to_string(),
-                        args,
-                    };
-                }
-                _ => break,
-            }
-        }
-
-        expr
-    }
-
-    fn parse_binary_expr(&mut self, min_prec: u8) -> Expression {
-        let mut left = self.parse_expr();
-
-        while let Token::Operator(op) = self.current() {
+        while let Some(Token::Operator(op)) = self.peek() {
             let prec = Parser::precedence(op);
             if prec < min_prec {
                 break;
             }
 
             let op = op.clone();
-            self.next();
+            self.advance();
 
-            let right = self.parse_binary_expr(prec + 1);
+            let right = self.parse_binary(prec + 1)?;
 
             left = Expression::Binary {
                 left: Box::new(left),
@@ -381,274 +417,551 @@ impl Parser {
             };
         }
 
-        left
+        Ok(left)
     }
 
-    fn parse_primary(&mut self) -> Expression {
-        match self.current() {
+    fn parse_primary(&mut self) -> Result<Expression, String> {
+        let peeked = self.peek().unwrap_or(&Token::EOF).clone();
+        match peeked {
             Token::Value(v) => {
-                let v = v.clone();
-                self.next();
-                Expression::Value(v)
+                self.advance();
+                Ok(Expression::Value(v.clone()))
             }
-            Token::Identifier(name) => {
-                let name = name.clone();
-                self.next();
-                Expression::Identifier(name)
-            }
-            Token::Operator(s) if s == "-" => {
-                self.next();
-                let operand = self.parse_primary();
-                Expression::Unary {
-                    operator: "-".to_string(),
-                    operand: Box::new(operand),
+            Token::Identifier(id) => {
+                self.advance();
+                let name = id.clone();
+                if self.eat(&Token::Symbol("(".to_string())) {
+                    // Function call
+                    let mut args = vec![];
+                    while self.peek() != Some(&Token::Symbol(")".to_string())) {
+                        if self.eat(&Token::Newline) {
+                            continue;
+                        }
+                        let arg = self.parse_binary(0)?;
+                        args.push(arg);
+                        if !self.eat(&Token::Symbol(",".to_string())) {
+                            break;
+                        }
+                    }
+                    if !self.eat(&Token::Symbol(")".to_string())) {
+                        return Err("Expected ')' after function call".to_string());
+                    }
+                    Ok(Expression::Call { function: name, args })
+                } else {
+                    // Just an identifier
+                    Ok(Expression::Identifier(name))
                 }
             }
-            Token::Operator(s) if s == "!" => {
-                self.next();
-                let operand = self.parse_primary();
-                Expression::Unary {
-                    operator: "!".to_string(),
+            Token::Operator(op) if op == "-" || op == "!" || op == "." => {
+                self.advance();
+                let operand = self.parse_primary()?;
+                Ok(Expression::Unary {
+                    operator: op.clone(),
                     operand: Box::new(operand),
-                }
-            }
-            Token::Symbol(s) if s == "." => {
-                self.next();
-                let operand = self.parse_primary();
-                Expression::Unary {
-                    operator: ".".to_string(),
-                    operand: Box::new(operand),
-                }
+                })
             }
             Token::Symbol(s) if s == "(" => {
-                self.next();
-                let expr = self.parse_binary_expr(0);
-                if let Token::Symbol(s) = self.current() {
-                    if s == ")" {
-                        self.next();
-                        expr
-                    } else {
-                        panic!("Expected ')'");
-                    }
-                } else {
-                    panic!("Expected ')'");
+                self.advance();
+                let expr = self.parse_binary(0)?;
+                if !self.eat(&Token::Symbol(")".to_string())) {
+                    return Err("Expected ')'".to_string());
                 }
+                Ok(expr)
             }
-            _ => {
-                panic!("Unexpected token in expression: {:?}", self.current());
-            }
+            _ => Err(format!("Unexpected token in expression: {:?}", self.peek())),
         }
     }
 
-    fn parse_block(&mut self) -> Vec<Statement> {
-        let mut statements = vec![];
-
-        if !self.eat(&Token::Symbol("{".to_string())) {
-            panic!("Expected '{{' at the start of block");
-        }
-
-        while self.current() != &Token::Symbol("}".to_string()) {
-            if let Token::Newline = self.current() {
-                self.next();
-                continue;
+    fn parse_if(&mut self) -> Result<Statement, String> {
+        self.advance();
+        let condition = self.parse_binary(0)?;
+        let body = self.parse_block()?;
+        let else_body = if self.eat(&Token::Keyword("else".to_string())) {
+            if self.eat(&Token::Keyword("if".to_string())) {
+                if let Statement::If { body, .. } = self.parse_if()? {
+                    Some(body)
+                } else {
+                    return Err(format!("This error should not happen here"))
+                }
+            } else {
+                Some(self.parse_block()?)
             }
-            let statement = self.parse_statement();
-            statements.push(statement);
-        }
+        } else { None };
 
-        if !self.eat(&Token::Symbol("}".to_string())) {
-            panic!("Expected '}}' at the end of block");
-        }
-
-        statements
+        Ok(Statement::If { condition, body, else_body })
     }
 
-    fn parse_statement(&mut self) -> Statement {
-        match self.current() {
-            Token::Keyword(k) if k == "if" => {
-                self.next();
-                let condition = self.parse_binary_expr(0);
-                let body = self.parse_block();
-                let else_body = if self.eat(&Token::Keyword("else".to_string())) {
-                    if self.eat(&Token::Keyword("if".to_string())) {
-                        let condition = self.parse_binary_expr(0);
-                        let body = self.parse_block();
-                        let else_body = if self.eat(&Token::Keyword("else".to_string())) {
-                            Some(self.parse_block())
-                        } else {
-                            None
-                        };
-                        Some(vec![Statement::If { condition, body, else_body }])
-                    } else {
-                        let body = self.parse_block();
-                        Some(body)
-                    }
+    fn parse_while(&mut self) -> Result<Statement, String> {
+        self.advance();
+        let condition = self.parse_binary(0)?;
+        let body = self.parse_block()?;
+        Ok(Statement::While { condition, body })
+    }
+
+    fn parse_repeat(&mut self) -> Result<Statement, String> {
+        self.advance();
+        let times = self.parse_binary(0)?;
+        let body = self.parse_block()?;
+        Ok(Statement::Repeat { times, body })
+    }
+
+    fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
+        match self.peek() {
+            Some(Token::Identifier(id)) => {
+                let name = id.clone();
+                self.advance();
+                if self.eat(&Token::Operator("=".to_string())) {
+                    let value = self.parse_binary(0)?;
+                    Ok(Statement::Assignment {
+                        is_global: false,
+                        identifier: name,
+                        value,
+                    })
+                } else if let Some(Token::Operator(op)) = self.eat_any(
+                &[
+                    Token::Operator("+=".to_string()),
+                    Token::Operator("-=".to_string()),
+                    Token::Operator("*=".to_string()),
+                    Token::Operator("/=".to_string()),
+                ]) {
+                    let real_op = op[0..1].to_string(); // extract +, -, *, /
+                    self.advance();
+                    let right = self.parse_binary(0)?;
+                    let left_expr = Expression::Identifier(name.clone());
+                    let combined_expr = Expression::Binary {
+                        left: Box::new(left_expr),
+                        operator: real_op,
+                        right: Box::new(right),
+                    };
+                    Ok(Statement::Assignment {
+                        is_global: false,
+                        identifier: name,
+                        value: combined_expr,
+                    })
                 } else {
-                    None
-                };
-                Statement::If { condition, body, else_body }
-            }
-            Token::Keyword(k) if k == "while" => {
-                self.next();
-                let condition = self.parse_binary_expr(0);
-                let body = self.parse_block();
-                Statement::While { condition, body }
-            }
-            Token::Keyword(k) if k == "repeat" => {
-                self.next();
-                let times = self.parse_binary_expr(0);
-                let body = self.parse_block();
-                Statement::Repeat { times, body }
-            }
-            Token::Keyword(k) if k == "setup" => {
-                self.next();
-                let body = self.parse_block();
-                Statement::Setup { body }
-            }
-            Token::Keyword(k) if k == "update" => {
-                self.next();
-                let body = self.parse_block();
-                Statement::Update { body }
-            }
-            Token::Keyword(k) if k == "global" => {
-                self.next();
-                let name = if let Token::Identifier(name) = self.current() {
-                    name.clone()
-                } else {
-                    panic!("Expected identifier after 'global'");
-                };
-                self.next();
-                if let Token::Operator(op) = self.current() {
-                    match op.as_str() {
-                        "=" => {
-                            self.next();
-                            let value = self.parse_binary_expr(0);
-                            Statement::Assignment {
-                                is_global: true,
-                                identifier: name,
-                                value,
-                            }
-                        }
-                        "+=" | "-=" | "*=" | "/=" => {
-                            let real_op = op[0..1].to_string(); // extract +, -, *, /
-                            self.next();
-                            let right = self.parse_binary_expr(0);
-                            let left_expr = Expression::Identifier(name.clone());
-                            let combined_expr = Expression::Binary {
-                                left: Box::new(left_expr),
-                                operator: real_op,
-                                right: Box::new(right),
-                            };
-                            Statement::Assignment {
-                                is_global: true,
-                                identifier: name,
-                                value: combined_expr,
-                            }
-                        }
-                        _ => {
-                            panic!("Unexpected operator after 'global {}': {}", name, op);
-                        }
-                    }
-                } else {
-                    panic!("Expected '=' after 'global'");
-                }
-            }
-            Token::Identifier(name) => {
-                let name = name.clone();
-                self.next();
-                if let Token::Operator(op) = self.current() {
-                    match op.as_str() {
-                        "=" => {
-                            self.next();
-                            let value = self.parse_binary_expr(0);
-                            Statement::Assignment {
-                                is_global: false,
-                                identifier: name,
-                                value,
-                            }
-                        }
-                        "+=" | "-=" | "*=" | "/=" => {
-                            let real_op = op[0..1].to_string(); // extract +, -, *, /
-                            self.next();
-                            let right = self.parse_binary_expr(0);
-                            let left_expr = Expression::Identifier(name.clone());
-                            let combined_expr = Expression::Binary {
-                                left: Box::new(left_expr),
-                                operator: real_op,
-                                right: Box::new(right),
-                            };
-                            Statement::Assignment {
-                                is_global: false,
-                                identifier: name,
-                                value: combined_expr,
-                            }
-                        }
-                        _ => {
-                            // Statement::Call(Expression::Identifier(name))
-                            let mut args = vec![];
-                            if self.eat(&Token::Symbol("(".to_string())) {
-                                while self.current() != &Token::Symbol(")".to_string()) {
-                                    if let Token::Newline = self.current() {
-                                        self.next();
-                                        continue;
-                                    }
-                                    let arg = self.parse_binary_expr(0);
-                                    args.push(arg);
-                                    if !self.eat(&Token::Symbol(",".to_string())) {
-                                        break;
-                                    }
-                                }
-                                if !self.eat(&Token::Symbol(")".to_string())) {
-                                    panic!("Expected ')' after function call");
-                                }
-                            }
-                            Statement::Call(Expression::Call {
-                                function: name,
-                                args,
-                            })
-                        }
-                    }
-                } else {
-                    // Statement::Call(Expression::Identifier(name))
+                    // Function call
                     let mut args = vec![];
                     if self.eat(&Token::Symbol("(".to_string())) {
-                        while self.current() != &Token::Symbol(")".to_string()) {
-                            if let Token::Newline = self.current() {
-                                self.next();
+                        while self.peek() != Some(&Token::Symbol(")".to_string())) {
+                            if self.eat(&Token::Newline) {
                                 continue;
                             }
-                            let arg = self.parse_binary_expr(0);
+                            let arg = self.parse_binary(0)?;
                             args.push(arg);
                             if !self.eat(&Token::Symbol(",".to_string())) {
                                 break;
                             }
                         }
                         if !self.eat(&Token::Symbol(")".to_string())) {
-                            panic!("Expected ')' after function call");
+                            return Err("Expected ')' after function call".to_string());
                         }
                     }
-                    Statement::Call(Expression::Call {
-                        function: name,
-                        args,
-                    })
+                    Ok(Statement::Call(Expression::Call { function: name, args }))
                 }
             }
-            _ => panic!("Unexpected token in statement: {:?} at {}", self.current(), self.current),
-        }
-    }
-
-    pub fn parse(&mut self) -> Vec<Statement> {
-        let mut statements = vec![];
-
-        while self.current() != &Token::EOF {
-            if let Token::Newline = self.current() {
-                self.next();
-                continue;
+            Some(Token::Keyword(val)) if val == "global" => {
+                self.advance();
+                if let Some(Token::Identifier(id)) = self.peek() {
+                    let name = id.clone();
+                    self.advance();
+                    if self.eat(&Token::Operator("=".to_string())) {
+                        let value = self.parse_binary(0)?;
+                        Ok(Statement::Assignment {
+                            is_global: true,
+                            identifier: name,
+                            value,
+                        })
+                    } else if self.eat(&Token::Operator("+=".to_string())) {
+                        let right = self.parse_binary(0)?;
+                        let left_expr = Expression::Identifier(name.clone());
+                        let combined_expr = Expression::Binary {
+                            left: Box::new(left_expr),
+                            operator: "+".to_string(),
+                            right: Box::new(right),
+                        };
+                        Ok(Statement::Assignment {
+                            is_global: true,
+                            identifier: name,
+                            value: combined_expr,
+                        })
+                    } else {
+                        Err(format!("Expected '=' or '+=' after 'global {}'", name))
+                    }
+                } else {
+                    Err("Expected identifier after 'global'".to_string())
+                }
             }
-            let statement = self.parse_statement();
-            statements.push(statement);
+            _ => Err(format!("Unexpected token in assignment or call: {:?}", self.peek())),
         }
-
-        statements
     }
 }
+
+// pub struct Parser {
+//     tokens: Vec<Token>,
+//     current: usize,
+// }
+
+// impl Parser {
+//     pub fn new(tokens: Vec<Token>) -> Self {
+//         Self {
+//             tokens,
+//             current: 0,
+//         }
+//     }
+
+//     fn current(&self) -> &Token {
+//         &self.tokens[self.current]
+//     }
+
+//     fn next(&mut self) {
+//         if self.current < self.tokens.len() {
+//             self.current += 1;
+//         }
+//     }
+
+//     fn eat(&mut self, token_type: &Token) -> bool {
+//         if self.current() == token_type {
+//             self.next();
+//             return true;
+//         }
+//         false
+//     }
+    
+//     fn precedence(op: &str) -> u8 {
+//         match op {
+//             "*" | "/" | "%" => 6,
+//             "+" | "-" => 5,
+//             "==" | "!=" | "<" | ">" | "<=" | ">=" => 4,
+//             "!" => 3,
+//             "&&" | "||" => 2,
+//             "=" => 1,
+//             _ => 0,
+//         }
+//     }
+
+//     fn parse_expr(&mut self) -> Expression {
+//         let mut expr = self.parse_primary();
+
+//         loop {
+//             match self.current() {
+//                 Token::Symbol(s) if s == "(" => {
+//                     self.next();
+//                     let mut args = vec![];
+//                     if self.current() != &Token::Symbol(")".to_string()) {
+//                         loop {
+//                             args.push(self.parse_expr());
+//                             if self.current() == &Token::Symbol(",".to_string()) {
+//                                 self.next();
+//                             } else {
+//                                 break;
+//                             }
+//                         }
+//                     }
+//                     if !self.eat(&Token::Symbol(")".to_string())) {
+//                         panic!("Expected ')'");
+//                     }
+
+//                     expr = Expression::Call {
+//                         function: expr.to_string(),
+//                         args,
+//                     };
+//                 }
+//                 _ => break,
+//             }
+//         }
+
+//         expr
+//     }
+
+//     fn parse_binary_expr(&mut self, min_prec: u8) -> Expression {
+//         let mut left = self.parse_expr();
+
+//         while let Token::Operator(op) = self.current() {
+//             let prec = Parser::precedence(op);
+//             if prec < min_prec {
+//                 break;
+//             }
+
+//             let op = op.clone();
+//             self.next();
+
+//             let right = self.parse_binary_expr(prec + 1);
+
+//             left = Expression::Binary {
+//                 left: Box::new(left),
+//                 operator: op,
+//                 right: Box::new(right),
+//             };
+//         }
+
+//         left
+//     }
+
+//     fn parse_primary(&mut self) -> Expression {
+//         match self.current() {
+//             Token::Value(v) => {
+//                 let v = v.clone();
+//                 self.next();
+//                 Expression::Value(v)
+//             }
+//             Token::Identifier(name) => {
+//                 let name = name.clone();
+//                 self.next();
+//                 Expression::Identifier(name)
+//             }
+//             Token::Operator(s) if s == "-" => {
+//                 self.next();
+//                 let operand = self.parse_primary();
+//                 Expression::Unary {
+//                     operator: "-".to_string(),
+//                     operand: Box::new(operand),
+//                 }
+//             }
+//             Token::Operator(s) if s == "!" => {
+//                 self.next();
+//                 let operand = self.parse_primary();
+//                 Expression::Unary {
+//                     operator: "!".to_string(),
+//                     operand: Box::new(operand),
+//                 }
+//             }
+//             Token::Symbol(s) if s == "." => {
+//                 self.next();
+//                 let operand = self.parse_primary();
+//                 Expression::Unary {
+//                     operator: ".".to_string(),
+//                     operand: Box::new(operand),
+//                 }
+//             }
+//             Token::Symbol(s) if s == "(" => {
+//                 self.next();
+//                 let expr = self.parse_binary_expr(0);
+//                 if let Token::Symbol(s) = self.current() {
+//                     if s == ")" {
+//                         self.next();
+//                         expr
+//                     } else {
+//                         panic!("Expected ')'");
+//                     }
+//                 } else {
+//                     panic!("Expected ')'");
+//                 }
+//             }
+//             _ => {
+//                 panic!("Unexpected token in expression: {:?}", self.current());
+//             }
+//         }
+//     }
+
+//     fn parse_block(&mut self) -> Vec<Statement> {
+//         let mut statements = vec![];
+
+//         if !self.eat(&Token::Symbol("{".to_string())) {
+//             panic!("Expected '{{' at the start of block");
+//         }
+
+//         while self.current() != &Token::Symbol("}".to_string()) {
+//             if let Token::Newline = self.current() {
+//                 self.next();
+//                 continue;
+//             }
+//             let statement = self.parse_statement();
+//             statements.push(statement);
+//         }
+
+//         if !self.eat(&Token::Symbol("}".to_string())) {
+//             panic!("Expected '}}' at the end of block");
+//         }
+
+//         statements
+//     }
+
+//     fn parse_statement(&mut self) -> Statement {
+//         match self.current() {
+//             Token::Keyword(k) if k == "if" => {
+//                 self.next();
+//                 let condition = self.parse_binary_expr(0);
+//                 let body = self.parse_block();
+//                 let else_body = if self.eat(&Token::Keyword("else".to_string())) {
+//                     if self.eat(&Token::Keyword("if".to_string())) {
+//                         let condition = self.parse_binary_expr(0);
+//                         let body = self.parse_block();
+//                         let else_body = if self.eat(&Token::Keyword("else".to_string())) {
+//                             Some(self.parse_block())
+//                         } else {
+//                             None
+//                         };
+//                         Some(vec![Statement::If { condition, body, else_body }])
+//                     } else {
+//                         let body = self.parse_block();
+//                         Some(body)
+//                     }
+//                 } else {
+//                     None
+//                 };
+//                 Statement::If { condition, body, else_body }
+//             }
+//             Token::Keyword(k) if k == "while" => {
+//                 self.next();
+//                 let condition = self.parse_binary_expr(0);
+//                 let body = self.parse_block();
+//                 Statement::While { condition, body }
+//             }
+//             Token::Keyword(k) if k == "repeat" => {
+//                 self.next();
+//                 let times = self.parse_binary_expr(0);
+//                 let body = self.parse_block();
+//                 Statement::Repeat { times, body }
+//             }
+//             Token::Keyword(k) if k == "setup" => {
+//                 self.next();
+//                 let body = self.parse_block();
+//                 Statement::Setup { body }
+//             }
+//             Token::Keyword(k) if k == "update" => {
+//                 self.next();
+//                 let body = self.parse_block();
+//                 Statement::Update { body }
+//             }
+//             Token::Keyword(k) if k == "global" => {
+//                 self.next();
+//                 let name = if let Token::Identifier(name) = self.current() {
+//                     name.clone()
+//                 } else {
+//                     panic!("Expected identifier after 'global'");
+//                 };
+//                 self.next();
+//                 if let Token::Operator(op) = self.current() {
+//                     match op.as_str() {
+//                         "=" => {
+//                             self.next();
+//                             let value = self.parse_binary_expr(0);
+//                             Statement::Assignment {
+//                                 is_global: true,
+//                                 identifier: name,
+//                                 value,
+//                             }
+//                         }
+//                         "+=" | "-=" | "*=" | "/=" => {
+//                             let real_op = op[0..1].to_string(); // extract +, -, *, /
+//                             self.next();
+//                             let right = self.parse_binary_expr(0);
+//                             let left_expr = Expression::Identifier(name.clone());
+//                             let combined_expr = Expression::Binary {
+//                                 left: Box::new(left_expr),
+//                                 operator: real_op,
+//                                 right: Box::new(right),
+//                             };
+//                             Statement::Assignment {
+//                                 is_global: true,
+//                                 identifier: name,
+//                                 value: combined_expr,
+//                             }
+//                         }
+//                         _ => {
+//                             panic!("Unexpected operator after 'global {}': {}", name, op);
+//                         }
+//                     }
+//                 } else {
+//                     panic!("Expected '=' after 'global'");
+//                 }
+//             }
+//             Token::Identifier(name) => {
+//                 let name = name.clone();
+//                 self.next();
+//                 if let Token::Operator(op) = self.current() {
+//                     match op.as_str() {
+//                         "=" => {
+//                             self.next();
+//                             let value = self.parse_binary_expr(0);
+//                             Statement::Assignment {
+//                                 is_global: false,
+//                                 identifier: name,
+//                                 value,
+//                             }
+//                         }
+//                         "+=" | "-=" | "*=" | "/=" => {
+//                             let real_op = op[0..1].to_string(); // extract +, -, *, /
+//                             self.next();
+//                             let right = self.parse_binary_expr(0);
+//                             let left_expr = Expression::Identifier(name.clone());
+//                             let combined_expr = Expression::Binary {
+//                                 left: Box::new(left_expr),
+//                                 operator: real_op,
+//                                 right: Box::new(right),
+//                             };
+//                             Statement::Assignment {
+//                                 is_global: false,
+//                                 identifier: name,
+//                                 value: combined_expr,
+//                             }
+//                         }
+//                         _ => {
+//                             // Statement::Call(Expression::Identifier(name))
+//                             let mut args = vec![];
+//                             if self.eat(&Token::Symbol("(".to_string())) {
+//                                 while self.current() != &Token::Symbol(")".to_string()) {
+//                                     if let Token::Newline = self.current() {
+//                                         self.next();
+//                                         continue;
+//                                     }
+//                                     let arg = self.parse_binary_expr(0);
+//                                     args.push(arg);
+//                                     if !self.eat(&Token::Symbol(",".to_string())) {
+//                                         break;
+//                                     }
+//                                 }
+//                                 if !self.eat(&Token::Symbol(")".to_string())) {
+//                                     panic!("Expected ')' after function call");
+//                                 }
+//                             }
+//                             Statement::Call(Expression::Call {
+//                                 function: name,
+//                                 args,
+//                             })
+//                         }
+//                     }
+//                 } else {
+//                     // Statement::Call(Expression::Identifier(name))
+//                     let mut args = vec![];
+//                     if self.eat(&Token::Symbol("(".to_string())) {
+//                         while self.current() != &Token::Symbol(")".to_string()) {
+//                             if let Token::Newline = self.current() {
+//                                 self.next();
+//                                 continue;
+//                             }
+//                             let arg = self.parse_binary_expr(0);
+//                             args.push(arg);
+//                             if !self.eat(&Token::Symbol(",".to_string())) {
+//                                 break;
+//                             }
+//                         }
+//                         if !self.eat(&Token::Symbol(")".to_string())) {
+//                             panic!("Expected ')' after function call");
+//                         }
+//                     }
+//                     Statement::Call(Expression::Call {
+//                         function: name,
+//                         args,
+//                     })
+//                 }
+//             }
+//             _ => panic!("Unexpected token in statement: {:?} at {}", self.current(), self.current),
+//         }
+//     }
+
+//     pub fn parse(&mut self) -> Vec<Statement> {
+//         let mut statements = vec![];
+
+//         while self.current() != &Token::EOF {
+//             if let Token::Newline = self.current() {
+//                 self.next();
+//                 continue;
+//             }
+//             let statement = self.parse_statement();
+//             statements.push(statement);
+//         }
+
+//         statements
+//     }
+// }
