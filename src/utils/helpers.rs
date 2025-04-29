@@ -118,8 +118,8 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                         Value::Boolean(false)
                     }
                 }
-                "mouse_x" => Value::Number(mouse_position().0),
-                "mouse_y" => Value::Number(mouse_position().1),
+                "mouse_x" => Value::Number(mouse_position().0 * 2.0 - screen_width()),
+                "mouse_y" => Value::Number(mouse_position().1 * 2.0 - screen_height()),
                 "is_broadcasted" => {
                     if let [Value::String(broadcast)] = args.as_slice() {
                         Value::Boolean(project.broadcasted_message.is_some() && project.broadcasted_message.as_ref().unwrap() == broadcast)
