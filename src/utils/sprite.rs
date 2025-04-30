@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 use std::f32::consts::PI;
+use std::io::Write;
+use std::path::Path;
+use std::fs::File;
 
 use macroquad::prelude::*;
 use macroquad::audio::*;
@@ -162,8 +165,10 @@ impl Sprite {
         }
     }
 
-    pub fn variable(&self, name: &str) -> Value {
+    pub fn variable(&self, name: &str, project: &Project) -> Value {
         if let Some(var) = self.variables.get(name) {
+            var.clone()
+        } else if let Some(var) = project.global_variables.get(name) {
             var.clone()
         } else {
             println!("Variable '{}' not found", name);
@@ -715,6 +720,39 @@ impl Sprite {
                                 }
                             } else {
                                 println!("Invalid arguments for set_window_state");
+                            }
+                        }
+                        "export" => {
+                            match args.as_slice() {
+                                [Value::String(content)] => {
+                                    let time = chrono::Local::now();
+                                    let filename = format!("{}-{}.png", self.name, time.format("%Y-%m-%d_%H-%M-%S"));
+                                    let path = Path::new(&project.export_path).join(filename);
+                                    let mut file = File::create(path).unwrap();
+                                    file.write_all(content.as_bytes()).unwrap();
+                                }
+                                [Value::String(content), Value::String(path)] => {
+                                    let path = Path::new(path);
+                                    let mut file = File::create(path).unwrap();
+                                    file.write_all(content.as_bytes()).unwrap();
+                                }
+                                _ => {
+                                    println!("Invalid arguments for export_to");
+                                }
+                            }
+                        }
+                        "screenshot" => {
+                            match args.as_slice() {
+                                [Value::String(path)] => {
+                                    let screenshot = get_screen_data();
+                                    screenshot.export_png(&path);
+                                }
+                                _ => {
+                                    let time = chrono::Local::now();
+                                    let path = format!("{}-{}.png", self.name, time.format("%Y-%m-%d_%H-%M-%S"));
+                                    let screenshot = get_screen_data();
+                                    screenshot.export_png(&path);
+                                }
                             }
                         }
                         _ => {

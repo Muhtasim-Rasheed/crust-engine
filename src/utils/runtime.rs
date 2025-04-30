@@ -48,14 +48,12 @@ impl Runtime {
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
 
-        let mut project = Project::new();
+        let mut project = Project::new(dir.join("export").to_string_lossy().to_string());
         for sprite in config.sprites {
             let mut textures = vec![];
             for path in sprite.costumes {
                 let path = dir.join(path);
-                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or_else(|_| {
-                    panic!("Failed to load texture: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
-                });
+                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or(load_texture("assets/missing.png").await.unwrap());
                 textures.push(tex);
             }
 
@@ -115,12 +113,13 @@ impl Runtime {
                 sprite.step(&mut self.project, &snapshots, &camera);
             }
 
-            self.project.sprites = sprites;
-            self.project.sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
+            sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
 
-            for sprite in &mut self.project.sprites {
+            for sprite in &mut sprites {
                 sprite.draw();
             }
+
+            self.project.sprites = sprites;
 
             draw_text(format!("FPS: {}", get_fps()).as_str(), -screen_width() + 20.0, -screen_height() + 70.0, 64.0, BLACK);
 

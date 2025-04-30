@@ -1,3 +1,5 @@
+use std::{fs::File, path::Path, io::Read};
+
 use macroquad::prelude::*;
 
 use super::{Expression, Project, Sprite, Value};
@@ -7,7 +9,7 @@ use super::{Expression, Project, Sprite, Value};
 pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite) -> Value {
     match expr {
         Expression::Value(v) => v.clone(),
-        Expression::Identifier(id) => sprite.variable(id).clone(),
+        Expression::Identifier(id) => sprite.variable(id, project).clone(),
         Expression::Binary { left, right, operator } => {
             let left_value = resolve_expression(left, project, sprite);
             let right_value = resolve_expression(right, project, sprite);
@@ -62,6 +64,39 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "lerp" => {
                     if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args.as_slice() {
                         Value::Number(lerp(*a, *b, *t))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "random" => {
+                    if let [Value::Number(min), Value::Number(max)] = args.as_slice() {
+                        Value::Number(rand::gen_range(*min, *max))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "distance" => {
+                    if let [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2)] = args.as_slice() {
+                        Value::Number(((x1 - x2).powi(2) + (y1 - y2).powi(2)).sqrt())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "distance_to" => {
+                    if let [Value::Number(x), Value::Number(y)] = args.as_slice() {
+                        Value::Number(((sprite.center.x - x).powi(2) + (sprite.center.y - y).powi(2)).sqrt())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "import" => {
+                    if let [Value::String(path)] = args.as_slice() {
+                        let path = Path::new(&project.export_path).join(path);
+                        let file = File::open(path).expect("Failed to open file");
+                        let mut reader = std::io::BufReader::new(file);
+                        let mut contents = String::new();
+                        reader.read_to_string(&mut contents).expect("Failed to read file");
+                        Value::String(contents)
                     } else {
                         Value::Null
                     }

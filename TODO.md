@@ -12,6 +12,12 @@
 - `acos(num)`
 - `atan(num)`
 - `lerp(a, b, t)`
+- `export(content)`
+- `export(content, path)`
+- `import(content)`
+- `import(content, path)`
+- `screenshot()`
+- `screenshot(path)`
 
 # Motion
 
