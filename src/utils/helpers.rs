@@ -68,6 +68,13 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                         Value::Null
                     }
                 }
+                "clamp" => {
+                    if let [Value::Number(value), Value::Number(min), Value::Number(max)] = args.as_slice() {
+                        Value::Number(clamp(*value, *min, *max))
+                    } else {
+                        Value::Null
+                    }
+                }
                 "random" => {
                     if let [Value::Number(min), Value::Number(max)] = args.as_slice() {
                         Value::Number(rand::gen_range(*min, *max))
