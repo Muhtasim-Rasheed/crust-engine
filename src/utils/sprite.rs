@@ -105,6 +105,7 @@ impl Sprite {
             time_waiting: 0,
             glide: None,
             draw_color: BLACK,
+            edge_bounce: false,
         }
     }
 
