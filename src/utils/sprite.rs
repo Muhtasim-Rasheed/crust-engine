@@ -638,15 +638,11 @@ impl Sprite {
                         }
                         "ellipse" => {
                             match args.as_slice() {
-                                [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2)] => {
-                                    let w = x2 - x1;
-                                    let h = y2 - y1;
-                                    draw_ellipse(*x1, *y1, w, h, 0.0, self.draw_color);
+                                [Value::Number(x1), Value::Number(y1), Value::Number(w), Value::Number(h)] => {
+                                    draw_ellipse(*x1, -*y1, *w, *h, 0.0, self.draw_color);
                                 }
-                                [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2), Value::Number(rotation)] => {
-                                    let w = x2 - x1;
-                                    let h = y2 - y1;
-                                    draw_ellipse(*x1, *y1, w, h, *rotation, self.draw_color);
+                                [Value::Number(x1), Value::Number(y1), Value::Number(w), Value::Number(h), Value::Number(rotation)] => {
+                                    draw_ellipse(*x1, -*y1, *w, *h, *rotation, self.draw_color);
                                 }
                                 _ => {
                                     println!("Invalid arguments for ellipse");
@@ -655,15 +651,11 @@ impl Sprite {
                         }
                         "hellipse" => {
                             match args.as_slice() {
-                                [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2), Value::Number(thickness)] => {
-                                    let w = x2 - x1;
-                                    let h = y2 - y1;
-                                    draw_ellipse_lines(*x1, *y1, w, h, 0.0, *thickness, self.draw_color);
+                                [Value::Number(x1), Value::Number(y1), Value::Number(w), Value::Number(h), Value::Number(thickness)] => {
+                                    draw_ellipse_lines(*x1, -*y1, *w, *h, 0.0, *thickness, self.draw_color);
                                 }
-                                [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2), Value::Number(rotation), Value::Number(thickness)] => {
-                                    let w = x2 - x1;
-                                    let h = y2 - y1;
-                                    draw_ellipse_lines(*x1, *y1, w, h, *rotation, *thickness, self.draw_color);
+                                [Value::Number(x1), Value::Number(y1), Value::Number(w), Value::Number(h), Value::Number(rotation), Value::Number(thickness)] => {
+                                    draw_ellipse_lines(*x1, -*y1, *w, *h, *rotation, *thickness, self.draw_color);
                                 }
                                 _ => {
                                     println!("Invalid arguments for hellipse");
