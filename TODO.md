@@ -12,6 +12,7 @@
 - `acos(num)`
 - `atan(num)`
 - `lerp(a, b, t)`
+- `clamp(value, min, max)`
 - `of(index, list)`
 - `random(min, max)`
 - `distance(x1, y1, x2, y2)`
