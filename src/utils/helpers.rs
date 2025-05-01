@@ -19,6 +19,7 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "*" => Value::Number(left_value.to_number() * right_value.to_number()),
                 "/" => Value::Number(left_value.to_number() / right_value.to_number()),
                 "%" => Value::Number(left_value.to_number() % right_value.to_number()),
+                "^" => Value::Number(left_value.to_number().powf(right_value.to_number())),
                 "==" => Value::Boolean(left_value == right_value),
                 "!=" => Value::Boolean(left_value != right_value),
                 "<" => Value::Boolean(left_value.to_number() < right_value.to_number()),
@@ -35,7 +36,6 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
             match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
                 "!" => Value::Boolean(!operand_value.to_boolean()),
-                "." => Value::Number(format!("0.{}", operand_value.to_number() as i64).parse::<f32>().unwrap()),
                 _ => panic!("Unknown operator: {}", operator),
             }
         }
@@ -71,6 +71,17 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "clamp" => {
                     if let [Value::Number(value), Value::Number(min), Value::Number(max)] = args.as_slice() {
                         Value::Number(clamp(*value, *min, *max))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "of" => {
+                    if let [Value::Number(index), Value::List(list)] = args.as_slice() {
+                        if let Some(value) = list.get(*index as usize) {
+                            value.clone()
+                        } else {
+                            Value::Null
+                        }
                     } else {
                         Value::Null
                     }
@@ -165,6 +176,13 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "is_broadcasted" => {
                     if let [Value::String(broadcast)] = args.as_slice() {
                         Value::Boolean(project.broadcasted_message.is_some() && project.broadcasted_message.as_ref().unwrap() == broadcast)
+                    } else {
+                        Value::Null
+                    }
+                }
+                "is_backdrop" => {
+                    if let [Value::Number(backdrop)] = args.as_slice() {
+                        Value::Boolean(project.stage.backdrop() == *backdrop as usize)
                     } else {
                         Value::Null
                     }

@@ -12,6 +12,10 @@
 - `acos(num)`
 - `atan(num)`
 - `lerp(a, b, t)`
+- `of(index, list)`
+- `random(min, max)`
+- `distance(x1, y1, x2, y2)`
+- `distance_to(x, y)`
 - `export(content)`
 - `export(content, path)`
 - `import(content)`
@@ -19,7 +23,7 @@
 - `screenshot()`
 - `screenshot(path)`
 
-# Motion
+# Motion [DONE]
 
 - [x] `move(steps)`
 - [x] `turn_cw(angle)`
@@ -35,7 +39,7 @@
 - [x] `set_x(x)`
 - [x] `change_y(steps)`
 - [x] `set_y(y)`
-- [ ] `edge_bounce()`
+- [x] `edge_bounce(true | false)`
 - [x] `rotation_style()`
 - [x] `direction()`
 - [x] `x()`
@@ -84,7 +88,7 @@
 - [x] `key_pressed(key)`
 - [x] `key_release(key)`
 - [x] `did_get_clicked()`
-- [ ] `backdrop_switch backdrop {}`
+- [x] `is_backdrop(backdrop)`
 - [ ] `when bool {}`
 - [x] `is_broadcasted(broadcast)`
 - [x] `broadcast(broadcast)`
@@ -104,7 +108,7 @@
 - [ ] `clone()`
 - [ ] `destroy_clone()`
 
-# Drawing
+# Drawing [DOME]
 
 - [x] `set_color(r, g, b)`
 - [x] `change_r(increment)`

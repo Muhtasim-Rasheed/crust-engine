@@ -134,13 +134,13 @@ impl Tokenizer {
 
         // Single-char operators
         let one = &self.code[self.pointer..self.pointer + 1];
-        if ["=", "+", "-", "*", "/", "%", "<", ">", "!"].contains(&one) {
+        if ["=", "+", "-", "*", "/", "%", "^", "<", ">", "!"].contains(&one) {
             self.pointer += 1;
             return Some(Token::Operator(one.to_string()));
         }
 
         // Symbols
-        if ["(", ")", "{", "}", ",", "."].contains(&one) {
+        if ["(", ")", "{", "}", ","].contains(&one) {
             self.pointer += 1;
             return Some(Token::Symbol(one.to_string()));
         }
@@ -149,6 +149,12 @@ impl Tokenizer {
         if c.chars().next().unwrap().is_ascii_digit() {
             let number = self.get_number();
             return Some(Token::Value(Value::Number(number.parse().unwrap())));
+        }
+
+        if c.chars().next().unwrap() == '.' {
+            self.pointer += 1;
+            let number = self.get_number();
+            return Some(Token::Value(Value::Number(format!(".{}", number).parse().unwrap())));
         }
 
         // Lists
@@ -385,7 +391,6 @@ impl Parser {
     
     fn precedence(op: &str) -> u8 {
         match op {
-            "." => 7,
             "*" | "/" | "%" => 6,
             "+" | "-" => 5,
             "==" | "!=" | "<" | ">" | "<=" | ">=" => 4,
@@ -452,7 +457,7 @@ impl Parser {
                     Ok(Expression::Identifier(name))
                 }
             }
-            Token::Operator(op) if op == "-" || op == "!" || op == "." => {
+            Token::Operator(op) if op == "-" || op == "!" => {
                 self.advance();
                 let operand = self.parse_primary()?;
                 Ok(Expression::Unary {

@@ -59,6 +59,7 @@ pub struct Sprite {
     pub effects: HashMap<String, f32>,
     pub sound_effects: HashMap<String, f32>,
     pub draw_color: Color,
+    edge_bounce: bool,
     current_costume: usize,
     crawler: usize,
     setup_ast: Vec<Statement>,
@@ -337,6 +338,15 @@ impl Sprite {
                         "change_x" => {
                             if let [Value::Number(step)] = args.as_slice() {
                                 self.center.x += *step;
+                                if self.edge_bounce {
+                                    if self.center.x < -screen_width() / 2.0 {
+                                        self.center.x = -screen_width() / 2.0;
+                                        self.direction = 180.0 - self.direction;
+                                    } else if self.center.x > screen_width() / 2.0 {
+                                        self.center.x = screen_width() / 2.0;
+                                        self.direction = 180.0 - self.direction;
+                                    }
+                                }
                             } else {
                                 println!("Invalid arguments for change_x");
                             }
@@ -351,6 +361,15 @@ impl Sprite {
                         "change_y" => {
                             if let [Value::Number(step)] = args.as_slice() {
                                 self.center.y += *step;
+                                if self.edge_bounce {
+                                    if self.center.y < -screen_height() / 2.0 {
+                                        self.center.y = -screen_height() / 2.0;
+                                        self.direction = -self.direction;
+                                    } else if self.center.y > screen_height() / 2.0 {
+                                        self.center.y = screen_height() / 2.0;
+                                        self.direction = -self.direction;
+                                    }
+                                }
                             } else {
                                 println!("Invalid arguments for change_y");
                             }
@@ -360,6 +379,13 @@ impl Sprite {
                                 self.center.y = *y;
                             } else {
                                 println!("Invalid arguments for set_y");
+                            }
+                        }
+                        "edge_bounce" => {
+                            if let [Value::Boolean(bounce)] = args.as_slice() {
+                                self.edge_bounce = *bounce;
+                            } else {
+                                println!("Invalid arguments for edge_bounce");
                             }
                         }
                         "rotation_style" => {
