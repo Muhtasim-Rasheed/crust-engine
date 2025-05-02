@@ -173,11 +173,13 @@ impl Sprite {
         }
     }
 
-    pub fn variable(&self, name: &str, project: &Project) -> Value {
+    pub fn variable(&self, name: &str, project: &Project, local_vars: &[(String, Value)]) -> Value {
         if let Some(var) = self.variables.get(name) {
             var.clone()
         } else if let Some(var) = project.global_variables.get(name) {
             var.clone()
+        } else if let Some(var) = local_vars.iter().find(|(n, _)| n == name) {
+            var.1.clone()
         } else {
             match name {
                 "PI" => Value::Number(PI),
@@ -190,10 +192,10 @@ impl Sprite {
         }
     }
 
-    fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
+    fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D, local_vars: &[(String, Value)]) {
         match statement {
             Statement::Assignment { is_global, identifier, value } => {
-                let value = super::resolve_expression(value, project, self);
+                let value = super::resolve_expression(value, project, self, local_vars);
                 if *is_global {
                     project.global_variables.insert(identifier.clone(), value);
                 } else {
@@ -205,30 +207,30 @@ impl Sprite {
                 }
             }
             Statement::If { condition, body, else_body } => {
-                let condition_value = super::resolve_expression(condition, project, self);
+                let condition_value = super::resolve_expression(condition, project, self, local_vars);
                 if condition_value.to_boolean() {
                     for statement in body {
-                        self.execute_statement(statement, project, snapshots, camera);
+                        self.execute_statement(statement, project, snapshots, camera, local_vars);
                     }
                 } else if let Some(else_body) = else_body {
                     for statement in else_body {
-                        self.execute_statement(statement, project, snapshots, camera);
+                        self.execute_statement(statement, project, snapshots, camera, local_vars);
                     }
                 }
             }
             Statement::While { condition, body } => {
-                while super::resolve_expression(condition, project, self).to_boolean() {
+                while super::resolve_expression(condition, project, self, local_vars).to_boolean() {
                     for statement in body {
-                        self.execute_statement(statement, project, snapshots, camera);
+                        self.execute_statement(statement, project, snapshots, camera, local_vars);
                     }
                 }
             }
             Statement::Repeat { times, body } => {
-                let times_value = super::resolve_expression(times, project, self);
+                let times_value = super::resolve_expression(times, project, self, local_vars);
                 if let Value::Number(times) = times_value {
                     for _ in 0..times as usize {
                         for statement in body {
-                            self.execute_statement(statement, project, snapshots, camera);
+                            self.execute_statement(statement, project, snapshots, camera, local_vars);
                         }
                     }
                 } else {
@@ -239,7 +241,7 @@ impl Sprite {
                 if let Expression::Call { function, args } = c {
                     let args = args
                         .iter()
-                        .map(|arg| super::resolve_expression(arg, project, self))
+                        .map(|arg| super::resolve_expression(arg, project, self, local_vars))
                         .collect::<Vec<_>>();
                     match function.as_str() {
                         // ============= MISC ============= \\
@@ -789,16 +791,17 @@ impl Sprite {
                         _ => {
                             if let Some((args_, body)) = self.functions.clone().get(function) {
                                 if args_.len() == args.len() {
-                                    let mut local_vars: Vec<(String, Value)> = vec![];
+                                    let mut local_vars_: Vec<(String, Value)> = vec![];
                                     for (i, arg) in args_.iter().enumerate() {
                                         if let Some(arg_value) = args.get(i) {
-                                            local_vars.push((arg.clone(), arg_value.clone()));
+                                            local_vars_.push((arg.clone(), arg_value.clone()));
                                         } else {
                                             println!("Missing argument for function '{}'", function);
                                         }
                                     }
+                                    local_vars_.append(&mut local_vars.to_vec());
                                     for statement in body {
-                                        self.execute_statement(statement, project, snapshots, camera);
+                                        self.execute_statement(statement, project, snapshots, camera, &local_vars_);
                                     }
                                 } else {
                                     println!("Invalid number of arguments for function '{}'", function);
@@ -836,14 +839,14 @@ impl Sprite {
         
         if !self.setup_finished {
             while self.crawler < self.setup_ast.len() {
-                self.execute_statement(&self.setup_ast[self.crawler].clone(), project, snapshots, camera);
+                self.execute_statement(&self.setup_ast[self.crawler].clone(), project, snapshots, camera, &vec![]);
                 self.crawler += 1;
             }
             self.setup_finished = true;
             self.crawler = 0;
         } else {
             while self.crawler < self.update_ast.len() {
-                self.execute_statement(&self.update_ast[self.crawler].clone(), project, snapshots, camera);
+                self.execute_statement(&self.update_ast[self.crawler].clone(), project, snapshots, camera, &vec![]);
                 self.crawler += 1;
             }
             self.crawler = 0;
