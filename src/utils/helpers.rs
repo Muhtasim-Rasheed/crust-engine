@@ -40,7 +40,6 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
             }
         }
         Expression::Call { function, args } => {
-            // let sprite = project.get_sprite(&sprite).unwrap().clone();
             let args = args.iter()
                 .map(|arg| resolve_expression(arg, project, sprite))
                 .collect::<Vec<_>>();
@@ -64,6 +63,20 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite)
                 "lerp" => {
                     if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args.as_slice() {
                         Value::Number(lerp(*a, *b, *t))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "to_rad" => {
+                    if let [Value::Number(deg)] = args.as_slice() {
+                        Value::Number(deg.to_radians())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "to_deg" => {
+                    if let [Value::Number(rad)] = args.as_slice() {
+                        Value::Number(rad.to_degrees())
                     } else {
                         Value::Null
                     }
@@ -305,6 +318,13 @@ fn string_to_keycode(s: &str) -> Option<KeyCode> {
         "7" => Some(Key7),
         "8" => Some(Key8),
         "9" => Some(Key9),
+
+        "lctrl" => Some(LeftControl),
+        "rctrl" => Some(RightControl),
+        "lshift" => Some(LeftShift),
+        "rshift" => Some(RightShift),
+        "lalt" => Some(LeftAlt),
+        "ralt" => Some(RightAlt),
 
         "left" => Some(Left),
         "right" => Some(Right),

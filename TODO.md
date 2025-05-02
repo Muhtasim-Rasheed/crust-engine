@@ -12,6 +12,8 @@
 - `acos(num)`
 - `atan(num)`
 - `lerp(a, b, t)`
+- `to_rad(deg)`
+- `to_deg(rad)`
 - `clamp(value, min, max)`
 - `of(index, list)`
 - `random(min, max)`
