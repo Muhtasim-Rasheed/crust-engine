@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use std::f32::consts::PI;
+use std::f32::consts::*;
+use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use std::fs::File;
 
-use macroquad::prelude::*;
 use macroquad::audio::*;
+use macroquad::prelude::*;
 
 use super::{Expression, Project, Statement, Value};
 
@@ -64,6 +64,7 @@ pub struct Sprite {
     crawler: usize,
     setup_ast: Vec<Statement>,
     update_ast: Vec<Statement>,
+    functions: HashMap<String, (Vec<String>, Vec<Statement>)>,
     setup_finished: bool,
     time_waiting: u32,
     glide: Option<Glide>,
@@ -73,6 +74,7 @@ impl Sprite {
     pub fn new(name: String, costumes: Vec<Texture2D>, sounds: HashMap<String, Sound>, ast: Vec<Statement>, w: f32, h: f32, x: f32, y: f32) -> Self {
         let mut setup_ast = vec![];
         let mut update_ast = vec![];
+        let mut functions = HashMap::new();
         for statement in ast {
             match statement {
                 Statement::Setup { body } => {
@@ -80,6 +82,9 @@ impl Sprite {
                 }
                 Statement::Update { body } => {
                     update_ast = body;
+                }
+                Statement::FunctionDefinition { name, args, body } => {
+                    functions.insert(name.clone(), (args.clone(), body));
                 }
                 _ => {}
             }
@@ -89,6 +94,7 @@ impl Sprite {
             crawler: 0,
             setup_ast,
             update_ast,
+            functions,
             setup_finished: false,
             costumes,
             center: vec2(x, y),
@@ -173,8 +179,14 @@ impl Sprite {
         } else if let Some(var) = project.global_variables.get(name) {
             var.clone()
         } else {
-            println!("Variable '{}' not found", name);
-            Value::Null
+            match name {
+                "PI" => Value::Number(PI),
+                "E" => Value::Number(E),
+                _ => {
+                    println!("Variable '{}' not found", name);
+                    Value::Null
+                }
+            }
         }
     }
 
@@ -775,7 +787,25 @@ impl Sprite {
                             }
                         }
                         _ => {
-                            println!("Unknown function: {}", function);
+                            if let Some((args_, body)) = self.functions.clone().get(function) {
+                                if args_.len() == args.len() {
+                                    let mut local_vars: Vec<(String, Value)> = vec![];
+                                    for (i, arg) in args_.iter().enumerate() {
+                                        if let Some(arg_value) = args.get(i) {
+                                            local_vars.push((arg.clone(), arg_value.clone()));
+                                        } else {
+                                            println!("Missing argument for function '{}'", function);
+                                        }
+                                    }
+                                    for statement in body {
+                                        self.execute_statement(statement, project, snapshots, camera);
+                                    }
+                                } else {
+                                    println!("Invalid number of arguments for function '{}'", function);
+                                }
+                            } else {
+                                println!("Unknown function: {}", function);
+                            }
                         }
                     }
                 }

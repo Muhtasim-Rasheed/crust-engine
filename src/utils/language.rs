@@ -73,7 +73,7 @@ impl Tokenizer {
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
             "if", "else", "while", "repeat", "global",
-            "setup", "update",
+            "setup", "update", "fn",
         ];
 
         if self.pointer >= self.code.len() {
@@ -273,6 +273,11 @@ pub enum Statement {
         body: Vec<Statement>,
     },
     Call(Expression),
+    FunctionDefinition {
+        name: String,
+        args: Vec<String>,
+        body: Vec<Statement>,
+    },
 }
 
 impl std::fmt::Debug for Statement {
@@ -285,6 +290,7 @@ impl std::fmt::Debug for Statement {
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
+            Statement::FunctionDefinition { name, args, body } => write!(f, "FUNCTION[{}({:?})] {{ {:?} }}", name, args, body),
         }
     }
 }
@@ -362,6 +368,7 @@ impl Parser {
                 let body = self.parse_block()?;
                 Ok(Statement::Update { body })
             }
+            Token::Keyword(k) if k == "fn" => self.parse_function_definition(),
             Token::Identifier(_) => self.parse_assignment_or_call(),
             _ => Err(format!("Unexpected token: {:?}", self.peek())),
         }
@@ -508,6 +515,39 @@ impl Parser {
         let times = self.parse_binary(0)?;
         let body = self.parse_block()?;
         Ok(Statement::Repeat { times, body })
+    }
+
+    fn parse_function_definition(&mut self) -> Result<Statement, String> {
+        self.advance();
+        if let Some(Token::Identifier(id)) = self.peek() {
+            let name = id.clone();
+            self.advance();
+            if !self.eat(&Token::Symbol("(".to_string())) {
+                return Err("Expected '(' after function name".to_string());
+            }
+            let mut args = vec![];
+            while self.peek() != Some(&Token::Symbol(")".to_string())) {
+                if self.eat(&Token::Newline) {
+                    continue;
+                }
+                if let Some(Token::Identifier(arg)) = self.peek() {
+                    args.push(arg.clone());
+                    self.advance();
+                } else {
+                    return Err("Expected identifier in function arguments".to_string());
+                }
+                if !self.eat(&Token::Symbol(",".to_string())) {
+                    break;
+                }
+            }
+            if !self.eat(&Token::Symbol(")".to_string())) {
+                return Err("Expected ')' after function arguments".to_string());
+            }
+            let body = self.parse_block()?;
+            Ok(Statement::FunctionDefinition { name, args, body })
+        } else {
+            Err("Expected name (identifier) after 'fn'".to_string())
+        }
     }
 
     fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
