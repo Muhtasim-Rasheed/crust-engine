@@ -53,7 +53,7 @@ impl Runtime {
             let mut textures = vec![];
             for path in sprite.costumes {
                 let path = dir.join(path);
-                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or(load_texture("assets/missing.png").await.unwrap());
+                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or(Texture2D::from_file_with_format(include_bytes!("../../assets/missing.png"), None));
                 textures.push(tex);
             }
 
