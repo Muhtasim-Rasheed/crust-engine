@@ -34,12 +34,14 @@ struct SpriteConfig {
 
 #[derive(Deserialize)]
 struct ProjectConfig {
+    debug_options: Vec<String>,
     stage: StageConfig,
     sprites: Vec<SpriteConfig>,
 }
 
 pub struct Runtime {
     pub project: Project,
+    debug_options: Vec<String>,
 }
 
 impl Runtime {
@@ -49,6 +51,13 @@ impl Runtime {
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
 
         let mut project = Project::new(dir.join("export").to_string_lossy().to_string());
+
+        for path in config.stage.backdrops {
+            let path = dir.join(path);
+            let tex = load_texture(&path.to_string_lossy()).await.unwrap();
+            project.stage.backdrops.push(tex);
+        }
+
         for sprite in config.sprites {
             let mut textures = vec![];
             for path in sprite.costumes {
@@ -81,14 +90,9 @@ impl Runtime {
             project.sprites.push(s);
         }
         
-        for path in config.stage.backdrops {
-            let path = dir.join(path);
-            let tex = load_texture(&path.to_string_lossy()).await.unwrap();
-            project.stage.backdrops.push(tex);
-        }
-
         Self {
             project,
+            debug_options: config.debug_options,
         }
     }
 
@@ -120,8 +124,19 @@ impl Runtime {
             }
 
             self.project.sprites = sprites;
+            
+            set_default_camera();
 
-            draw_text(format!("FPS: {}", get_fps()).as_str(), -screen_width() + 20.0, -screen_height() + 70.0, 64.0, BLACK);
+            let mut debugs = HashMap::new();
+            debugs.insert("show_fps", get_fps().to_string());
+            debugs.insert("show_mouse_pos", format!("({}, {})", mouse_position().0, mouse_position().1));
+            let debug_options: Vec<String> = self.debug_options.iter()
+                .filter(|option| debugs.contains_key(option.as_str()))
+                .map(|option| format!("{}: {}", option, debugs[option.as_str()]))
+                .collect();
+            for (i, debug) in debug_options.iter().enumerate() {
+                draw_text(debug, 10.0, 30.0 + (i as f32 * 30.0), 24.0, BLACK);
+            }
 
             next_frame().await;
         }
