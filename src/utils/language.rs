@@ -146,7 +146,7 @@ impl Tokenizer {
         }
 
         // Symbols
-        if ["(", ")", "{", "}", ","].contains(&one) {
+        if ["(", ")", "[", "]", "{", "}", ","].contains(&one) {
             self.pointer += 1;
             return Some(Token::Symbol(one.to_string()));
         }
@@ -161,24 +161,6 @@ impl Tokenizer {
             self.pointer += 1;
             let number = self.get_number();
             return Some(Token::Value(Value::Number(format!(".{}", number).parse().unwrap())));
-        }
-
-        // Lists
-        if c.starts_with('[') {
-            self.pointer += 1;
-            let mut list = vec![];
-            while self.pointer < self.code.len() && !self.code[self.pointer..].starts_with(']') {
-                if let Some(token) = self.tokenize() {
-                    if let Token::Value(v) = token {
-                        list.push(v);
-                    }
-                }
-                if self.pointer < self.code.len() && self.code[self.pointer..].starts_with(',') {
-                    self.pointer += 1;
-                }
-            }
-            self.pointer += 1; // Skip closing ]
-            return Some(Token::Value(Value::List(list)));
         }
 
         // Identifiers or keywords
@@ -211,6 +193,7 @@ impl Tokenizer {
 #[derive(Clone)]
 pub enum Expression {
     Value(Value),
+    List(Vec<Expression>),
     Identifier(String),
     Binary {
         left: Box<Expression>,
@@ -231,6 +214,10 @@ impl Expression {
     pub fn to_string(&self) -> String {
         match self {
             Expression::Value(v) => v.to_string(),
+            Expression::List(l) => {
+                let list_str = l.iter().map(|e| e.to_string()).collect::<Vec<_>>().join(", ");
+                format!("[{}]", list_str)
+            }
             Expression::Identifier(id) => id.clone(),
             Expression::Binary { left, operator, right } => {
                 format!("({} {} {})", left.to_string(), operator, right.to_string())
@@ -439,6 +426,26 @@ impl Parser {
         Ok(left)
     }
 
+    fn parse_list(&mut self) -> Result<Expression, String> {
+        let mut list = vec![];
+        while self.peek() != Some(&Token::Symbol("]".to_string())) {
+            if self.eat(&Token::Newline) {
+                continue;
+            }
+            let expr = self.parse_binary(0)?;
+            list.push(expr);
+            if !self.eat(&Token::Symbol(",".to_string())) {
+                break;
+            }
+        }
+
+        if !self.eat(&Token::Symbol("]".to_string())) {
+            return Err("Expected ']' at the end of list".to_string());
+        }
+
+        Ok(Expression::List(list))
+    }
+
     fn parse_primary(&mut self) -> Result<Expression, String> {
         let peeked = self.peek().unwrap_or(&Token::EOF).clone();
         match peeked {
@@ -486,6 +493,10 @@ impl Parser {
                     return Err("Expected ')'".to_string());
                 }
                 Ok(expr)
+            }
+            Token::Symbol(s) if s == "[" => {
+                self.advance();
+                Ok(self.parse_list()?)
             }
             _ => Err(format!("Unexpected token in expression: {:?}", self.peek())),
         }

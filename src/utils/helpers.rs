@@ -9,6 +9,13 @@ use super::{Expression, Project, Sprite, SpriteSnapshot, Value};
 pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut Sprite, local_vars: &[(String, Value)], snapshots: &[SpriteSnapshot], camera: &Camera2D) -> Value {
     match expr {
         Expression::Value(v) => v.clone(),
+        Expression::List(l) => {
+            let mut list = vec![];
+            for element in l {
+                list.push(resolve_expression(element, project, sprite, local_vars, snapshots, camera));
+            }
+            Value::List(list)
+        }
         Expression::Identifier(id) => sprite.variable(id, project, local_vars).clone(),
         Expression::Binary { left, right, operator } => {
             let left_value = resolve_expression(left, project, sprite, local_vars, snapshots, camera);
@@ -130,6 +137,15 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::String(contents)
                     } else {
                         Value::Null
+                    }
+                }
+                "typeof" => {
+                    match args.as_slice() {
+                        [Value::String(_)] => Value::String("string".to_string()),
+                        [Value::Number(_)] => Value::String("number".to_string()),
+                        [Value::Boolean(_)] => Value::String("boolean".to_string()),
+                        [Value::List(_)] => Value::String("list".to_string()),
+                        _ => Value::Null,
                     }
                 }
                 "direction" => Value::Number(sprite.direction),
