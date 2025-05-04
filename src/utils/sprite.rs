@@ -246,7 +246,7 @@ impl Sprite {
                     match function.as_str() {
                         // ============= MISC ============= \\
                         "print" => {
-                            println!("{} => {}", self.name, args[0].to_string());
+                            println!("{} => {:?}", self.name, args);
                         }
                         // ============= MOTION ============= \\
                         "move" => {
