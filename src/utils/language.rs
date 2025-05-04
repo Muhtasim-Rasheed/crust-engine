@@ -102,6 +102,12 @@ impl Tokenizer {
             return Some(Token::Newline);
         }
 
+        // Null
+        if c.starts_with("null") {
+            self.pointer += 4;
+            return Some(Token::Value(Value::Null));
+        }
+
         // Booleans
         if c.starts_with("true") {
             self.pointer += 4;
