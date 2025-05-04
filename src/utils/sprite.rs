@@ -59,12 +59,12 @@ pub struct Sprite {
     pub effects: HashMap<String, f32>,
     pub sound_effects: HashMap<String, f32>,
     pub draw_color: Color,
+    pub functions: HashMap<String, (Vec<String>, Vec<Statement>, Expression)>,
     edge_bounce: bool,
     current_costume: usize,
     crawler: usize,
     setup_ast: Vec<Statement>,
     update_ast: Vec<Statement>,
-    functions: HashMap<String, (Vec<String>, Vec<Statement>)>,
     setup_finished: bool,
     time_waiting: u32,
     glide: Option<Glide>,
@@ -83,8 +83,8 @@ impl Sprite {
                 Statement::Update { body } => {
                     update_ast = body;
                 }
-                Statement::FunctionDefinition { name, args, body } => {
-                    functions.insert(name.clone(), (args.clone(), body));
+                Statement::FunctionDefinition { name, args, body, returns } => {
+                    functions.insert(name.clone(), (args.clone(), body.clone(), returns.clone()));
                 }
                 _ => {}
             }
@@ -192,10 +192,10 @@ impl Sprite {
         }
     }
 
-    fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D, local_vars: &[(String, Value)]) {
+    pub fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D, local_vars: &[(String, Value)]) {
         match statement {
             Statement::Assignment { is_global, identifier, value } => {
-                let value = super::resolve_expression(value, project, self, local_vars);
+                let value = super::resolve_expression(value, project, self, local_vars, snapshots, camera); 
                 if *is_global {
                     project.global_variables.insert(identifier.clone(), value);
                 } else {
@@ -207,7 +207,7 @@ impl Sprite {
                 }
             }
             Statement::If { condition, body, else_body } => {
-                let condition_value = super::resolve_expression(condition, project, self, local_vars);
+                let condition_value = super::resolve_expression(condition, project, self, local_vars, snapshots, camera); 
                 if condition_value.to_boolean() {
                     for statement in body {
                         self.execute_statement(statement, project, snapshots, camera, local_vars);
@@ -219,14 +219,14 @@ impl Sprite {
                 }
             }
             Statement::While { condition, body } => {
-                while super::resolve_expression(condition, project, self, local_vars).to_boolean() {
+                while super::resolve_expression(condition, project, self, local_vars, snapshots, camera).to_boolean() { 
                     for statement in body {
                         self.execute_statement(statement, project, snapshots, camera, local_vars);
                     }
                 }
             }
             Statement::Repeat { times, body } => {
-                let times_value = super::resolve_expression(times, project, self, local_vars);
+                let times_value = super::resolve_expression(times, project, self, local_vars, snapshots, camera); 
                 if let Value::Number(times) = times_value {
                     for _ in 0..times as usize {
                         for statement in body {
@@ -241,7 +241,7 @@ impl Sprite {
                 if let Expression::Call { function, args } = c {
                     let args = args
                         .iter()
-                        .map(|arg| super::resolve_expression(arg, project, self, local_vars))
+                        .map(|arg| super::resolve_expression(arg, project, self, local_vars, snapshots, camera)) 
                         .collect::<Vec<_>>();
                     match function.as_str() {
                         // ============= MISC ============= \\
@@ -789,7 +789,7 @@ impl Sprite {
                             }
                         }
                         _ => {
-                            if let Some((args_, body)) = self.functions.clone().get(function) {
+                            if let Some((args_, body, ..)) = self.functions.clone().get(function) {
                                 if args_.len() == args.len() {
                                     let mut local_vars_: Vec<(String, Value)> = vec![];
                                     for (i, arg) in args_.iter().enumerate() {

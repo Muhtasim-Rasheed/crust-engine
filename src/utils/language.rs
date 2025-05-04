@@ -283,6 +283,7 @@ pub enum Statement {
         name: String,
         args: Vec<String>,
         body: Vec<Statement>,
+        returns: Expression,
     },
 }
 
@@ -296,7 +297,7 @@ impl std::fmt::Debug for Statement {
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
-            Statement::FunctionDefinition { name, args, body } => write!(f, "FUNCTION[{}({:?})] {{ {:?} }}", name, args, body),
+            Statement::FunctionDefinition { name, args, body, returns } => write!(f, "FUNCTION[{}({:?}) -> {}] {{ {:?} }}", name, args, returns.to_string(), body),
         }
     }
 }
@@ -549,8 +550,9 @@ impl Parser {
             if !self.eat(&Token::Symbol(")".to_string())) {
                 return Err("Expected ')' after function arguments".to_string());
             }
+            let returns = self.parse_binary(0)?;
             let body = self.parse_block()?;
-            Ok(Statement::FunctionDefinition { name, args, body })
+            Ok(Statement::FunctionDefinition { name, args, body, returns })
         } else {
             Err("Expected name (identifier) after 'fn'".to_string())
         }

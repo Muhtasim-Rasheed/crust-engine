@@ -2,17 +2,17 @@ use std::{fs::File, path::Path, io::Read};
 
 use macroquad::prelude::*;
 
-use super::{Expression, Project, Sprite, Value};
+use super::{Expression, Project, Sprite, SpriteSnapshot, Value};
 
 // Helper functions!
 
-pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite, local_vars: &[(String, Value)]) -> Value {
+pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut Sprite, local_vars: &[(String, Value)], snapshots: &[SpriteSnapshot], camera: &Camera2D) -> Value {
     match expr {
         Expression::Value(v) => v.clone(),
         Expression::Identifier(id) => sprite.variable(id, project, local_vars).clone(),
         Expression::Binary { left, right, operator } => {
-            let left_value = resolve_expression(left, project, sprite, local_vars);
-            let right_value = resolve_expression(right, project, sprite, local_vars);
+            let left_value = resolve_expression(left, project, sprite, local_vars, snapshots, camera);
+            let right_value = resolve_expression(right, project, sprite, local_vars, snapshots, camera);
             match operator.as_str() {
                 "+" => Value::Number(left_value.to_number() + right_value.to_number()),
                 "-" => Value::Number(left_value.to_number() - right_value.to_number()),
@@ -32,7 +32,7 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite,
             }
         }
         Expression::Unary { operator, operand } => {
-            let operand_value = resolve_expression(operand, project, sprite, local_vars);
+            let operand_value = resolve_expression(operand, project, sprite, local_vars, snapshots, camera);
             match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
                 "!" => Value::Boolean(!operand_value.to_boolean()),
@@ -41,7 +41,7 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite,
         }
         Expression::Call { function, args } => {
             let args = args.iter()
-                .map(|arg| resolve_expression(arg, project, sprite, local_vars))
+                .map(|arg| resolve_expression(arg, project, sprite, local_vars, snapshots, camera))
                 .collect::<Vec<_>>();
             match function.as_str() {
                 "time" => Value::Number(get_time() as f32),
@@ -205,7 +205,30 @@ pub fn resolve_expression(expr: &Expression, project: &Project, sprite: &Sprite,
                 "b" => Value::Number(sprite.draw_color.b),
                 "window_width" => Value::Number(screen_width()),
                 "window_height" => Value::Number(screen_height()),
-                _ => Value::Null
+                _ => {
+                    if let Some((args_, body, returns)) = sprite.functions.clone().get(function) {
+                        if args_.len() == args.len() {
+                            let mut local_vars_: Vec<(String, Value)> = vec![];
+                            for (i, arg) in args_.iter().enumerate() {
+                                if let Some(arg_value) = args.get(i) {
+                                    local_vars_.push((arg.clone(), arg_value.clone()));
+                                } else {
+                                    println!("Missing argument for function '{}'", function);
+                                }
+                            }
+                            local_vars_.append(&mut local_vars.to_vec());
+                            for statement in body {
+                                sprite.execute_statement(statement, project, snapshots, camera, &local_vars_);
+                            }
+                            let returns = resolve_expression(returns, project, sprite, &local_vars_, snapshots, camera);
+                            return returns;
+                        } else {
+                            return Value::Null;
+                        }
+                    } else {
+                        return Value::Null;
+                    }
+                }
             }
         }
     }
