@@ -51,6 +51,10 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 .map(|arg| resolve_expression(arg, project, sprite, local_vars, snapshots, camera))
                 .collect::<Vec<_>>();
             match function.as_str() {
+                "args" => {
+                    let args = std::env::args().collect::<Vec<_>>();
+                    Value::List(args.iter().map(|arg| Value::String(arg.clone())).collect())
+                }
                 "time" => Value::Number(get_time() as f32),
                 "concat" => {
                     let mut result = String::new();

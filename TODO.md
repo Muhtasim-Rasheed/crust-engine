@@ -1,5 +1,6 @@
 # Misc
 
+- `args()`
 - `print(string)`
 - `time()`
 - `concat(strings..)`
