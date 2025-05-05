@@ -94,10 +94,21 @@ impl Tokenizer {
 
         let c = &self.code[self.pointer..];
         
-        // Check if the current char is a `#`
-        if c.starts_with('#') {
+        // Comments
+        if c.starts_with("//") {
             while self.pointer < self.code.len() && !self.code[self.pointer..].starts_with('\n') {
                 self.pointer += 1;
+            }
+            return Some(Token::Newline);
+        }
+
+        if c.starts_with("/*") {
+            self.pointer += 2;
+            while self.pointer < self.code.len() && !self.code[self.pointer..].starts_with("*/") {
+                self.pointer += 1;
+            }
+            if self.pointer < self.code.len() {
+                self.pointer += 2; // Skip */
             }
             return Some(Token::Newline);
         }
