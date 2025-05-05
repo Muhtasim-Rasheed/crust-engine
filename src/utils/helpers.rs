@@ -1,4 +1,11 @@
-use std::{fs::File, path::Path, io::Read};
+use std::{
+    fs::File,
+    path::Path,
+    io::{
+        Read,
+        Write,
+    },
+};
 
 use macroquad::prelude::*;
 
@@ -54,6 +61,22 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "args" => {
                     let args = std::env::args().collect::<Vec<_>>();
                     Value::List(args.iter().map(|arg| Value::String(arg.clone())).collect())
+                }
+                "input" => {
+                    if let Some(prompt) = args.get(0) {
+                        if let Value::String(prompt) = prompt {
+                            let mut input = String::new();
+                            print!("{} => {} ", sprite.name, prompt);
+                            std::io::stdout().flush().unwrap();
+                            std::io::stdin().read_line(&mut input).unwrap();
+                            input = input.trim().to_string();
+                            Value::String(input)
+                        } else {
+                            Value::Null
+                        }
+                    } else {
+                        Value::Null
+                    }
                 }
                 "time" => Value::Number(get_time() as f32),
                 "concat" => {

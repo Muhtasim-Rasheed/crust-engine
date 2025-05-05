@@ -2,6 +2,7 @@
 
 - `args()`
 - `print(string)`
+- `input(prompt)`
 - `time()`
 - `concat(strings..)`
 - `abs(num)`
