@@ -23,6 +23,23 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
             }
             Value::List(list)
         }
+        Expression::ListMemberAccess { list, index } => {
+            let index = resolve_expression(index, project, sprite, local_vars, snapshots, camera);
+            let list = resolve_expression(list, project, sprite, local_vars, snapshots, camera);
+            if let Value::List(list) = list {
+                if let Value::Number(index) = index {
+                    if index >= 0.0 && index < list.len() as f32 {
+                        return list[index as usize].clone();
+                    } else {
+                        return Value::Null;
+                    }
+                } else {
+                    return Value::Null;
+                }
+            } else {
+                return Value::Null;
+            }
+        }
         Expression::Identifier(id) => sprite.variable(id, project, local_vars).clone(),
         Expression::Binary { left, right, operator } => {
             let left_value = resolve_expression(left, project, sprite, local_vars, snapshots, camera);
@@ -122,13 +139,11 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
-                "of" => {
-                    if let [Value::Number(index), Value::List(list)] = args.as_slice() {
-                        if let Some(value) = list.get(*index as usize) {
-                            value.clone()
-                        } else {
-                            Value::Null
-                        }
+                "len" => {
+                    if let [Value::String(s)] = args.as_slice() {
+                        Value::Number(s.len() as f32)
+                    } else if let [Value::List(l)] = args.as_slice() {
+                        Value::Number(l.len() as f32)
                     } else {
                         Value::Null
                     }

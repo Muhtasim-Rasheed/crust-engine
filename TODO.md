@@ -17,7 +17,7 @@
 - `to_rad(deg)`
 - `to_deg(rad)`
 - `clamp(value, min, max)`
-- `of(index, list)`
+- `len(list | string)`
 - `random(min, max)`
 - `distance(x1, y1, x2, y2)`
 - `distance_to(x, y)`

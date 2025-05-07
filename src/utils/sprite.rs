@@ -206,6 +206,27 @@ impl Sprite {
                     }
                 }
             }
+            Statement::ListMemberAssignment { is_global, identifier, index, value } => {
+                let value = super::resolve_expression(value, project, self, local_vars, snapshots, camera);
+                let index = super::resolve_expression(index, project, self, local_vars, snapshots, camera);
+                if let Value::Number(index) = index {
+                    if *is_global {
+                        if let Some(global_list) = project.global_variables.get_mut(identifier.to_string().as_str()) {
+                            if let Value::List(global_list) = global_list {
+                                global_list[index as usize] = value;
+                            }
+                        }
+                    } else {
+                        if let Some(local_list) = self.variables.get_mut(identifier.to_string().as_str()) {
+                            if let Value::List(local_list) = local_list {
+                                local_list[index as usize] = value;
+                            }
+                        }
+                    }
+                } else {
+                    println!("Index must be a number");
+                }
+            }
             Statement::If { condition, body, else_body } => {
                 let condition_value = super::resolve_expression(condition, project, self, local_vars, snapshots, camera); 
                 if condition_value.to_boolean() {

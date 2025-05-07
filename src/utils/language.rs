@@ -205,6 +205,10 @@ impl Tokenizer {
 pub enum Expression {
     Value(Value),
     List(Vec<Expression>),
+    ListMemberAccess {
+        list: Box<Expression>,
+        index: Box<Expression>,
+    },
     Identifier(String),
     Binary {
         left: Box<Expression>,
@@ -228,6 +232,9 @@ impl Expression {
             Expression::List(l) => {
                 let list_str = l.iter().map(|e| e.to_string()).collect::<Vec<_>>().join(", ");
                 format!("[{}]", list_str)
+            }
+            Expression::ListMemberAccess { list, index } => {
+                format!("{}[{}]", list.to_string(), index.to_string())
             }
             Expression::Identifier(id) => id.clone(),
             Expression::Binary { left, operator, right } => {
@@ -255,6 +262,12 @@ pub enum Statement {
     Assignment {
         is_global: bool,
         identifier: String,
+        value: Expression,
+    },
+    ListMemberAssignment {
+        is_global: bool,
+        identifier: Expression,
+        index: Expression,
         value: Expression,
     },
     If {
@@ -288,7 +301,8 @@ pub enum Statement {
 impl std::fmt::Debug for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Statement::Assignment { is_global, identifier, value } => write!(f, "ASSIGN[{} {} = {}]", if *is_global { "global" } else { "" }, identifier, value.to_string()),
+            Statement::Assignment { is_global, identifier, value } => write!(f, "ASSIGN[{} {:?} = {}]", if *is_global { "global" } else { "" }, identifier, value.to_string()),
+            Statement::ListMemberAssignment { is_global, identifier, index, value } => write!(f, "LIST_ASSIGN[{} {:?}[{}] = {}]", if *is_global { "global" } else { "" }, identifier, index.to_string(), value.to_string()),
             Statement::If { condition, body, else_body } => write!(f, "IF[{}] {{ {:?} }} ELSE {{ {:?} }}", condition.to_string(), body, else_body),
             Statement::While { condition, body } => write!(f, "WHILE[{}] {{ {:?} }}", condition.to_string(), body),
             Statement::Repeat { times, body } => write!(f, "REPEAT[{}] {{ {:?} }}", times.to_string(), body),
@@ -375,7 +389,7 @@ impl Parser {
             }
             Token::Keyword(k) if k == "fn" => self.parse_function_definition(),
             Token::Identifier(_) => self.parse_assignment_or_call(),
-            _ => Err(format!("Unexpected token: {:?}", self.peek())),
+            _ => Err(format!("Unexpected token: {:?}", self.peek().unwrap_or(&Token::EOF))),
         }
     }
 
@@ -485,8 +499,20 @@ impl Parser {
                     }
                     Ok(Expression::Call { function: name, args })
                 } else {
-                    // Just an identifier
-                    Ok(Expression::Identifier(name))
+                    // Wait! Might be a list member access!
+                    if self.eat(&Token::Symbol("[".to_string())) {
+                        let index = self.parse_binary(0)?;
+                        if !self.eat(&Token::Symbol("]".to_string())) {
+                            return Err("Expected ']' after list member access".to_string());
+                        }
+                        Ok(Expression::ListMemberAccess {
+                            list: Box::new(Expression::Identifier(name)),
+                            index: Box::new(index),
+                        })
+                    } else {
+                        // * ACTUALLY * an identifier
+                        Ok(Expression::Identifier(name))
+                    }
                 }
             }
             Token::Operator(op) if op == "-" || op == "!" => {
@@ -580,92 +606,210 @@ impl Parser {
         }
     }
 
+    // fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
+    //     match self.peek() {
+    //         Some(Token::Identifier(id)) => {
+    //             let name = id.clone();
+    //             self.advance();
+    //             if self.eat(&Token::Operator("=".to_string())) {
+    //                 let value = self.parse_binary(0)?;
+    //                 Ok(Statement::Assignment {
+    //                     is_global: false,
+    //                     identifier: name,
+    //                     value,
+    //                 })
+    //             } else if let Some(Token::Operator(op)) = self.eat_any(
+    //             &[
+    //                 Token::Operator("+=".to_string()),
+    //                 Token::Operator("-=".to_string()),
+    //                 Token::Operator("*=".to_string()),
+    //                 Token::Operator("/=".to_string()),
+    //             ]) {
+    //                 let real_op = op[0..1].to_string(); // extract +, -, *, /
+    //                 let right = self.parse_binary(0)?;
+    //                 let left_expr = Expression::Identifier(name.clone());
+    //                 let combined_expr = Expression::Binary {
+    //                     left: Box::new(left_expr),
+    //                     operator: real_op,
+    //                     right: Box::new(right),
+    //                 };
+    //                 Ok(Statement::Assignment {
+    //                     is_global: false,
+    //                     identifier: name,
+    //                     value: combined_expr,
+    //                 })
+    //             } else {
+    //                 // Function call
+    //                 let mut args = vec![];
+    //                 if self.eat(&Token::Symbol("(".to_string())) {
+    //                     while self.peek() != Some(&Token::Symbol(")".to_string())) {
+    //                         if self.eat(&Token::Newline) {
+    //                             continue;
+    //                         }
+    //                         let arg = self.parse_binary(0)?;
+    //                         args.push(arg);
+    //                         if !self.eat(&Token::Symbol(",".to_string())) {
+    //                             break;
+    //                         }
+    //                     }
+    //                     if !self.eat(&Token::Symbol(")".to_string())) {
+    //                         return Err("Expected ')' after function call".to_string());
+    //                     }
+    //                 }
+    //                 Ok(Statement::Call(Expression::Call { function: name, args }))
+    //             }
+    //         }
+    //         Some(Token::Keyword(val)) if val == "global" => {
+    //             self.advance();
+    //             if let Some(Token::Identifier(id)) = self.peek() {
+    //                 let name = id.clone();
+    //                 self.advance();
+    //                 if self.eat(&Token::Operator("=".to_string())) {
+    //                     let value = self.parse_binary(0)?;
+    //                     Ok(Statement::Assignment {
+    //                         is_global: true,
+    //                         identifier: name,
+    //                         value,
+    //                     })
+    //                 } else if self.eat(&Token::Operator("+=".to_string())) {
+    //                     let right = self.parse_binary(0)?;
+    //                     let left_expr = Expression::Identifier(name.clone());
+    //                     let combined_expr = Expression::Binary {
+    //                         left: Box::new(left_expr),
+    //                         operator: "+".to_string(),
+    //                         right: Box::new(right),
+    //                     };
+    //                     Ok(Statement::Assignment {
+    //                         is_global: true,
+    //                         identifier: name,
+    //                         value: combined_expr,
+    //                     })
+    //                 } else {
+    //                     Err(format!("Expected '=' or '+=' after 'global {}'", name))
+    //                 }
+    //             } else {
+    //                 Err("Expected identifier after 'global'".to_string())
+    //             }
+    //         }
+    //         _ => Err(format!("Unexpected token in assignment or call: {:?}", self.peek())),
+    //     }
+    // }
+    
+    // NEW and UPDATED parse_assignment_or_call that supports list member access!
     fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
-        match self.peek() {
-            Some(Token::Identifier(id)) => {
-                let name = id.clone();
-                self.advance();
-                if self.eat(&Token::Operator("=".to_string())) {
-                    let value = self.parse_binary(0)?;
-                    Ok(Statement::Assignment {
-                        is_global: false,
-                        identifier: name,
-                        value,
-                    })
-                } else if let Some(Token::Operator(op)) = self.eat_any(
+        let is_global = self.eat(&Token::Keyword("global".to_string()));
+        let identifier = if let Some(Token::Identifier(id)) = self.peek() {
+            id.clone()
+        } else {
+            return Err("Expected identifier".to_string());
+        };
+        self.advance();
+
+        if self.eat(&Token::Operator("=".to_string())) {
+            let value = self.parse_binary(0)?;
+            Ok(Statement::Assignment {
+                is_global,
+                identifier,
+                value,
+            })
+        } else if let Some(Token::Operator(op)) = self.eat_any(
+            &[
+                Token::Operator("+=".to_string()),
+                Token::Operator("-=".to_string()),
+                Token::Operator("*=".to_string()),
+                Token::Operator("/=".to_string()),
+            ]) {
+            let real_op = op[0..1].to_string(); // extract +, -, *, /
+            let right = self.parse_binary(0)?;
+            let left_expr = Expression::Identifier(identifier.clone());
+            let combined_expr = Expression::Binary {
+                left: Box::new(left_expr),
+                operator: real_op,
+                right: Box::new(right),
+            };
+            Ok(Statement::Assignment {
+                is_global,
+                identifier,
+                value: combined_expr,
+            })
+        } else if self.eat(&Token::Symbol("[".to_string())) {
+            // List member access
+            let index = self.parse_binary(0)?;
+            if !self.eat(&Token::Symbol("]".to_string())) {
+                return Err("Expected ']' after list member access".to_string());
+            }
+            if self.eat(&Token::Operator("=".to_string())) {
+                let value = self.parse_binary(0)?;
+                Ok(Statement::ListMemberAssignment {
+                    is_global,
+                    identifier: Expression::Identifier(identifier),
+                    index,
+                    value,
+                })
+            } else if let Some(Token::Operator(op)) = self.eat_any(
                 &[
                     Token::Operator("+=".to_string()),
                     Token::Operator("-=".to_string()),
                     Token::Operator("*=".to_string()),
                     Token::Operator("/=".to_string()),
                 ]) {
-                    let real_op = op[0..1].to_string(); // extract +, -, *, /
-                    let right = self.parse_binary(0)?;
-                    let left_expr = Expression::Identifier(name.clone());
-                    let combined_expr = Expression::Binary {
-                        left: Box::new(left_expr),
-                        operator: real_op,
-                        right: Box::new(right),
-                    };
-                    Ok(Statement::Assignment {
-                        is_global: false,
-                        identifier: name,
-                        value: combined_expr,
-                    })
-                } else {
-                    // Function call
-                    let mut args = vec![];
-                    if self.eat(&Token::Symbol("(".to_string())) {
-                        while self.peek() != Some(&Token::Symbol(")".to_string())) {
-                            if self.eat(&Token::Newline) {
-                                continue;
-                            }
-                            let arg = self.parse_binary(0)?;
-                            args.push(arg);
-                            if !self.eat(&Token::Symbol(",".to_string())) {
-                                break;
-                            }
+                let real_op = op[0..1].to_string(); // extract +, -, *, /
+                let right = self.parse_binary(0)?;
+                let left_expr = Expression::ListMemberAccess {
+                    list: Box::new(Expression::Identifier(identifier.clone())),
+                    index: Box::new(index.clone()),
+                };
+                let combined_expr = Expression::Binary {
+                    left: Box::new(left_expr),
+                    operator: real_op,
+                    right: Box::new(right),
+                };
+                println!("combined_expr: {:?}", combined_expr);
+                Ok(Statement::ListMemberAssignment {
+                    is_global,
+                    identifier: Expression::Identifier(identifier),
+                    index,
+                    value: combined_expr,
+                })
+            } else {
+                // Function call
+                let mut args = vec![];
+                if self.eat(&Token::Symbol("(".to_string())) {
+                    while self.peek() != Some(&Token::Symbol(")".to_string())) {
+                        if self.eat(&Token::Newline) {
+                            continue;
                         }
-                        if !self.eat(&Token::Symbol(")".to_string())) {
-                            return Err("Expected ')' after function call".to_string());
+                        let arg = self.parse_binary(0)?;
+                        args.push(arg);
+                        if !self.eat(&Token::Symbol(",".to_string())) {
+                            break;
                         }
                     }
-                    Ok(Statement::Call(Expression::Call { function: name, args }))
-                }
-            }
-            Some(Token::Keyword(val)) if val == "global" => {
-                self.advance();
-                if let Some(Token::Identifier(id)) = self.peek() {
-                    let name = id.clone();
-                    self.advance();
-                    if self.eat(&Token::Operator("=".to_string())) {
-                        let value = self.parse_binary(0)?;
-                        Ok(Statement::Assignment {
-                            is_global: true,
-                            identifier: name,
-                            value,
-                        })
-                    } else if self.eat(&Token::Operator("+=".to_string())) {
-                        let right = self.parse_binary(0)?;
-                        let left_expr = Expression::Identifier(name.clone());
-                        let combined_expr = Expression::Binary {
-                            left: Box::new(left_expr),
-                            operator: "+".to_string(),
-                            right: Box::new(right),
-                        };
-                        Ok(Statement::Assignment {
-                            is_global: true,
-                            identifier: name,
-                            value: combined_expr,
-                        })
-                    } else {
-                        Err(format!("Expected '=' or '+=' after 'global {}'", name))
+                    if !self.eat(&Token::Symbol(")".to_string())) {
+                        return Err("Expected ')' after function call".to_string());
                     }
-                } else {
-                    Err("Expected identifier after 'global'".to_string())
+                }
+                Ok(Statement::Call(Expression::Call { function: identifier, args }))
+            }
+        } else {
+            // Function call
+            let mut args = vec![];
+            if self.eat(&Token::Symbol("(".to_string())) {
+                while self.peek() != Some(&Token::Symbol(")".to_string())) {
+                    if self.eat(&Token::Newline) {
+                        continue;
+                    }
+                    let arg = self.parse_binary(0)?;
+                    args.push(arg);
+                    if !self.eat(&Token::Symbol(",".to_string())) {
+                        break;
+                    }
+                }
+                if !self.eat(&Token::Symbol(")".to_string())) {
+                    return Err("Expected ')' after function call".to_string());
                 }
             }
-            _ => Err(format!("Unexpected token in assignment or call: {:?}", self.peek())),
+            Ok(Statement::Call(Expression::Call { function: identifier, args }))
         }
     }
 }
