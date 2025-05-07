@@ -27,6 +27,11 @@
 - `import(content, path)`
 - `screenshot()`
 - `screenshot(path)`
+- `push(list)`
+- `pop(list)`
+- `insert(list, index, value)`
+- `remove(list, index)`
+- `extend(list1, list2)`
 
 # Motion [DONE]
 

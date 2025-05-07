@@ -190,6 +190,63 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         _ => Value::Null,
                     }
                 }
+                "push" => {
+                    if let [Value::List(list), value] = args.as_slice() {
+                        let mut new_list = list.clone();
+                        new_list.push(value.clone());
+                        Value::List(new_list)
+                    } else {
+                        Value::Null
+                    }
+                }
+                "pop" => {
+                    if let [Value::List(list)] = args.as_slice() {
+                        if list.len() > 0 {
+                            let mut new_list = list.clone();
+                            let popped_value = new_list.pop().unwrap();
+                            Value::List(vec![Value::List(new_list), popped_value])
+                        } else {
+                            Value::Null
+                        }
+                    } else {
+                        Value::Null
+                    }
+                }
+                "insert" => {
+                    if let [Value::List(list), Value::Number(index), value] = args.as_slice() {
+                        if *index >= 0.0 && *index <= list.len() as f32 {
+                            let mut new_list = list.clone();
+                            new_list.insert(*index as usize, value.clone());
+                            Value::List(new_list)
+                        } else {
+                            Value::Null
+                        }
+                    } else {
+                        Value::Null
+                    }
+                }
+                "remove" => {
+                    if let [Value::List(list), Value::Number(index)] = args.as_slice() {
+                        if *index >= 0.0 && *index < list.len() as f32 {
+                            let mut new_list = list.clone();
+                            let removed_value = new_list.remove(*index as usize);
+                            Value::List(vec![Value::List(new_list), removed_value])
+                        } else {
+                            Value::Null
+                        }
+                    } else {
+                        Value::Null
+                    }
+                }
+                "extend" => {
+                    if let [Value::List(list1), Value::List(list2)] = args.as_slice() {
+                        let mut new_list = list1.clone();
+                        new_list.extend(list2.clone());
+                        Value::List(new_list)
+                    } else {
+                        Value::Null
+                    }
+                }
                 "direction" => Value::Number(sprite.direction),
                 "x" => Value::Number(sprite.center.x),
                 "y" => Value::Number(sprite.center.y),
