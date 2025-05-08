@@ -89,6 +89,10 @@ impl Sprite {
                 _ => {}
             }
         }
+        let mut costumes = costumes;
+        if costumes.is_empty() {
+            costumes.push(Texture2D::empty());
+        }
         Self {
             name,
             crawler: 0,

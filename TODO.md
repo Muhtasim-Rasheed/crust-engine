@@ -23,8 +23,9 @@
 - `distance_to(x, y)`
 - `export(content)`
 - `export(content, path)`
-- `import(content)`
-- `import(content, path)`
+- `import(path)`
+- `import_binary(path)`
+- `parse_image(binary)`
 - `screenshot()`
 - `screenshot(path)`
 - `push(list)`

@@ -171,12 +171,33 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 }
                 "import" => {
                     if let [Value::String(path)] = args.as_slice() {
-                        let path = Path::new(&project.export_path).join(path);
+                        let path = Path::new(&project.home_path).join(path);
                         let file = File::open(path).expect("Failed to open file");
                         let mut reader = std::io::BufReader::new(file);
                         let mut contents = String::new();
                         reader.read_to_string(&mut contents).expect("Failed to read file");
                         Value::String(contents)
+                    } else {
+                        Value::Null
+                    }
+                }
+                "import_binary" => {
+                    if let [Value::String(path)] = args.as_slice() {
+                        let path = Path::new(&project.home_path).join(path);
+                        let file = File::open(path).expect("Failed to open file");
+                        let mut reader = std::io::BufReader::new(file);
+                        let mut contents = Vec::new();
+                        reader.read_to_end(&mut contents).expect("Failed to read file");
+                        Value::List(contents.iter().map(|&b| Value::Number(b as f32)).collect())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "parse_image" => {
+                    if let [Value::List(contents)] = args.as_slice() {
+                        let image = image::load_from_memory(contents.iter().map(|v| v.to_number() as u8).collect::<Vec<u8>>().as_slice()).expect("Failed to load image");
+                        let pixels: Vec<Value> = image.to_rgba8().into_raw().iter().map(|&b| Value::Number(b as f32)).collect();
+                        Value::List(vec![Value::Number(image.width() as f32), Value::Number(image.height() as f32), Value::List(pixels)])
                     } else {
                         Value::Null
                     }

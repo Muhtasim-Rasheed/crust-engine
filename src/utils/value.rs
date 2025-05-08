@@ -46,12 +46,14 @@ impl Value {
             Value::Boolean(b) => b.to_string(),
             Value::List(l) => {
                 let mut string = String::new();
+                string.push_str("[");
                 for (i, item) in l.iter().enumerate() {
                     string.push_str(&item.to_string());
                     if i < l.len() - 1 {
                         string.push_str(", ");
                     }
                 }
+                string.push_str("]");
                 string
             }
         }

@@ -50,7 +50,7 @@ impl Runtime {
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
 
-        let mut project = Project::new(dir.join("export").to_string_lossy().to_string());
+        let mut project = Project::new(dir.to_string_lossy().to_string(), dir.join("export").to_string_lossy().to_string());
 
         for path in config.stage.backdrops {
             let path = dir.join(path);
