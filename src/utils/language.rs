@@ -74,6 +74,7 @@ impl Tokenizer {
         let keyword_list = vec![
             "if", "else", "while", "repeat", "global",
             "setup", "update", "fn",
+            "import",
         ];
 
         if self.pointer >= self.code.len() {
@@ -289,6 +290,9 @@ pub enum Statement {
     Update {
         body: Vec<Statement>,
     },
+    Import {
+        path: String,
+    },
     Call(Expression),
     FunctionDefinition {
         name: String,
@@ -308,6 +312,7 @@ impl std::fmt::Debug for Statement {
             Statement::Repeat { times, body } => write!(f, "REPEAT[{}] {{ {:?} }}", times.to_string(), body),
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
+            Statement::Import { path } => write!(f, "IMPORT[{}]", path),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
             Statement::FunctionDefinition { name, args, body, returns } => write!(f, "FUNCTION[{}({:?}) -> {}] {{ {:?} }}", name, args, returns.to_string(), body),
         }
@@ -388,6 +393,7 @@ impl Parser {
                 Ok(Statement::Update { body })
             }
             Token::Keyword(k) if k == "fn" => self.parse_function_definition(),
+            Token::Keyword(k) if k == "import" => self.parse_import(),
             Token::Identifier(_) => self.parse_assignment_or_call(),
             _ => Err(format!("Unexpected token: {:?}", self.peek().unwrap_or(&Token::EOF))),
         }
@@ -606,96 +612,20 @@ impl Parser {
         }
     }
 
-    // fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
-    //     match self.peek() {
-    //         Some(Token::Identifier(id)) => {
-    //             let name = id.clone();
-    //             self.advance();
-    //             if self.eat(&Token::Operator("=".to_string())) {
-    //                 let value = self.parse_binary(0)?;
-    //                 Ok(Statement::Assignment {
-    //                     is_global: false,
-    //                     identifier: name,
-    //                     value,
-    //                 })
-    //             } else if let Some(Token::Operator(op)) = self.eat_any(
-    //             &[
-    //                 Token::Operator("+=".to_string()),
-    //                 Token::Operator("-=".to_string()),
-    //                 Token::Operator("*=".to_string()),
-    //                 Token::Operator("/=".to_string()),
-    //             ]) {
-    //                 let real_op = op[0..1].to_string(); // extract +, -, *, /
-    //                 let right = self.parse_binary(0)?;
-    //                 let left_expr = Expression::Identifier(name.clone());
-    //                 let combined_expr = Expression::Binary {
-    //                     left: Box::new(left_expr),
-    //                     operator: real_op,
-    //                     right: Box::new(right),
-    //                 };
-    //                 Ok(Statement::Assignment {
-    //                     is_global: false,
-    //                     identifier: name,
-    //                     value: combined_expr,
-    //                 })
-    //             } else {
-    //                 // Function call
-    //                 let mut args = vec![];
-    //                 if self.eat(&Token::Symbol("(".to_string())) {
-    //                     while self.peek() != Some(&Token::Symbol(")".to_string())) {
-    //                         if self.eat(&Token::Newline) {
-    //                             continue;
-    //                         }
-    //                         let arg = self.parse_binary(0)?;
-    //                         args.push(arg);
-    //                         if !self.eat(&Token::Symbol(",".to_string())) {
-    //                             break;
-    //                         }
-    //                     }
-    //                     if !self.eat(&Token::Symbol(")".to_string())) {
-    //                         return Err("Expected ')' after function call".to_string());
-    //                     }
-    //                 }
-    //                 Ok(Statement::Call(Expression::Call { function: name, args }))
-    //             }
-    //         }
-    //         Some(Token::Keyword(val)) if val == "global" => {
-    //             self.advance();
-    //             if let Some(Token::Identifier(id)) = self.peek() {
-    //                 let name = id.clone();
-    //                 self.advance();
-    //                 if self.eat(&Token::Operator("=".to_string())) {
-    //                     let value = self.parse_binary(0)?;
-    //                     Ok(Statement::Assignment {
-    //                         is_global: true,
-    //                         identifier: name,
-    //                         value,
-    //                     })
-    //                 } else if self.eat(&Token::Operator("+=".to_string())) {
-    //                     let right = self.parse_binary(0)?;
-    //                     let left_expr = Expression::Identifier(name.clone());
-    //                     let combined_expr = Expression::Binary {
-    //                         left: Box::new(left_expr),
-    //                         operator: "+".to_string(),
-    //                         right: Box::new(right),
-    //                     };
-    //                     Ok(Statement::Assignment {
-    //                         is_global: true,
-    //                         identifier: name,
-    //                         value: combined_expr,
-    //                     })
-    //                 } else {
-    //                     Err(format!("Expected '=' or '+=' after 'global {}'", name))
-    //                 }
-    //             } else {
-    //                 Err("Expected identifier after 'global'".to_string())
-    //             }
-    //         }
-    //         _ => Err(format!("Unexpected token in assignment or call: {:?}", self.peek())),
-    //     }
-    // }
-    
-    // NEW and UPDATED parse_assignment_or_call that supports list member access!
+    fn parse_import(&mut self) -> Result<Statement, String> {
+        self.advance();
+        if let Some(Token::Value(Value::String(path))) = self.peek() {
+            let path = path.clone();
+            self.advance();
+            if !self.eat(&Token::Newline) {
+                return Err("Expected newline after import statement".to_string());
+            }
+            Ok(Statement::Import { path: path.clone() })
+        } else {
+            Err("Expected string path after 'import'".to_string())
+        }
+    }
+
     fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
         let is_global = self.eat(&Token::Keyword("global".to_string()));
         let identifier = if let Some(Token::Identifier(id)) = self.peek() {
