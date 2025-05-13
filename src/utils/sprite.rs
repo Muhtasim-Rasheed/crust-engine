@@ -32,16 +32,22 @@ pub enum RotationStyle {
 }
 
 #[derive(Debug)]
-pub struct Glide {
+struct Glide {
     start_x: f32,
     start_y: f32,
     end_x: f32,
     end_y: f32,
     duration: usize,
     remaining: usize,
-
     pub ctrl1: Vec2,
     pub ctrl2: Vec2,
+}
+
+#[derive(Debug, Clone)]
+pub struct Function {
+    pub args: Vec<String>,
+    pub body: Vec<Statement>,
+    pub returns: Expression,
 }
 
 #[derive(Debug)]
@@ -59,7 +65,7 @@ pub struct Sprite {
     pub effects: HashMap<String, f32>,
     pub sound_effects: HashMap<String, f32>,
     pub draw_color: Color,
-    pub functions: HashMap<String, (Vec<String>, Vec<Statement>, Expression)>,
+    pub functions: HashMap<String, Function>,
     edge_bounce: bool,
     current_costume: usize,
     crawler: usize,
@@ -84,7 +90,12 @@ impl Sprite {
                     update_ast = body;
                 }
                 Statement::FunctionDefinition { name, args, body, returns } => {
-                    functions.insert(name.clone(), (args.clone(), body.clone(), returns.clone()));
+                    // functions.insert(name.clone(), (args.clone(), body.clone(), returns.clone()));
+                    functions.insert(name.clone(), Function {
+                        args: args.clone(),
+                        body: body.clone(),
+                        returns: returns.clone(),
+                    });
                 }
                 _ => {}
             }
@@ -814,7 +825,8 @@ impl Sprite {
                             }
                         }
                         _ => {
-                            if let Some((args_, body, ..)) = self.functions.clone().get(function) {
+                            if let Some(function_struct) = self.functions.clone().get(function) {
+                                let Function { args: args_, body, .. } = function_struct;
                                 if args_.len() == args.len() {
                                     let mut local_vars_: Vec<(String, Value)> = vec![];
                                     for (i, arg) in args_.iter().enumerate() {

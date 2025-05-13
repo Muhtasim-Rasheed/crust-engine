@@ -9,7 +9,7 @@ use std::{
 
 use macroquad::prelude::*;
 
-use super::{Expression, Project, Sprite, SpriteSnapshot, Value};
+use super::{Expression, Function, Project, Sprite, SpriteSnapshot, Value};
 
 // Helper functions!
 
@@ -342,7 +342,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "window_width" => Value::Number(screen_width()),
                 "window_height" => Value::Number(screen_height()),
                 _ => {
-                    if let Some((args_, body, returns)) = sprite.functions.clone().get(function) {
+                    if let Some(function_struct) = sprite.functions.clone().get(function) {
+                        let Function { args: args_, body, returns } = function_struct;
                         if args_.len() == args.len() {
                             let mut local_vars_: Vec<(String, Value)> = vec![];
                             for (i, arg) in args_.iter().enumerate() {

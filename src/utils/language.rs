@@ -694,7 +694,6 @@ impl Parser {
                     operator: real_op,
                     right: Box::new(right),
                 };
-                println!("combined_expr: {:?}", combined_expr);
                 Ok(Statement::ListMemberAssignment {
                     is_global,
                     identifier: Expression::Identifier(identifier),
