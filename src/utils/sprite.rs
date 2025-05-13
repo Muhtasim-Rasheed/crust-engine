@@ -70,9 +70,8 @@ pub struct Sprite {
     pub functions: HashMap<String, Function>,
     edge_bounce: bool,
     current_costume: usize,
-    crawler: usize,
     setup_ast: Vec<Statement>,
-    update_ast: Vec<Statement>,
+    update_ast: Vec<Vec<Statement>>,
     setup_finished: bool,
     time_waiting: u32,
     glide: Option<Glide>,
@@ -89,7 +88,8 @@ impl Sprite {
                     setup_ast = body;
                 }
                 Statement::Update { body } => {
-                    update_ast = body;
+                    // update_ast = body;
+                    update_ast.push(body);
                 }
                 Statement::FunctionDefinition { name, args, body, returns } => {
                     functions.insert(name.clone(), Function {
@@ -151,7 +151,6 @@ impl Sprite {
         }
         Self {
             name,
-            crawler: 0,
             setup_ast,
             update_ast,
             functions,
@@ -920,18 +919,16 @@ impl Sprite {
         }
         
         if !self.setup_finished {
-            while self.crawler < self.setup_ast.len() {
-                self.execute_statement(&self.setup_ast[self.crawler].clone(), project, snapshots, camera, &vec![]);
-                self.crawler += 1;
+            for statement in self.setup_ast.clone() {
+                self.execute_statement(&statement, project, snapshots, camera, &vec![]);
             }
             self.setup_finished = true;
-            self.crawler = 0;
         } else {
-            while self.crawler < self.update_ast.len() {
-                self.execute_statement(&self.update_ast[self.crawler].clone(), project, snapshots, camera, &vec![]);
-                self.crawler += 1;
+            for ast in self.update_ast.clone() {
+                for statement in ast {
+                    self.execute_statement(&statement, project, snapshots, camera, &vec![]);
+                }
             }
-            self.crawler = 0;
         }
     }
 
