@@ -85,7 +85,7 @@ impl Runtime {
             let mut parser = Parser::new(tokens);
             let ast = parser.parse();
 
-            let s = Sprite::new(sprite.name.clone(), textures, sounds, ast, sprite.w, sprite.h, sprite.x, sprite.y);
+            let s = Sprite::new(sprite.name.clone(), textures, sounds, ast, sprite.w, sprite.h, sprite.x, sprite.y, dir.to_string_lossy().to_string());
 
             project.sprites.push(s);
         }
