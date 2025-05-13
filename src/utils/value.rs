@@ -61,15 +61,17 @@ impl Value {
 
     pub fn to_boolean(&self) -> bool {
         match self {
+            Value::Null => false,
             Value::Boolean(b) => *b,
             Value::Number(n) => *n != 0.0,
             Value::String(s) => !s.is_empty(),
-            _ => false,
+            Value::List(l) => !l.is_empty(),
         }
     }
 
     pub fn to_list(&self) -> Vec<Value> {
         match self {
+            Value::Null => vec![],
             Value::List(l) => l.clone(),
             Value::String(s) => s.chars()
                 .map(|c| Value::String(c.to_string()))
