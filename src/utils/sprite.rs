@@ -99,10 +99,10 @@ impl Sprite {
                     });
                 }
                 Statement::Import { path } => {
-                    fn import_library(path: &str, base_dir: &str, visited: &mut Vec<String>) -> HashMap<String, Function> {
+                    fn import_module(path: &str, base_dir: &str, visited: &mut Vec<String>) -> HashMap<String, Function> {
                         let path = Path::new(base_dir).join(path);
                         let code = std::fs::read_to_string(&path).unwrap_or_else(|_| {
-                            println!("Failed to load library: {}", &path.display());
+                            println!("Failed to load module: {}", &path.display());
                             String::new()
                         });
                         let mut tokenizer = Tokenizer::new(code);
@@ -127,7 +127,7 @@ impl Sprite {
                                         return functions;
                                     }
                                     // Better.
-                                    let imported_functions = import_library(&path, &base_dir, visited);
+                                    let imported_functions = import_module(&path, &base_dir, visited);
                                     visited.push(path);
                                     functions.extend(imported_functions);
                                 }
@@ -137,7 +137,7 @@ impl Sprite {
                         functions
                     }
                     let mut visited: Vec<String> = vec![];
-                    let imported_functions = import_library(&path, &base_dir, &mut visited);
+                    let imported_functions = import_module(&path, &base_dir, &mut visited);
                     for (name, function) in imported_functions {
                         functions.insert(name, function);
                     }
