@@ -80,7 +80,7 @@ impl Runtime {
             let sprite_code_file = dir.join(&sprite.code);
             let code = std::fs::read_to_string(&sprite_code_file).expect("Failed to read sprite code");
 
-            let mut tokenizer = Tokenizer::new(code.clone());
+            let mut tokenizer = Tokenizer::new(code);
             let tokens = tokenizer.tokenize_full();
             let mut parser = Parser::new(tokens);
             let ast = parser.parse();

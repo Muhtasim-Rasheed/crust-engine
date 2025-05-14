@@ -108,7 +108,6 @@ impl Sprite {
                     setup_ast = body;
                 }
                 Statement::Update { body } => {
-                    // update_ast = body;
                     update_ast.push(body);
                 }
                 Statement::FunctionDefinition { name, args, body, returns } => {
@@ -119,7 +118,7 @@ impl Sprite {
                     });
                 }
                 Statement::Import { path } => {
-                    fn import_module(path: &str, base_dir: &str, visited: &mut Vec<String>) -> HashMap<String, Function> {
+                    fn import_module(path: &str, base_dir: &str, visited: &mut Vec<String>, setup_ast: &mut Vec<Statement>) -> HashMap<String, Function> {
                         let path = Path::new(base_dir).join(path);
                         let code = std::fs::read_to_string(&path).unwrap_or_else(|_| {
                             println!("Failed to load module: {}", &path.display());
@@ -139,15 +138,28 @@ impl Sprite {
                                         returns: returns.clone(),
                                     });
                                 }
+                                Statement::Setup { body } => {
+                                    for statement in body {
+                                        match statement {
+                                            Statement::Assignment { is_global, identifier, value } => {
+                                                (|| {
+                                                    setup_ast.insert(0, Statement::Assignment {
+                                                        is_global,
+                                                        identifier,
+                                                        value: value.clone(),
+                                                    });
+                                                })();
+                                            }
+                                            _ => {}
+                                        }
+                                    }
+                                }
                                 Statement::Import { path } => {
-                                    // Going recursive!
-                                    // But wait-
                                     if visited.contains(&path) {
                                         println!("Circular import detected: {}, skipping", path);
                                         return functions;
                                     }
-                                    // Better.
-                                    let imported_functions = import_module(&path, &base_dir, visited);
+                                    let imported_functions = import_module(&path, &base_dir, visited, setup_ast);
                                     visited.push(path);
                                     functions.extend(imported_functions);
                                 }
@@ -157,7 +169,7 @@ impl Sprite {
                         functions
                     }
                     let mut visited: Vec<String> = vec![];
-                    let imported_functions = import_module(&path, &base_dir, &mut visited);
+                    let imported_functions = import_module(&path, &base_dir, &mut visited, &mut setup_ast);
                     for (name, function) in imported_functions {
                         functions.insert(name, function);
                     }
