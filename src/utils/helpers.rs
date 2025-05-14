@@ -273,7 +273,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "y" => Value::Number(sprite.center.y),
                 "costume" => Value::Number(sprite.costume() as f32),
                 "backdrop" => Value::Number(project.stage.backdrop() as f32),
-                "size" => Value::Number(sprite.scale * 100.0),
+                "size" => Value::List(vec![Value::Number(sprite.size.x), Value::Number(sprite.size.y)]),
+                "scale" => Value::Number(sprite.scale * 100.0),
                 "effect" => {
                     if let [Value::String(effect)] = args.as_slice() {
                         Value::Number(sprite.effects.get(effect).cloned().unwrap_or(0.0))

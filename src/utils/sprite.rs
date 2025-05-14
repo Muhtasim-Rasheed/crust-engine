@@ -529,9 +529,9 @@ impl Sprite {
                                 println!("Invalid arguments for change_size");
                             }
                         }
-                        "set_size" => {
+                        "set_scale" => {
                             if let [Value::Number(size)] = args.as_slice() {
-                                self.scale = *size;
+                                self.scale = *size / 100.0;
                             } else {
                                 println!("Invalid arguments for set_size");
                             }
