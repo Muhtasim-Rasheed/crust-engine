@@ -118,6 +118,25 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
+                "property_of" => {
+                    if let [Value::String(sprite), Value::String(property)] = args.as_slice() {
+                        // All sprites are in the snapshots
+                        for snapshot in snapshots {
+                            if snapshot.name == *sprite {
+                                if let Some(value) = snapshot.get(property) {
+                                    return value.clone();
+                                } else {
+                                    println!("Property '{}' not found in sprite '{}'", property, sprite);
+                                    return Value::Null;
+                                }
+                            }
+                        }
+                        println!("Sprite '{}' not found in snapshots", sprite);
+                        return Value::Null;
+                    } else {
+                        Value::Null
+                    }
+                }
                 "to_rad" => {
                     if let [Value::Number(deg)] = args.as_slice() {
                         Value::Number(deg.to_radians())

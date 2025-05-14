@@ -14,6 +14,7 @@
 - `acos(num)`
 - `atan(num)`
 - `lerp(a, b, t)`
+- `property_of(sprite, property)`
 - `to_rad(deg)`
 - `to_deg(rad)`
 - `clamp(value, min, max)`

@@ -15,6 +15,23 @@ use super::{Expression, Project, Statement, Value};
 pub struct SpriteSnapshot {
     pub name: String,
     pub center: Vec2,
+    pub size: Vec2,
+    pub scale: f32,
+    pub direction: f32,
+}
+
+impl SpriteSnapshot {
+    pub fn get(&self, name: &str) -> Option<Value> {
+        match name {
+            "name" => Some(Value::String(self.name.clone())),
+            "x" => Some(Value::Number(self.center.x)),
+            "y" => Some(Value::Number(self.center.y)),
+            "size" => Some(Value::List(vec![Value::Number(self.size.x), Value::Number(self.size.y)])),
+            "scale" => Some(Value::Number(self.scale)),
+            "direction" => Some(Value::Number(self.direction)),
+            _ => None,
+        }
+    }
 }
 
 impl From<&Sprite> for SpriteSnapshot {
@@ -22,6 +39,9 @@ impl From<&Sprite> for SpriteSnapshot {
         SpriteSnapshot {
             name: sprite.name.clone(),
             center: sprite.center,
+            size: sprite.size,
+            scale: sprite.scale,
+            direction: sprite.direction,
         }
     }
 }
