@@ -275,6 +275,13 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "backdrop" => Value::Number(project.stage.backdrop() as f32),
                 "size" => Value::List(vec![Value::Number(sprite.size.x), Value::Number(sprite.size.y)]),
                 "scale" => Value::Number(sprite.scale * 100.0),
+                "bounds" => Value::List(vec![
+                    Value::Number(sprite.center.x - sprite.size.x * sprite.scale),
+                    Value::Number(sprite.center.y - sprite.size.y * sprite.scale),
+                    Value::Number(sprite.center.x + sprite.size.x * sprite.scale),
+                    Value::Number(sprite.center.y + sprite.size.y * sprite.scale),
+                ]),
+                "layer" => Value::Number(sprite.layer as f32),
                 "effect" => {
                     if let [Value::String(effect)] = args.as_slice() {
                         Value::Number(sprite.effects.get(effect).cloned().unwrap_or(0.0))

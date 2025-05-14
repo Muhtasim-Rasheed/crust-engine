@@ -79,6 +79,9 @@
 - [x] `costume()`
 - [x] `backdrop()`
 - [x] `size()`
+- [x] `scale()`
+- [x] `bounds()`
+- [x] `layer()`
 - [x] `effect(effect)`
 
 # Sound
