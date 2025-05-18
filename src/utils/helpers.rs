@@ -23,6 +23,14 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
             }
             Value::List(list)
         }
+        Expression::Object(o) => {
+            let mut object = std::collections::HashMap::new();
+            for (key, value) in o {
+                let resolved_value = resolve_expression(value, project, sprite, local_vars, snapshots, camera);
+                object.insert(key.clone(), resolved_value);
+            }
+            Value::Object(object)
+        }
         Expression::ListMemberAccess { list, index } => {
             let index = resolve_expression(index, project, sprite, local_vars, snapshots, camera);
             let list = resolve_expression(list, project, sprite, local_vars, snapshots, camera);
@@ -30,6 +38,16 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 if let Value::Number(index) = index {
                     if index >= 0.0 && index < list.len() as f32 {
                         return list[index as usize].clone();
+                    } else {
+                        return Value::Null;
+                    }
+                } else {
+                    return Value::Null;
+                }
+            } else if let Value::Object(object) = list {
+                if let Value::String(ref key) = index {
+                    if let Some(value) = object.get(key) {
+                        return value.clone();
                     } else {
                         return Value::Null;
                     }
@@ -163,6 +181,22 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Number(s.len() as f32)
                     } else if let [Value::List(l)] = args.as_slice() {
                         Value::Number(l.len() as f32)
+                    } else if let [Value::Object(o)] = args.as_slice() {
+                        Value::Number(o.len() as f32)
+                    } else {
+                        Value::Null
+                    }
+                }
+                "keys" => {
+                    if let [Value::Object(o)] = args.as_slice() {
+                        Value::List(o.keys().map(|k| Value::String(k.clone())).collect())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "values" => {
+                    if let [Value::Object(o)] = args.as_slice() {
+                        Value::List(o.values().cloned().collect())
                     } else {
                         Value::Null
                     }

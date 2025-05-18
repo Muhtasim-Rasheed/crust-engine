@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Clone, PartialEq)]
 pub enum Value {
     Null,
@@ -5,6 +7,7 @@ pub enum Value {
     String(String),
     Boolean(bool),
     List(Vec<Value>),
+    Object(HashMap<String, Value>),
 }
 
 impl std::fmt::Debug for Value {
@@ -23,6 +26,17 @@ impl std::fmt::Debug for Value {
                     }
                 }
                 write!(f, "[{}]", string)
+            }
+            Value::Object(o) => {
+                let mut string = String::new();
+                for (key, value) in o.iter() {
+                    string.push_str(&format!("{}: {}, ", key, value.to_string()));
+                }
+                if !string.is_empty() {
+                    string.pop();
+                    string.pop();
+                }
+                write!(f, "{{ {} }}", string)
             }
         }
     }
@@ -56,6 +70,12 @@ impl Value {
                 string.push_str("]");
                 string
             }
+            Value::Object(o) => {
+                format!("{{ {} }}", o.iter()
+                    .map(|(k, v)| format!("{}: {}", k, v.to_string()))
+                    .collect::<Vec<_>>()
+                    .join(", "))
+            }
         }
     }
 
@@ -66,17 +86,30 @@ impl Value {
             Value::Number(n) => *n != 0.0,
             Value::String(s) => !s.is_empty(),
             Value::List(l) => !l.is_empty(),
+            Value::Object(o) => !o.is_empty(),
         }
     }
 
-    pub fn to_list(&self) -> Vec<Value> {
-        match self {
-            Value::Null => vec![],
-            Value::List(l) => l.clone(),
-            Value::String(s) => s.chars()
-                .map(|c| Value::String(c.to_string()))
-                .collect(),
-            _ => vec![self.clone()],
-        }
-    }
+    // pub fn to_list(&self) -> Vec<Value> {
+    //     match self {
+    //         Value::Null => vec![],
+    //         Value::List(l) => l.clone(),
+    //         Value::String(s) => s.chars()
+    //             .map(|c| Value::String(c.to_string()))
+    //             .collect(),
+    //         _ => vec![self.clone()],
+    //     }
+    // }
+
+    // pub fn to_object(&self) -> HashMap<String, Value> {
+    //     match self {
+    //         Value::Null => HashMap::new(),
+    //         Value::Object(o) => o.clone(),
+    //         Value::List(l) => l.iter()
+    //             .enumerate()
+    //             .map(|(i, v)| (i.to_string(), v.clone()))
+    //             .collect(),
+    //         _ => HashMap::new(),
+    //     }
+    // }
 }

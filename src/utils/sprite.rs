@@ -314,8 +314,22 @@ impl Sprite {
                             }
                         }
                     }
+                } else if let Value::String(key) = index {
+                    if *is_global {
+                        if let Some(global_list) = project.global_variables.get_mut(identifier.to_string().as_str()) {
+                            if let Value::Object(global_list) = global_list {
+                                global_list.insert(key.clone(), value);
+                            }
+                        }
+                    } else {
+                        if let Some(local_list) = self.variables.get_mut(identifier.to_string().as_str()) {
+                            if let Value::Object(local_list) = local_list {
+                                local_list.insert(key.clone(), value);
+                            }
+                        }
+                    }
                 } else {
-                    println!("Index must be a number");
+                    println!("Invalid index type for list assignment (expected number or string)");
                 }
             }
             Statement::If { condition, body, else_body } => {

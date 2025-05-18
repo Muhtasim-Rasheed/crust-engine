@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::Value;
 
 // ========================= Tokenizer ========================= \\
@@ -158,7 +160,7 @@ impl Tokenizer {
         }
 
         // Symbols
-        if ["(", ")", "[", "]", "{", "}", ","].contains(&one) {
+        if ["(", ")", "[", "]", "{", "}", ",", ":"].contains(&one) {
             self.pointer += 1;
             return Some(Token::Symbol(one.to_string()));
         }
@@ -206,6 +208,7 @@ impl Tokenizer {
 pub enum Expression {
     Value(Value),
     List(Vec<Expression>),
+    Object(HashMap<String, Expression>),
     ListMemberAccess {
         list: Box<Expression>,
         index: Box<Expression>,
@@ -233,6 +236,10 @@ impl Expression {
             Expression::List(l) => {
                 let list_str = l.iter().map(|e| e.to_string()).collect::<Vec<_>>().join(", ");
                 format!("[{}]", list_str)
+            }
+            Expression::Object(o) => {
+                let obj_str = o.iter().map(|(k, v)| format!("{}: {}", k, v.to_string())).collect::<Vec<_>>().join(", ");
+                format!("{{ {} }}", obj_str)
             }
             Expression::ListMemberAccess { list, index } => {
                 format!("{}[{}]", list.to_string(), index.to_string())
@@ -477,6 +484,35 @@ impl Parser {
         Ok(Expression::List(list))
     }
 
+    fn parse_object(&mut self) -> Result<Expression, String> {
+        let mut object = HashMap::new();
+        while self.peek() != Some(&Token::Symbol("}".to_string())) {
+            if self.eat(&Token::Newline) {
+                continue;
+            }
+            let peeked = self.peek().unwrap_or(&Token::EOF).clone();
+            if let Token::Identifier(key) = peeked {
+                self.advance();
+                if !self.eat(&Token::Symbol(":".to_string())) {
+                    return Err(format!("Expected ':' after key in object but got {:?}", self.peek()));
+                }
+                let value = self.parse_binary(0)?;
+                object.insert(key.clone(), value);
+                if !self.eat(&Token::Symbol(",".to_string())) {
+                    break;
+                }
+            } else {
+                return Err("Expected identifier as key in object".to_string());
+            }
+        }
+
+        if !self.eat(&Token::Symbol("}".to_string())) {
+            return Err("Expected '}' at the end of object".to_string());
+        }
+
+        Ok(Expression::Object(object))
+    }
+
     fn parse_primary(&mut self) -> Result<Expression, String> {
         let peeked = self.peek().unwrap_or(&Token::EOF).clone();
         match peeked {
@@ -540,6 +576,10 @@ impl Parser {
             Token::Symbol(s) if s == "[" => {
                 self.advance();
                 Ok(self.parse_list()?)
+            }
+            Token::Symbol(s) if s == "{" => {
+                self.advance();
+                Ok(self.parse_object()?)
             }
             _ => Err(format!("Unexpected token in expression: {:?}", self.peek())),
         }
