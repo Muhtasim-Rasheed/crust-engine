@@ -61,8 +61,15 @@ struct Glide {
     end_y: f32,
     duration: usize,
     remaining: usize,
-    pub ctrl1: Vec2,
-    pub ctrl2: Vec2,
+    ctrl1: Vec2,
+    ctrl2: Vec2,
+}
+
+#[derive(Debug)]
+struct Dialogue {
+    text: String,
+    duration: f32,
+    think: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -88,6 +95,7 @@ pub struct Sprite {
     pub sound_effects: HashMap<String, f32>,
     pub draw_color: Color,
     pub functions: HashMap<String, Function>,
+    dialogue: Option<Dialogue>,
     edge_bounce: bool,
     current_costume: usize,
     setup_ast: Vec<Statement>,
@@ -200,6 +208,7 @@ impl Sprite {
             effects: HashMap::new(),
             sound_effects: HashMap::new(),
             time_waiting: 0,
+            dialogue: None,
             glide: None,
             draw_color: BLACK,
             edge_bounce: false,
@@ -542,6 +551,44 @@ impl Sprite {
                             }
                         }
                         // ============= LOOKS ============= \\
+                        "say" => {
+                            match args.as_slice() {
+                                [text] => {
+                                    self.dialogue = Some(Dialogue {
+                                        text: text.to_string(),
+                                        duration: f32::INFINITY,
+                                        think: false,
+                                    });
+                                }
+                                [text, Value::Number(duration)] => {
+                                    self.dialogue = Some(Dialogue {
+                                        text: text.to_string(),
+                                        duration: *duration * 60.0,
+                                        think: false,
+                                    });
+                                }
+                                _ => println!("Invalid arguments for say"),
+                            }
+                        }
+                        "think" => {
+                            match args.as_slice() {
+                                [text] => {
+                                    self.dialogue = Some(Dialogue {
+                                        text: text.to_string(),
+                                        duration: f32::INFINITY,
+                                        think: true,
+                                    });
+                                }
+                                [text, Value::Number(duration)] => {
+                                    self.dialogue = Some(Dialogue {
+                                        text: text.to_string(),
+                                        duration: *duration * 60.0,
+                                        think: true,
+                                    });
+                                }
+                                _ => println!("Invalid arguments for think"),
+                            }
+                        }
                         "switch_costume" => {
                             if let [Value::Number(index)] = args.as_slice() {
                                 self.set_costume(*index as usize);
@@ -945,6 +992,15 @@ impl Sprite {
     }
 
     pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
+        // TODO: Correctly implement dialogue waiting
+        if let Some(dialogue) = &mut self.dialogue {
+            if dialogue.duration > 0.0 {
+                dialogue.duration -= 1.0;
+            } else {
+                self.dialogue = None;
+            }
+        }
+
         if let Some(glide) = &mut self.glide {
             let t = 1.0 - (glide.remaining as f32 / glide.duration as f32);
             if glide.remaining > 0 {
@@ -958,7 +1014,8 @@ impl Sprite {
 
             return;
         }
-
+        
+        // TODO: Correctly implement the wait function
         if self.time_waiting > 0 {
             self.time_waiting -= 1;
             return;
@@ -1275,5 +1332,23 @@ impl Sprite {
                 ..Default::default()
             },
         );
+
+        if let Some(dialogue) = &self.dialogue {
+            let dialogue_size = measure_text(&dialogue.text, None, 72, 1.0);
+            draw_text_ex(
+                &dialogue.text,
+                self.center.x - dialogue_size.width / 2.0,
+                self.center.y - scaled_size.y / 2.0 - dialogue_size.height,
+                TextParams {
+                    font_size: 72,
+                    color: if dialogue.think {
+                        Color::new(1.0, 1.0, 1.0, 0.7)
+                    } else {
+                        Color::new(1.0, 1.0, 1.0, 1.0)
+                    },
+                    ..Default::default()
+                },
+            );
+        }
     }
 }

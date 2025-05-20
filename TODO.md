@@ -57,12 +57,12 @@
 - [x] `x()`
 - [x] `y()`
 
-# Looks
+# Looks [DONE]
 
-- [ ] `say(string, time)`
-- [ ] `say(string)`
-- [ ] `think(string, time)`
-- [ ] `think(string)`
+- [x] `say(string, time)`
+- [x] `say(string)`
+- [x] `think(string, time)`
+- [x] `think(string)`
 - [x] `switch_costume(costume)`
 - [x] `next_costume()`
 - [x] `previous_costume()`
