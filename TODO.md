@@ -123,7 +123,7 @@
 - [ ] `clone()`
 - [ ] `destroy_clone()`
 
-# Drawing [DOME]
+# Drawing [DONE]
 
 - [x] `set_color(r, g, b)`
 - [x] `change_r(increment)`
@@ -138,8 +138,9 @@
 - [x] `ellipse(x, y, width, height, rotation)`
 - [x] `hellipse(x, y, width, height, thickness)`
 - [x] `hellipse(x, y, width, height, rotation, thickness)`
-- [x] `polygon(x1, y1..., xN, yN)`
-- [x] `hpolygon(thickness, x1, y1..., xN, yN)`
+- [x] `polygon(x1, y1, ..., xN, yN)`
+- [x] `hpolygon(thickness, x1, y1, ..., xN, yN)`
+- [x] `textured_quad(parse_image_result, x1, y1, x2, y2, x3, y3, x4, y4)`
 - [x] `stamp()`
 - [x] `clear_all_stamps()`
 - [x] `r()`

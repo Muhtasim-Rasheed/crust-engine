@@ -482,6 +482,24 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + t * (b - a)
 }
 
+pub fn lerp_vec2(a: Vec2, b: Vec2, t: f32) -> Vec2 {
+    Vec2::new(
+        lerp(a.x, b.x, t),
+        lerp(a.y, b.y, t),
+    )
+}
+
+pub fn sample_texture(texture: &Image, uv: Vec2) -> Color {
+    let tex_width = texture.width() as usize;
+    let tex_height = texture.height() as usize;
+
+    let x = (uv.x * tex_width as f32).clamp(0.0, tex_width as f32 - 1.0) as usize;
+    let y = (uv.y * tex_height as f32).clamp(0.0, tex_height as f32 - 1.0) as usize;
+
+    let data = texture.get_image_data();
+    data[x + y * tex_width].into()
+}
+
 pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
     let mut flat = vec![0; pixels.len() * 4];
     for (i, pixel) in pixels.iter().enumerate() {

@@ -187,7 +187,7 @@ impl Sprite {
         }
         let mut costumes = costumes;
         if costumes.is_empty() {
-            costumes.push(Texture2D::empty());
+            costumes.push(Texture2D::from_image(&Image::gen_image_color(1, 1, Color::new(0.0, 0.0, 0.0, 0.0))));
         }
         Self {
             name,
@@ -885,6 +885,52 @@ impl Sprite {
                             } else {
                                 let thickness = args[0].to_number();
                                 super::draw_convex_polygon_lines(&xs, &ys, thickness, self.draw_color);
+                            }
+                        }
+                        "textured_quad" => {
+                            if let [Value::List(parse_image_result),
+                                    Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2),
+                                    Value::Number(x3), Value::Number(y3), Value::Number(x4), Value::Number(y4)] = args.as_slice() {
+                                if let [Value::Number(width), Value::Number(height), Value::List(pixels)] = parse_image_result.as_slice() {
+                                    let mut image = Image::gen_image_color(*width as u16, *height as u16, Color::new(0.0, 0.0, 0.0, 0.0));
+                                    for i in 0..*width as usize {
+                                        for j in 0..*height as usize {
+                                            let index = i + j * (*width as usize) * 4;
+                                            let r = pixels[index].to_number() / 255.0;
+                                            let g = pixels[index + 1].to_number() / 255.0;
+                                            let b = pixels[index + 2].to_number() / 255.0;
+                                            let a = pixels[index + 3].to_number() / 255.0;
+                                            image.set_pixel(i as u32, j as u32, Color::new(r, g, b, a));
+                                        }
+                                    }
+                                    let p1 = vec2(*x1, *y1);
+                                    let p2 = vec2(*x2, *y2);
+                                    let p3 = vec2(*x3, *y3);
+                                    let p4 = vec2(*x4, *y4);
+                                    for i in 0..=(*width as usize) {
+                                        let t = i as f32 / *width as f32;
+
+                                        let left = super::lerp_vec2(p1, p4, t);
+                                        let right = super::lerp_vec2(p2, p3, t);
+                                        let uv_left = vec2(0.0, t);
+                                        let uv_right = vec2(1.0, t);
+
+                                        for j in 0..=(*height as usize) {
+                                            let s = j as f32 / *height as f32;
+
+                                            let pos = super::lerp_vec2(left, right, s);
+                                            let uv = super::lerp_vec2(uv_left, uv_right, s);
+
+                                            let color = super::sample_texture(&image, uv);
+                                            // draw_pixel(pos.x as i32, pos.y as i32, color);
+                                            draw_rectangle(pos.x, pos.y, 1.0, 1.0, color);
+                                        }
+                                    }
+                                } else {
+                                    println!("Invalid arguments for textured_quad");
+                                }
+                            } else {
+                                println!("Invalid arguments for textured_quad");
                             }
                         }
                         "stamp" => {
