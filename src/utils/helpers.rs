@@ -490,14 +490,72 @@ pub fn lerp_vec2(a: Vec2, b: Vec2, t: f32) -> Vec2 {
 }
 
 pub fn sample_texture(texture: &Image, uv: Vec2) -> Color {
-    let tex_width = texture.width() as usize;
-    let tex_height = texture.height() as usize;
+    // let tex_width = texture.width() as usize;
+    // let tex_height = texture.height() as usize;
 
-    let x = (uv.x * tex_width as f32).clamp(0.0, tex_width as f32 - 1.0) as usize;
-    let y = (uv.y * tex_height as f32).clamp(0.0, tex_height as f32 - 1.0) as usize;
+    // let x = (uv.x * tex_width as f32).clamp(0.0, tex_width as f32 - 1.0) as usize;
+    // let y = (uv.y * tex_height as f32).clamp(0.0, tex_height as f32 - 1.0) as usize;
 
+    // let data = texture.get_image_data();
+    // data[x + y * tex_width].into()
+    
+    // Bilinear
+    let w = texture.width() as f32;
+    let h = texture.height() as f32;
     let data = texture.get_image_data();
-    data[x + y * tex_width].into()
+
+    let x = uv.x * w - 0.5;
+    let y = uv.y * h - 0.5;
+
+    let x0 = x.floor().clamp(0.0, w - 1.0) as usize;
+    let x1 = (x0 + 1).min(w as usize - 1);
+    let y0 = y.floor().clamp(0.0, h - 1.0) as usize;
+    let y1 = (y0 + 1).min(h as usize - 1);
+
+    let tx = x.fract();
+    let ty = y.fract();
+
+    let i = |x: usize, y: usize| -> Color {
+        data[x + y * w as usize].into()
+    };
+
+    let c00 = i(x0, y0);
+    let c10 = i(x1, y0);
+    let c01 = i(x0, y1);
+    let c11 = i(x1, y1);
+
+    let lerp_color = |a: Color, b: Color, t: f32| -> Color {
+        Color::new(
+            lerp(a.r, b.r, t),
+            lerp(a.g, b.g, t),
+            lerp(a.b, b.b, t),
+            lerp(a.a, b.a, t),
+        )
+    };
+    
+    let top = lerp_color(c00.into(), c10.into(), tx);
+    let bottom = lerp_color(c01.into(), c11.into(), tx);
+    let color = lerp_color(top, bottom, ty);
+    color
+}
+
+pub fn compute_resolution(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2, texture: &Image) -> usize {
+    let width = texture.width();
+    let height = texture.height();
+
+    let screen_diag = [
+        p1.distance(p2),
+        p2.distance(p3),
+        p3.distance(p4),
+        p4.distance(p1),
+    ]
+    .into_iter()
+    .fold(0.0, f32::max);
+
+    // One step per screen-space pixel of the longest side (scaled by tex size)
+    let longest_tex_side = width.max(height);
+    (screen_diag * longest_tex_side as f32 / width.max(1) as f32)
+        .clamp(4.0, 1000.0) as usize
 }
 
 pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {

@@ -129,7 +129,7 @@ impl Runtime {
 
             let mut debugs = HashMap::new();
             debugs.insert("show_fps", get_fps().to_string());
-            debugs.insert("show_mouse_pos", format!("({}, {})", mouse_position().0, mouse_position().1));
+            debugs.insert("show_mouse_pos", format!("({}, {})", mouse_position().0 * 2.0 - screen_width(), mouse_position().1 * 2.0 - screen_height()));
             let debug_options: Vec<String> = self.debug_options.iter()
                 .filter(|option| debugs.contains_key(option.as_str()))
                 .map(|option| format!("{}: {}", option, debugs[option.as_str()]))

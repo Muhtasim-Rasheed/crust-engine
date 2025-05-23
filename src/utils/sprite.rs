@@ -907,22 +907,23 @@ impl Sprite {
                                     let p2 = vec2(*x2, *y2);
                                     let p3 = vec2(*x3, *y3);
                                     let p4 = vec2(*x4, *y4);
-                                    for i in 0..=(*width as usize) {
-                                        let t = i as f32 / *width as f32;
+                                    let resolution = super::compute_resolution(p1, p2, p3, p4, &image);
+                                    for i in 0..=resolution {
+                                        let t = i as f32 / resolution as f32;
 
                                         let left = super::lerp_vec2(p1, p4, t);
                                         let right = super::lerp_vec2(p2, p3, t);
                                         let uv_left = vec2(0.0, t);
                                         let uv_right = vec2(1.0, t);
 
-                                        for j in 0..=(*height as usize) {
-                                            let s = j as f32 / *height as f32;
+                                        for j in 0..=resolution {
+                                            let s = j as f32 / resolution as f32;
 
                                             let pos = super::lerp_vec2(left, right, s);
                                             let uv = super::lerp_vec2(uv_left, uv_right, s);
 
                                             let color = super::sample_texture(&image, uv);
-                                            // draw_pixel(pos.x as i32, pos.y as i32, color);
+                                            // let color = Color::new(uv.x, uv.y, 1.0, 1.0);
                                             draw_rectangle(pos.x, pos.y, 1.0, 1.0, color);
                                         }
                                     }
