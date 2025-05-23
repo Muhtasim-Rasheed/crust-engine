@@ -895,7 +895,7 @@ impl Sprite {
                                     let mut image = Image::gen_image_color(*width as u16, *height as u16, Color::new(0.0, 0.0, 0.0, 0.0));
                                     for i in 0..*width as usize {
                                         for j in 0..*height as usize {
-                                            let index = i + j * (*width as usize) * 4;
+                                            let index = (i + j * (*width as usize)) * 4;
                                             let r = pixels[index].to_number() / 255.0;
                                             let g = pixels[index + 1].to_number() / 255.0;
                                             let b = pixels[index + 2].to_number() / 255.0;
