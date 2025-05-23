@@ -515,7 +515,7 @@ pub fn compute_resolution(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2, texture: &Imag
     // One step per screen-space pixel of the longest side (scaled by tex size)
     let longest_tex_side = width.max(height);
     (screen_diag * longest_tex_side as f32 / width.max(1) as f32)
-        .clamp(4.0, 1000.0) as usize
+        .clamp(4.0, 512.0) as usize
 }
 
 pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
