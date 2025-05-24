@@ -75,7 +75,7 @@ impl Tokenizer {
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
             "if", "else", "while", "repeat", "global",
-            "setup", "update", "fn",
+            "setup", "update", "when_start_as_clone", "fn",
             "import",
         ];
 
@@ -297,6 +297,9 @@ pub enum Statement {
     Update {
         body: Vec<Statement>,
     },
+    WhenStartAsClone {
+        body: Vec<Statement>,
+    },
     Import {
         path: String,
     },
@@ -319,6 +322,7 @@ impl std::fmt::Debug for Statement {
             Statement::Repeat { times, body } => write!(f, "REPEAT[{}] {{ {:?} }}", times.to_string(), body),
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
+            Statement::WhenStartAsClone { body } => write!(f, "WHEN_START_AS_CLONE {{ {:?} }}", body),
             Statement::Import { path } => write!(f, "IMPORT[{}]", path),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
             Statement::FunctionDefinition { name, args, body, returns } => write!(f, "FUNCTION[{}({:?}) -> {}] {{ {:?} }}", name, args, returns.to_string(), body),
@@ -398,6 +402,11 @@ impl Parser {
                 self.advance();
                 let body = self.parse_block()?;
                 Ok(Statement::Update { body })
+            }
+            Token::Keyword(k) if k == "when_start_as_clone" => {
+                self.advance();
+                let body = self.parse_block()?;
+                Ok(Statement::WhenStartAsClone { body })
             }
             Token::Keyword(k) if k == "fn" => self.parse_function_definition(),
             Token::Keyword(k) if k == "import" => self.parse_import(),

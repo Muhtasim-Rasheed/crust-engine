@@ -320,7 +320,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                     } else {
                         Value::Null
                     }
-                }
+                },
+                "whoami" => Value::String(sprite.name.clone()),
                 "direction" => Value::Number(sprite.direction),
                 "x" => Value::Number(sprite.center.x),
                 "y" => Value::Number(sprite.center.y),

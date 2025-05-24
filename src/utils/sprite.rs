@@ -95,6 +95,8 @@ pub struct Sprite {
     pub sound_effects: HashMap<String, f32>,
     pub draw_color: Color,
     pub functions: HashMap<String, Function>,
+    clones: Vec<Sprite>,
+    clone_ast: Vec<Statement>,
     dialogue: Option<Dialogue>,
     edge_bounce: bool,
     current_costume: usize,
@@ -110,6 +112,7 @@ impl Sprite {
         let mut setup_ast = vec![];
         let mut update_ast = vec![];
         let mut functions = HashMap::new();
+        let mut clone_ast = vec![];
         for statement in ast {
             match statement {
                 Statement::Setup { body } => {
@@ -117,6 +120,9 @@ impl Sprite {
                 }
                 Statement::Update { body } => {
                     update_ast.push(body);
+                }
+                Statement::WhenStartAsClone { body } => {
+                    clone_ast = body;
                 }
                 Statement::FunctionDefinition { name, args, body, returns } => {
                     functions.insert(name.clone(), Function {
@@ -212,6 +218,45 @@ impl Sprite {
             glide: None,
             draw_color: BLACK,
             edge_bounce: false,
+            clones: vec![],
+            clone_ast,
+        }
+    }
+
+    pub fn new_clone(&self) -> Self {
+        let name = format!("{} (clone {})", self.name, self.clones.len() + 1);
+        let setup_ast = self.clone_ast.clone();
+        let update_ast = vec![];
+        let functions = self.functions.clone();
+        let costumes = self.costumes.clone();
+        let sounds = self.sounds.clone();
+        let center = self.center;
+        let size = self.size;
+        Self {
+            name,
+            setup_ast,
+            update_ast,
+            functions,
+            setup_finished: false,
+            costumes,
+            center,
+            size,
+            current_costume: self.current_costume,
+            sounds,
+            scale: self.scale,
+            layer: self.layer,
+            direction: self.direction,
+            rotation_style: self.rotation_style.clone(),
+            variables: self.variables.clone(),
+            effects: self.effects.clone(),
+            sound_effects: self.sound_effects.clone(),
+            time_waiting: 0,
+            dialogue: None,
+            glide: None,
+            draw_color: self.draw_color,
+            edge_bounce: self.edge_bounce,
+            clones: vec![],
+            clone_ast: self.clone_ast.clone(),
         }
     }
 
@@ -290,6 +335,10 @@ impl Sprite {
                 }
             }
         }
+    }
+
+    fn clone(&mut self) {
+        self.clones.push(self.new_clone());
     }
 
     pub fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D, local_vars: &[(String, Value)]) {
@@ -754,6 +803,7 @@ impl Sprite {
                                 println!("Invalid arguments for wait");
                             }
                         }
+                        "clone" => self.clone(),
                         // ============= DRAWING ============= \\
                         "set_color" => {
                             if let [Value::Number(r), Value::Number(g), Value::Number(b)] = args.as_slice() {
@@ -1081,6 +1131,11 @@ impl Sprite {
                 }
             }
         }
+
+        // idk run step for all the clones too
+        for clone in &mut self.clones {
+            clone.step(project, snapshots, camera);
+        }
     }
 
     pub fn draw(&self) {
@@ -1357,6 +1412,11 @@ impl Sprite {
         }
         let processed_texture = Texture2D::from_image(&effect_image);
         processed_texture.set_filter(FilterMode::Nearest);
+
+        // draw all the clones first so they are behind
+        for clone in &self.clones {
+            clone.draw();
+        }
 
         draw_texture_ex(
             &processed_texture,

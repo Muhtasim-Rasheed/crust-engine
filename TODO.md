@@ -34,6 +34,7 @@
 - `insert(list, index, value)`
 - `remove(list, index)`
 - `extend(list1, list2)`
+- `whoami()`
 
 # Motion [DONE]
 
@@ -119,8 +120,8 @@
 - [x] `if bool {} else if bool {}`
 - [x] `while bool {}`
 - [ ] `stop(all | self | script | other-scripts | other-sprites-and-scripts)`
-- [ ] `when_start_as_clone {}`
-- [ ] `clone()`
+- [x] `when_start_as_clone {}`
+- [x] `clone()`
 - [ ] `destroy_clone()`
 
 # Drawing [DONE]
