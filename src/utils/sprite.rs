@@ -460,6 +460,10 @@ impl Sprite {
                                 [Value::String(name)] => {
                                     if name == "mouse" {
                                         self.goto_cursor();
+                                    } else if name == "random" {
+                                        let x = rand::gen_range(-1024.0, 1024.0);
+                                        let y = rand::gen_range(-576.0, 576.0);
+                                        self.goto(x, y);
                                     } else {
                                         self.goto_other(&snapshots, name);
                                     }
