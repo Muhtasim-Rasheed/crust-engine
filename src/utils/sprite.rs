@@ -907,7 +907,8 @@ impl Sprite {
                                     let p2 = vec2(*x2, *y2);
                                     let p3 = vec2(*x3, *y3);
                                     let p4 = vec2(*x4, *y4);
-                                    let resolution = super::compute_resolution(p1, p2, p3, p4, &image);
+                                    // let resolution = super::compute_resolution(p1, p2, p3, p4, &image); // throw ts away we dont need 8 fps
+                                    let resolution = 128;
                                     for i in 0..=resolution {
                                         let t = i as f32 / resolution as f32;
 
@@ -924,7 +925,7 @@ impl Sprite {
 
                                             let color = super::sample_texture(&image, uv);
                                             // let color = Color::new(uv.x, uv.y, 1.0, 1.0);
-                                            draw_rectangle(pos.x, pos.y, 1.0, 1.0, color);
+                                            draw_rectangle(pos.x - 4.0, pos.y - 4.0, 8.0, 8.0, color);
                                         }
                                     }
                                 } else {

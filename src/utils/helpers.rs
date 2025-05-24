@@ -499,24 +499,24 @@ pub fn sample_texture(texture: &Image, uv: Vec2) -> Color {
     texture.get_pixel(x, y)
 }
 
-pub fn compute_resolution(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2, texture: &Image) -> usize {
-    let width = texture.width();
-    let height = texture.height();
+// pub fn compute_resolution(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2, texture: &Image) -> usize {
+//     let width = texture.width();
+//     let height = texture.height();
 
-    let screen_diag = [
-        p1.distance(p2),
-        p2.distance(p3),
-        p3.distance(p4),
-        p4.distance(p1),
-    ]
-    .into_iter()
-    .fold(0.0, f32::max);
+//     let screen_diag = [
+//         p1.distance(p2),
+//         p2.distance(p3),
+//         p3.distance(p4),
+//         p4.distance(p1),
+//     ]
+//     .into_iter()
+//     .fold(0.0, f32::max);
 
-    // One step per screen-space pixel of the longest side (scaled by tex size)
-    let longest_tex_side = width.max(height);
-    (screen_diag * longest_tex_side as f32 / width.max(1) as f32)
-        .clamp(4.0, 512.0) as usize
-}
+//     // One step per screen-space pixel of the longest side (scaled by tex size)
+//     let longest_tex_side = width.max(height);
+//     (screen_diag * longest_tex_side as f32 / width.max(1) as f32)
+//         .clamp(4.0, 512.0) as usize
+// }
 
 pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
     let mut flat = vec![0; pixels.len() * 4];
