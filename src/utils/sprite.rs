@@ -96,7 +96,9 @@ pub struct Sprite {
     pub draw_color: Color,
     pub functions: HashMap<String, Function>,
     clones: Vec<Sprite>,
-    clone_ast: Vec<Statement>,
+    // clone_ast: Vec<Statement>,
+    clone_setup: Vec<Statement>,
+    clone_update: Vec<Vec<Statement>>,
     dialogue: Option<Dialogue>,
     edge_bounce: bool,
     current_costume: usize,
@@ -105,6 +107,7 @@ pub struct Sprite {
     setup_finished: bool,
     time_waiting: u32,
     glide: Option<Glide>,
+    delete_pending: bool,
 }
 
 impl Sprite {
@@ -112,7 +115,8 @@ impl Sprite {
         let mut setup_ast = vec![];
         let mut update_ast = vec![];
         let mut functions = HashMap::new();
-        let mut clone_ast = vec![];
+        let mut clone_setup = vec![];
+        let mut clone_update = vec![];
         for statement in ast {
             match statement {
                 Statement::Setup { body } => {
@@ -121,8 +125,11 @@ impl Sprite {
                 Statement::Update { body } => {
                     update_ast.push(body);
                 }
-                Statement::WhenStartAsClone { body } => {
-                    clone_ast = body;
+                Statement::CloneSetup { body } => {
+                    clone_setup = body;
+                }
+                Statement::CloneUpdate { body } => {
+                    clone_update.push(body);
                 }
                 Statement::FunctionDefinition { name, args, body, returns } => {
                     functions.insert(name.clone(), Function {
@@ -219,14 +226,16 @@ impl Sprite {
             draw_color: BLACK,
             edge_bounce: false,
             clones: vec![],
-            clone_ast,
+            clone_setup,
+            clone_update,
+            delete_pending: false,
         }
     }
 
     pub fn new_clone(&self) -> Self {
         let name = format!("{} (clone {})", self.name, self.clones.len() + 1);
-        let setup_ast = self.clone_ast.clone();
-        let update_ast = vec![];
+        let setup_ast = self.clone_setup.clone();
+        let update_ast = self.clone_update.clone();
         let functions = self.functions.clone();
         let costumes = self.costumes.clone();
         let sounds = self.sounds.clone();
@@ -256,7 +265,9 @@ impl Sprite {
             draw_color: self.draw_color,
             edge_bounce: self.edge_bounce,
             clones: vec![],
-            clone_ast: self.clone_ast.clone(),
+            clone_setup: self.clone_setup.clone(),
+            clone_update: self.clone_update.clone(),
+            delete_pending: false,
         }
     }
 
@@ -808,6 +819,15 @@ impl Sprite {
                             }
                         }
                         "clone" => self.clone(),
+                        "delete_clone" => {
+                            if let [Value::Number(cloneid)] = args.as_slice() {
+                                if let Some(index) = self.clones.iter().position(|c| c.name == format!("{} (clone {})", self.name, cloneid)) {
+                                    self.clones.remove(index);
+                                }
+                            } else {
+                                self.delete_pending = true;
+                            }
+                        }
                         // ============= DRAWING ============= \\
                         "set_color" => {
                             if let [Value::Number(r), Value::Number(g), Value::Number(b)] = args.as_slice() {
@@ -1122,7 +1142,7 @@ impl Sprite {
             self.time_waiting -= 1;
             return;
         }
-        
+
         if !self.setup_finished {
             for statement in self.setup_ast.clone() {
                 self.execute_statement(&statement, project, snapshots, camera, &vec![]);
@@ -1135,6 +1155,9 @@ impl Sprite {
                 }
             }
         }
+
+        // filter out clones that are marked for deletion
+        self.clones.retain(|clone| !clone.delete_pending);
 
         // idk run step for all the clones too
         for clone in &mut self.clones {

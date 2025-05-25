@@ -75,7 +75,7 @@ impl Tokenizer {
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
             "if", "else", "while", "repeat", "global",
-            "setup", "update", "when_start_as_clone", "fn",
+            "setup", "update", "clone_setup", "clone_update", "fn",
             "import",
         ];
 
@@ -297,7 +297,10 @@ pub enum Statement {
     Update {
         body: Vec<Statement>,
     },
-    WhenStartAsClone {
+    CloneSetup {
+        body: Vec<Statement>,
+    },
+    CloneUpdate {
         body: Vec<Statement>,
     },
     Import {
@@ -322,7 +325,8 @@ impl std::fmt::Debug for Statement {
             Statement::Repeat { times, body } => write!(f, "REPEAT[{}] {{ {:?} }}", times.to_string(), body),
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
-            Statement::WhenStartAsClone { body } => write!(f, "WHEN_START_AS_CLONE {{ {:?} }}", body),
+            Statement::CloneSetup { body } => write!(f, "CLONE_SETUP {{ {:?} }}", body),
+            Statement::CloneUpdate { body } => write!(f, "CLONE_UPDATE {{ {:?} }}", body),
             Statement::Import { path } => write!(f, "IMPORT[{}]", path),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
             Statement::FunctionDefinition { name, args, body, returns } => write!(f, "FUNCTION[{}({:?}) -> {}] {{ {:?} }}", name, args, returns.to_string(), body),
@@ -403,10 +407,15 @@ impl Parser {
                 let body = self.parse_block()?;
                 Ok(Statement::Update { body })
             }
-            Token::Keyword(k) if k == "when_start_as_clone" => {
+            Token::Keyword(k) if k == "clone_setup" => {
                 self.advance();
                 let body = self.parse_block()?;
-                Ok(Statement::WhenStartAsClone { body })
+                Ok(Statement::CloneSetup { body })
+            }
+            Token::Keyword(k) if k == "clone_update" => {
+                self.advance();
+                let body = self.parse_block()?;
+                Ok(Statement::CloneUpdate { body })
             }
             Token::Keyword(k) if k == "fn" => self.parse_function_definition(),
             Token::Keyword(k) if k == "import" => self.parse_import(),

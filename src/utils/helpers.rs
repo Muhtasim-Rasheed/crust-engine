@@ -322,6 +322,19 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                     }
                 },
                 "whoami" => Value::String(sprite.name.clone()),
+                "cloneid" => {
+                    if let Some(clone_id) = sprite.name.split(" (clone ").nth(1) {
+                        if let Some(clone_id) = clone_id.strip_suffix(')') {
+                            Value::Number(clone_id.parse::<f32>().unwrap_or(0.0))
+                        } else {
+                            Value::Null
+                        }
+                    } else {
+                        Value::Null
+                    }
+                }
+                "frame" => Value::Number(get_time() as f32 * 60.0),
+                "delta_time" => Value::Number(get_frame_time() as f32),
                 "direction" => Value::Number(sprite.direction),
                 "x" => Value::Number(sprite.center.x),
                 "y" => Value::Number(sprite.center.y),
