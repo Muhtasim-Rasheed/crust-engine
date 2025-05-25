@@ -419,6 +419,7 @@ impl Parser {
             }
             Token::Keyword(k) if k == "fn" => self.parse_function_definition(),
             Token::Keyword(k) if k == "import" => self.parse_import(),
+            Token::Keyword(k) if k == "global" => self.parse_global_assignment(),
             Token::Identifier(_) => self.parse_assignment_or_call(),
             _ => Err(format!("Unexpected token: {:?}", self.peek().unwrap_or(&Token::EOF))),
         }
@@ -685,7 +686,6 @@ impl Parser {
     }
 
     fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
-        let is_global = self.eat(&Token::Keyword("global".to_string()));
         let identifier = if let Some(Token::Identifier(id)) = self.peek() {
             id.clone()
         } else {
@@ -696,7 +696,7 @@ impl Parser {
         if self.eat(&Token::Operator("=".to_string())) {
             let value = self.parse_binary(0)?;
             Ok(Statement::Assignment {
-                is_global,
+                is_global: false,
                 identifier,
                 value,
             })
@@ -716,7 +716,7 @@ impl Parser {
                 right: Box::new(right),
             };
             Ok(Statement::Assignment {
-                is_global,
+                is_global: false,
                 identifier,
                 value: combined_expr,
             })
@@ -729,7 +729,7 @@ impl Parser {
             if self.eat(&Token::Operator("=".to_string())) {
                 let value = self.parse_binary(0)?;
                 Ok(Statement::ListMemberAssignment {
-                    is_global,
+                    is_global: false,
                     identifier: Expression::Identifier(identifier),
                     index,
                     value,
@@ -753,7 +753,7 @@ impl Parser {
                     right: Box::new(right),
                 };
                 Ok(Statement::ListMemberAssignment {
-                    is_global,
+                    is_global: false,
                     identifier: Expression::Identifier(identifier),
                     index,
                     value: combined_expr,
@@ -797,6 +797,91 @@ impl Parser {
                 }
             }
             Ok(Statement::Call(Expression::Call { function: identifier, args }))
+        }
+    }
+
+    pub fn parse_global_assignment(&mut self) -> Result<Statement, String> {
+        if self.eat(&Token::Keyword("global".to_string())) {
+            let identifier = if let Some(Token::Identifier(id)) = self.peek() {
+                id.clone()
+            } else {
+                return Err("Expected identifier after 'global'".to_string());
+            };
+            self.advance();
+
+            if self.eat(&Token::Operator("=".to_string())) {
+                let value = self.parse_binary(0)?;
+                Ok(Statement::Assignment {
+                    is_global: true,
+                    identifier,
+                    value,
+                })
+            } else if let Some(Token::Operator(op)) = self.eat_any(
+                &[
+                    Token::Operator("+=".to_string()),
+                    Token::Operator("-=".to_string()),
+                    Token::Operator("*=".to_string()),
+                    Token::Operator("/=".to_string()),
+                ]) {
+                let real_op = op[0..1].to_string(); // extract +, -, *, /
+                let right = self.parse_binary(0)?;
+                let left_expr = Expression::Identifier(identifier.clone());
+                let combined_expr = Expression::Binary {
+                    left: Box::new(left_expr),
+                    operator: real_op,
+                    right: Box::new(right),
+                };
+                Ok(Statement::Assignment {
+                    is_global: true,
+                    identifier,
+                    value: combined_expr,
+                })
+            } else if self.eat(&Token::Symbol("[".to_string())) {
+                // List member access
+                let index = self.parse_binary(0)?;
+                if !self.eat(&Token::Symbol("]".to_string())) {
+                    return Err("Expected ']' after list member access".to_string());
+                }
+                if self.eat(&Token::Operator("=".to_string())) {
+                    let value = self.parse_binary(0)?;
+                    Ok(Statement::ListMemberAssignment {
+                        is_global: true,
+                        identifier: Expression::Identifier(identifier),
+                        index,
+                        value,
+                    })
+                } else if let Some(Token::Operator(op)) = self.eat_any(
+                    &[
+                        Token::Operator("+=".to_string()),
+                        Token::Operator("-=".to_string()),
+                        Token::Operator("*=".to_string()),
+                        Token::Operator("/=".to_string()),
+                    ]) {
+                    let real_op = op[0..1].to_string(); // extract +, -, *, /
+                    let right = self.parse_binary(0)?;
+                    let left_expr = Expression::ListMemberAccess {
+                        list: Box::new(Expression::Identifier(identifier.clone())),
+                        index: Box::new(index.clone()),
+                    };
+                    let combined_expr = Expression::Binary {
+                        left: Box::new(left_expr),
+                        operator: real_op,
+                        right: Box::new(right),
+                    };
+                    Ok(Statement::ListMemberAssignment {
+                        is_global: true,
+                        identifier: Expression::Identifier(identifier),
+                        index,
+                        value: combined_expr,
+                    })
+                } else {
+                    Err("Expected '=' or operator after list member access".to_string())
+                }
+            } else {
+                Err("Expected '=' or operator after identifier".to_string())
+            }
+        } else {
+            Err("Expected 'global' keyword".to_string())
         }
     }
 }
