@@ -24,8 +24,12 @@ fn window_config() -> Conf {
 async fn main() {
     let mut args = std::env::args();
     let project_file = args.nth(1).unwrap_or_else(|| {
-        println!("Usage: cargo run <project_file>");
-        std::process::exit(1);
+        rfd::FileDialog::new()
+            .set_title("Select Desired Crust Project")
+            .add_filter("Crust Project", &["toml"])
+            .pick_file()
+            .map(|file| file.as_path().to_string_lossy().to_string())
+            .unwrap_or_else(|| panic!("No project file selected"))
     });
     let project_file = project_file.trim_matches('"');
     let mut runtime = utils::Runtime::new(&project_file).await;

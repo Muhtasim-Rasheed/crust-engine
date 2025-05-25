@@ -7,5 +7,6 @@ edition = "2024"
 chrono = "0.4.41"
 image = "0.25.6"
 macroquad = { version = "0.4.14", features = ["audio"] }
+rfd = "0.15.3"
 serde = { version = "1.0.219", features = ["derive"] }
 toml = "0.8.20"
