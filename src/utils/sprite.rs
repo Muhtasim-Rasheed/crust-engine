@@ -95,8 +95,8 @@ pub struct Sprite {
     pub sound_effects: HashMap<String, f32>,
     pub draw_color: Color,
     pub functions: HashMap<String, Function>,
+    pub clone_id: Option<usize>,
     clones: Vec<Sprite>,
-    // clone_ast: Vec<Statement>,
     clone_setup: Vec<Statement>,
     clone_update: Vec<Vec<Statement>>,
     dialogue: Option<Dialogue>,
@@ -228,6 +228,7 @@ impl Sprite {
             clones: vec![],
             clone_setup,
             clone_update,
+            clone_id: None,
             delete_pending: false,
         }
     }
@@ -267,6 +268,7 @@ impl Sprite {
             clones: vec![],
             clone_setup: self.clone_setup.clone(),
             clone_update: self.clone_update.clone(),
+            clone_id: Some(self.clones.len() + 1),
             delete_pending: false,
         }
     }
