@@ -1,18 +1,22 @@
 # Crust
 
-Welcome to the documentation for ✨ **Crust** ✨ - a Scratch-like game development tool with its own programming language, also named Crust.
+✨ **Crust** ✨ is a Scratch-like game development tool with its own programming language, also named Crust.
 
 ---
 
 ## What is Crust?
 
-Crust is a game development tool that allows users to create games using text-based programming instead unlike Scratch. Main features include but are not limited to:
+Crust is a game development tool that allows users to create games using text-based programming instead unlike Scratch, which is drag-and-drop based. Main features include but are not limited to:
 
 - Text-based programming language
 - A lot of functions from Scratch
 - Runs at a smooth 60 FPS instead of 30 FPS in Scratch
 - Supports all major platforms (Windows, macOS, Linux) except mobile
 - Open-source and free to use
+
+## Documentation
+
+You can find the documentation for Crust by going [here](https://muhtasim-rasheed.github.io/crust/). The documentation covers everything from the Crust programming language to how to run Crust projects.
 
 ## Example
 
@@ -34,6 +38,7 @@ h = 1
 ```
 
 ```
+// example.crst
 // This is a simple Crust program that draws a blue circle on the screen
 
 setup {}

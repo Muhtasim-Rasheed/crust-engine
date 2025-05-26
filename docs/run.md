@@ -1,4 +1,4 @@
-If you want to run Crust, you need to have the Crust engine installed on your system. You can download the latest release from the [Crust releases page](https://github.com/Muhtasim-Rasheed/crust/releases/latest) or build it from source.
+If you want to run Crust, you need to have the Crust engine installed on your system. You can only build it from source at the moment.
 
 ## Building Crust
 
