@@ -2,6 +2,8 @@
 name = "crust"
 version = "0.2.2"
 edition = "2024"
+license = "GPL-3.0-or-later"
+license-file = "LICENSE"
 
 [dependencies]
 chrono = "0.4.41"

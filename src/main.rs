@@ -1,3 +1,19 @@
+// Crust is a Scratch-like game development tool with a custom scripting language.
+// Copyright (C) 2025  Muhtasim Noor Al Rasheed & P4ncake
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 use macroquad::{miniquad::conf::Icon, prelude::ImageFormat, texture::Image, window::Conf};
 
 mod utils;
