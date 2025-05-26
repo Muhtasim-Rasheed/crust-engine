@@ -164,9 +164,9 @@
     - [x] `fullscreen`
     - [ ] `borderless-windowed`
     - [ ] `minimized`
-- [ ] `set_window_x(x)`
-- [ ] `set_window_y(y)`
-- [ ] `set_window_position(x, y)`
+- [x] `set_window_x(x)`
+- [x] `set_window_y(y)`
+- [x] `set_window_position(x, y)`
 - [x] `window_width()`
 - [x] `window_height()`
 - [ ] `screen_width()`

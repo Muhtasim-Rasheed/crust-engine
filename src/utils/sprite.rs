@@ -445,6 +445,39 @@ impl Sprite {
                         "print" => {
                             println!("{} => {:?}", self.name, args);
                         }
+                        "export" => {
+                            match args.as_slice() {
+                                [Value::String(content)] => {
+                                    let time = chrono::Local::now();
+                                    let filename = format!("{}-{}.png", self.name, time.format("%Y-%m-%d_%H-%M-%S"));
+                                    let path = Path::new(&project.export_path).join(filename);
+                                    let mut file = File::create(path).unwrap();
+                                    file.write_all(content.as_bytes()).unwrap();
+                                }
+                                [Value::String(content), Value::String(path)] => {
+                                    let path = Path::new(path);
+                                    let mut file = File::create(path).unwrap();
+                                    file.write_all(content.as_bytes()).unwrap();
+                                }
+                                _ => {
+                                    println!("Invalid arguments for export_to");
+                                }
+                            }
+                        }
+                        "screenshot" => {
+                            match args.as_slice() {
+                                [Value::String(path)] => {
+                                    let screenshot = get_screen_data();
+                                    screenshot.export_png(&path);
+                                }
+                                _ => {
+                                    let time = chrono::Local::now();
+                                    let path = format!("{}-{}.png", self.name, time.format("%Y-%m-%d_%H-%M-%S"));
+                                    let screenshot = get_screen_data();
+                                    screenshot.export_png(&path);
+                                }
+                            }
+                        }
                         // ============= MOTION ============= \\
                         "move" => {
                             if let [Value::Number(step)] = args.as_slice() {
@@ -1052,37 +1085,25 @@ impl Sprite {
                                 println!("Invalid arguments for set_window_state");
                             }
                         }
-                        "export" => {
-                            match args.as_slice() {
-                                [Value::String(content)] => {
-                                    let time = chrono::Local::now();
-                                    let filename = format!("{}-{}.png", self.name, time.format("%Y-%m-%d_%H-%M-%S"));
-                                    let path = Path::new(&project.export_path).join(filename);
-                                    let mut file = File::create(path).unwrap();
-                                    file.write_all(content.as_bytes()).unwrap();
-                                }
-                                [Value::String(content), Value::String(path)] => {
-                                    let path = Path::new(path);
-                                    let mut file = File::create(path).unwrap();
-                                    file.write_all(content.as_bytes()).unwrap();
-                                }
-                                _ => {
-                                    println!("Invalid arguments for export_to");
-                                }
+                        "set_window_x" => {
+                            if let [Value::Number(x)] = args.as_slice() {
+                                miniquad::window::set_window_position(*x as i32, miniquad::window::get_window_position().1);
+                            } else {
+                                println!("Invalid arguments for set_window_x");
                             }
                         }
-                        "screenshot" => {
-                            match args.as_slice() {
-                                [Value::String(path)] => {
-                                    let screenshot = get_screen_data();
-                                    screenshot.export_png(&path);
-                                }
-                                _ => {
-                                    let time = chrono::Local::now();
-                                    let path = format!("{}-{}.png", self.name, time.format("%Y-%m-%d_%H-%M-%S"));
-                                    let screenshot = get_screen_data();
-                                    screenshot.export_png(&path);
-                                }
+                        "set_window_y" => {
+                            if let [Value::Number(y)] = args.as_slice() {
+                                miniquad::window::set_window_position(miniquad::window::get_window_position().0, *y as i32);
+                            } else {
+                                println!("Invalid arguments for set_window_y");
+                            }
+                        }
+                        "set_window_position" => {
+                            if let [Value::Number(x), Value::Number(y)] = args.as_slice() {
+                                miniquad::window::set_window_position(*x as i32, *y as i32);
+                            } else {
+                                println!("Invalid arguments for set_window_position");
                             }
                         }
                         _ => {
