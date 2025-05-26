@@ -1,0 +1,14 @@
+debug_options = ["show_fps", "show_mouse_pos"]
+
+[stage]
+backdrops = [ "backdrop_0.png" ]
+
+[[sprites]]
+name = "drawer"
+code = "drawer.crst"
+costumes = [ "square.png" ]
+sounds = []
+x = 0
+y = 0
+w = 1
+h = 1

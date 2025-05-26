@@ -1,0 +1,5 @@
+setup {
+	global var = "hi"
+}
+
+update {}

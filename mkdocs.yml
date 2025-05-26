@@ -1,0 +1,33 @@
+site_name: Crust
+theme:
+  font:
+    text: Comic Sans MS
+    code: JetBrains Mono
+  name: material
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  palette:
+    scheme: slate
+    primary: orange
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Project Setup: project-setup.md
+    - Crust (The Programming Language): crust-language.md
+    - Functions:
+      - Miscellaneous Functions: misc.md
+      - Motion Functions: motion.md
+      - Looks Functions: looks.md
+      - Sound Functions: sound.md
+      - Event Functions: events.md
+      - Control Functions: control.md
+      - Drawing Functions: drawing.md
+      - Window Functions: window.md
+    - Running your Crust Project: run.md
+  - License: license.md
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true

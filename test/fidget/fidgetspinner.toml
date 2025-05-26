@@ -1,0 +1,14 @@
+debug_options = []
+
+[stage]
+backdrops = [ "background.png" ]
+
+[[sprites]]
+name = "controller"
+code = "controller.crst"
+costumes = [ "indicator.png" ]
+sounds = []
+x = 0
+y = 0
+w = 50
+h = 50

@@ -1,0 +1,42 @@
+# Miscellaneous Functions
+
+The miscellaneous functions do not fit into any other category. They are used for various purposes, such as debugging, math, and others. This is the biggest category in Crust, and it contains a lot of functions. Here is a list of all the miscellaneous functions in Crust:
+
+- `args()`: Returns the command line arguments passed to the program.
+- `print(values...)`: Prints the given values to the console. Can take multiple values, separated by commas.
+- `input(prompt)`: Prompts the user for input and returns the input as a string. The prompt is displayed in the console.
+- `time()`: Returns the current time in seconds since the program started.
+- `concat(strings...)`: Concatenates the given strings and returns the result. Can take multiple strings, separated by commas.
+- `abs(num)`: Returns the absolute value of the given number.
+- `sqrt(num)`: Returns the square root of the given number.
+- `sin(num)`: Returns the sine of the given number (in radians).
+- `cos(num)`: Returns the cosine of the given number (in radians).
+- `tan(num)`: Returns the tangent of the given number (in radians).
+- `asin(num)`: Returns the arcsine of the given number (in radians).
+- `acos(num)`: Returns the arccosine of the given number (in radians).
+- `atan(num)`: Returns the arctangent of the given number (in radians).
+- `lerp(a, b, t)`: Returns the linear interpolation between `a` and `b` at `t`, where `t` is a value between 0 and 1.
+- `property_of(sprite, property)`: Returns the value of the given property of the sprite. The property can be `name`, `x`, `y`, `size`, `scale`, and `direction`.
+- `to_rad(deg)`: Converts the given angle in degrees to radians.
+- `to_deg(rad)`: Converts the given angle in radians to degrees.
+- `clamp(value, min, max)`: Clamps the given value between the minimum and maximum values.
+- `len(list | string)`: Returns the length of the given list or string.
+- `random(min, max)`: Returns a random number between the given minimum and maximum values.
+- `distance(x1, y1, x2, y2)`: Returns the distance between the two points `(x1, y1)` and `(x2, y2)`.
+- `distance_to(x, y)`: Returns the distance from the sprite to the point `(x, y)`.
+- `export(content)`: Exports the given content to a file. The file is created in a the `exports` directory in the project root.
+- `export(content, path)`: Exports the given content to a file at the specified path. The path is relative to the project root.
+- `import(path)`: Imports a Crust file at the specified path. The path is relative to the project root.
+- `import_binary(path)`: Imports a binary file at the specified path. The path is relative to the project root.
+- `parse_image(binary)`: Parses the given binary data as an image and returns a list [width, height, pixels]. The pixels are a list of RGBA values in the format [r, g, b, a].
+- `screenshot()`: Takes a screenshot of the current screen and saves it to the `exports` directory in the project root.
+- `screenshot(path)`: Takes a screenshot of the current screen and saves it to the specified path. The path is relative to the project root.
+- `push(list, value)`: Pushes the given value to the end of the list and returns the new list.
+- `pop(list)`: Pops the last value from the list and returns a list containing the new list and the popped value.
+- `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.
+- `remove(list, index)`: Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
+- `extend(list1, list2)`: Extends the first list with the second list and returns the new list.
+- `whoami()`: Returns the name of the current sprite. Works for clones as well.
+- `clone_id()`: Returns the ID of the current clone. Returns 0 if the sprite is not a clone.
+- `frame()`: Returns the current frame number. Starts at 0.
+- `delta_time()`: Returns the time in seconds since the last frame. Can be used to calculate the frame rate or to create smooth animations.
