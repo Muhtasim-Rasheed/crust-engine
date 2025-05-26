@@ -1,5 +1,3 @@
-# Drawing Functions
-
 The drawing functions are used to draw shapes and lines on the screen unlike in Scratch where you have to move a pen. They can be used to create graphics, animations, and more. It also lets you stamp the sprite onto the stage. Here is a list of all the drawing functions in Crust:
 
 - `set_color(r, g, b)`: Sets the drawing color to the specified RGB values. The values are in the range of 0 to 255.

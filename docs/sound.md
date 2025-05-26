@@ -1,5 +1,3 @@
-# Sound Functions
-
 The sound functions are used to play and control sounds in the project. They can be used to play sound effects, music, and more. Here is a list of all the sound functions in Crust:
 
 - `play_sound(sound, stop_other_sounds)`: Plays the specified sound. The sound is specified by its name in the sounds map of the sprite.

@@ -1,5 +1,3 @@
-# Project Setup
-
 !!! note
     The words "Stage" and "Backdrop" are used interchangeably in Crust.
 

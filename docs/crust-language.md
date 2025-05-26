@@ -1,5 +1,3 @@
-# Crust (The programming language)
-
 ## What is Crust (The programming language)?
 
 Crust is Crust's programming language, and it's syntax is similar to Rust. Crust is also coded in Rust, which makes it blazing fast. Crust is a text-based programming language, unlike Scratch, which uses blocks. Crust is designed to be easy to learn and use, while also being powerful enough to create complex games. Crust programs are written in `.crst` files, which are plain text files that can be edited with any text editor.

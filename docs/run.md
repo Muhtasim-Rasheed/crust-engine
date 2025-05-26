@@ -1,4 +1,25 @@
-# Running your Crust Project
+If you want to run Crust, you need to have the Crust engine installed on your system. You can download the latest release from the [Crust releases page](https://github.com/Muhtasim-Rasheed/crust/releases/latest) or build it from source.
+
+## Building Crust
+
+Firstly, clone the Crust repository from GitHub:
+
+```bash
+git clone https://github.com/Muhtasim-Rasheed/crust.git
+cd crust
+```
+
+To build Crust, you need to have the Rust toolchain installed on your system. You can install Rust by following the instructions on the [official Rust website](https://www.rust-lang.org/tools/install).
+
+Once you have Rust installed, you can build and install Crust by running the following command in the terminal:
+
+```bash
+cargo install --path .
+```
+
+This will compile Crust and install it on your system. Make cargo can be found in your PATH, so you can run the `crust` command from anywhere in your terminal.
+
+## Running your Crust Project
 
 To run your Crust project, you need to have Crust installed on your system (obviously). Once you have Crust installed, you can run your project using the following command in your terminal:
 
@@ -12,4 +33,4 @@ To run your Crust project, you need to have Crust installed on your system (obvi
     ```
 
 Replace the path with the path to your project's `project.toml` file. This will start the Crust engine and run your project.
-If you don't mention the path to the `project.toml` file, Crust will look for it in the current directory.
+If you don't mention the path to the `project.toml` file, Crust will open a file picker dialog for you.

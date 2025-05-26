@@ -1,5 +1,3 @@
-# Motion Functions
-
 The motion functions are used to move sprites around the screen. They can be used to create animations, move sprites to specific positions, and more. Here is a list of all the motion functions in Crust:
 
 - `move(steps)`: Moves the sprite forward by the specified number of steps. The direction is determined by the sprite's current direction.

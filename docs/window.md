@@ -1,5 +1,3 @@
-# Window Functions
-
 The window functions are used to control the window's size, position, and state in the application. These functions allow you to customize the appearance of the window and how it interacts with the user. Here is a list of all the window functions in Crust:
 
 - `set_window_width(width)`: Sets the width of the window to the specified value in pixels.

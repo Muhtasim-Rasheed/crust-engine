@@ -1,5 +1,3 @@
-# Event Functions
-
 The event functions are used to handle events in the project. They can be used to respond to user input, collisions, and other events. Here is a list of all the event functions in Crust:
 
 - `key_down(key)`: Returns `true` if the specified key is currently pressed down.

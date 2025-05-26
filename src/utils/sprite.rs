@@ -1087,21 +1087,21 @@ impl Sprite {
                         }
                         "set_window_x" => {
                             if let [Value::Number(x)] = args.as_slice() {
-                                miniquad::window::set_window_position(*x as i32, miniquad::window::get_window_position().1);
+                                miniquad::window::set_window_position(*x as u32, miniquad::window::get_window_position().1);
                             } else {
                                 println!("Invalid arguments for set_window_x");
                             }
                         }
                         "set_window_y" => {
                             if let [Value::Number(y)] = args.as_slice() {
-                                miniquad::window::set_window_position(miniquad::window::get_window_position().0, *y as i32);
+                                miniquad::window::set_window_position(miniquad::window::get_window_position().0, *y as u32);
                             } else {
                                 println!("Invalid arguments for set_window_y");
                             }
                         }
                         "set_window_position" => {
                             if let [Value::Number(x), Value::Number(y)] = args.as_slice() {
-                                miniquad::window::set_window_position(*x as i32, *y as i32);
+                                miniquad::window::set_window_position(*x as u32, *y as u32);
                             } else {
                                 println!("Invalid arguments for set_window_position");
                             }

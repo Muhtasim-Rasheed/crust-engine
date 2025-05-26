@@ -1,5 +1,3 @@
-# Miscellaneous Functions
-
 The miscellaneous functions do not fit into any other category. They are used for various purposes, such as debugging, math, and others. This is the biggest category in Crust, and it contains a lot of functions. Here is a list of all the miscellaneous functions in Crust:
 
 - `args()`: Returns the command line arguments passed to the program.

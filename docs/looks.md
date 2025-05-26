@@ -1,5 +1,3 @@
-# Looks Functions
-
 The looks functions are used to change the appearance of sprites and backdrops. They can be used to change costumes, backdrops, sizes, effects, and more. Here is a list of all the looks functions in Crust:
 
 - `say(string, time)`: Makes the sprite say the specified string for the specified time in seconds. The string is displayed above the sprite.

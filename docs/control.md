@@ -1,5 +1,3 @@
-# Control Functions
-
 Most of the control functions are block statements and explained in the [Crust Language](crust-language.md) page. Here is a list of all the control functions in Crust:
 
 - `wait(time)`: Waits for the specified time in seconds before continuing to the next block.
