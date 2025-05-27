@@ -24,7 +24,7 @@ Inline statements are single-line statements that perform a specific action. The
 - `variable = value`: Assigns a value to a variable. Example: `x = 42`. Variables can change their datatype at any time.
 - `global variable = value`: Assigns a value to a global variable. Global variables can be accessed from any sprite. Example: `global score = 0`
 - `function_name(arguments)`: Calls a function with the given arguments. Example: `goto("mouse")`
-- `import "file.crst"`: Imports a Crust file. The file can contain functions, variables, and other statements. Example: `import "utils.crst"`
+- `import "file.crst"`: Imports a Crust file. The file can contain functions and variables. Import statements are defined at the head of the program. Example: `import "utils.crst"`
 
 To assign a list's or object's value, you can use the following syntax:
 
@@ -35,7 +35,7 @@ To assign a list's or object's value, you can use the following syntax:
 
 Block statements are multi-line statements that perform a many actions in one go. They are used to define functions, loops, and conditionals. Block statements are enclosed in curly braces `{}`. There are 8 block statements in Crust:
 
-- `setup { ... }`: The setup block is executed once at the start of the program. It is used to initialize variables, import files, and set up the game environment.
+- `setup { ... }`: The setup block is executed once at the start of the program. It is used to initialize variables and set up the game environment.
   In library files, variable assignments are appended to the importing file from the setup block. Everything else is ignored.
 - `update { ... }`: The update block is executed every frame, and is used to update the game state, handle input, and draw graphics. Libraries ignore the update block.
 - `if condition { ... }`: Executes the block if the condition is true. Example: `if x > 0 { print("x is positive") }`
@@ -52,8 +52,8 @@ if x > 0 {
 ```
 - `while condition { ... }`: Executes the block repeatedly while the condition is true. Example: `while x < 10 { x += 1 }`
 - `repeat n { ... }`: Executes the block a specific number of times. Example: `repeat 5 { print("Hello") }`
-- `clone_setup { ... }`: The clone setup block is executed once for each clone of a sprite. It is used to initialize variables and set up the clone's state.
-- `clone_update { ... }`: The clone update block is executed every frame for each clone of a sprite. It is used to update the clone's state and draw graphics.
+- `clone_setup { ... }`: The clone setup block is executed once for each clone of a sprite. It is used to initialize variables and set up the clone's state. Libraries ignore the clone setup block.
+- `clone_update { ... }`: The clone update block is executed every frame for each clone of a sprite. It is used to update the clone's state and draw graphics. Libraries ignore the clone update block.
 - `fn function_name(arguments) return { ... }`: Defines a function with the given name and arguments. The function can be called later using `function_name(arguments)`. Example: 
 ```
 fn add(a, b) result {
@@ -61,7 +61,8 @@ fn add(a, b) result {
 }
 ```
 
-Note: No `return` statement exists, and the return is embedded in the function header. The function can return a value by assigning it to the `result` variable.
+!!! note 
+    No `return` statement exists, and the return is embedded in the function header. The function can return a value by assigning it to the `result` variable.
 
 ## Expressions
 
