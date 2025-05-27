@@ -1,4 +1,4 @@
-If you want to run Crust, you need to have the Crust engine installed on your system. You can only build it from source at the moment.
+If you want to run Crust projects, you need to have the Crust engine installed on your system. You can only build it from source at the moment.
 
 ## Building Crust
 
@@ -21,7 +21,7 @@ This will compile Crust and install it on your system. Make cargo can be found i
 
 ## Running your Crust Project
 
-To run your Crust project, you need to have Crust installed on your system (obviously). Once you have Crust installed, you can run your project using the following command in your terminal:
+Once you have Crust installed, you can run your project using the following command in your terminal:
 
 === "Linux / macOS / Windows (WSL)"
     ```bash
