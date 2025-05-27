@@ -25,7 +25,7 @@ struct SpriteConfig {
     name: String,
     code: String,
     costumes: Vec<String>,
-    sounds: Vec<SoundConfig>,
+    sounds: Option<Vec<SoundConfig>>,
     x: f32,
     y: f32,
     w: f32,
@@ -34,7 +34,7 @@ struct SpriteConfig {
 
 #[derive(Deserialize)]
 struct ProjectConfig {
-    debug_options: Vec<String>,
+    debug_options: Option<Vec<String>>,
     stage: StageConfig,
     sprites: Vec<SpriteConfig>,
 }
@@ -67,12 +67,15 @@ impl Runtime {
             }
 
             let mut sounds = vec![];
-            for sound in sprite.sounds {
-                let path = dir.join(&sound.file);
-                let sound_data = load_sound(&path.to_string_lossy()).await.unwrap_or_else(|_| {
-                    panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
-                });
-                sounds.push((sound.name, sound_data));
+            if sprite.sounds.is_some() {
+                let sounds_ = sprite.sounds.unwrap();
+                for sound in sounds_ {
+                    let path = dir.join(&sound.file);
+                    let sound_data = load_sound(&path.to_string_lossy()).await.unwrap_or_else(|_| {
+                        panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
+                    });
+                    sounds.push((sound.name, sound_data));
+                }
             }
 
             let sounds = sounds.into_iter().collect::<HashMap<_, _>>();
@@ -92,7 +95,7 @@ impl Runtime {
         
         Self {
             project,
-            debug_options: config.debug_options,
+            debug_options: config.debug_options.unwrap_or(vec![]),
         }
     }
 

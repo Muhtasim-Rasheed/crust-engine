@@ -58,6 +58,8 @@ All paths mentioned are relative to the `project.toml` file.
         - `w`: The width of the sprite in pixels. Defaults to 100.
         - `h`: The height of the sprite in pixels. Defaults to 100.
 
+The keys `debug_options` and `[sprites.sounds]` are optional. If they are not present, the default values will be used.
+
 ## Recommended Project Structure
 
 The recommended project structure is as follows:

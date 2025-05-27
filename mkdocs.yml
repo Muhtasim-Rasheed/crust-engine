@@ -24,6 +24,7 @@ nav:
       - Drawing Functions: drawing.md
       - Window Functions: window.md
     - Running your Crust Project: run.md
+  - The Screen: screen.md
   - License: license.md
 markdown_extensions:
   - admonition
