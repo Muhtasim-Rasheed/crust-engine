@@ -1106,6 +1106,14 @@ impl Sprite {
                                 println!("Invalid arguments for set_window_position");
                             }
                         }
+                        "pointer_grab" => {
+                            if let [Value::Boolean(grab)] = args.as_slice() {
+                                set_cursor_grab(*grab);
+                                show_mouse(!grab);
+                            } else {
+                                println!("Invalid arguments for pointer_grab");
+                            }
+                        }
                         _ => {
                             if let Some(function_struct) = self.functions.clone().get(function) {
                                 let Function { args: args_, body, .. } = function_struct;

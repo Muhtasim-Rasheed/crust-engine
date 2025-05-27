@@ -167,6 +167,7 @@
 - [x] `set_window_x(x)`
 - [x] `set_window_y(y)`
 - [x] `set_window_position(x, y)`
+- [x] `pointer_grab(bool)`
 - [x] `window_width()`
 - [x] `window_height()`
 - [ ] `screen_width()`
