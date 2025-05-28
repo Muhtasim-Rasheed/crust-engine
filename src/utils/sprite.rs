@@ -53,6 +53,15 @@ pub enum RotationStyle {
     DontRotate,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum StopRequest {
+    All, // Stop all sprites and scripts
+    This, // Stop this sprite and all its scripts
+    Script(usize), // Stop a specific script by ID
+    OtherScripts(usize), // Stop all scripts of this sprite except the one with the given ID
+    OtherSpritesAndScripts(usize), // Stop all other sprites and all scripts except the one with the given ID
+}
+
 #[derive(Debug)]
 struct Glide {
     start_x: f32,
@@ -96,6 +105,7 @@ pub struct Sprite {
     pub draw_color: Color,
     pub functions: HashMap<String, Function>,
     pub clone_id: Option<usize>,
+    pub stop_request: Option<StopRequest>,
     clones: Vec<Sprite>,
     clone_setup: Vec<Statement>,
     clone_update: Vec<Vec<Statement>>,
@@ -230,6 +240,7 @@ impl Sprite {
             clone_update,
             clone_id: None,
             delete_pending: false,
+            stop_request: None,
         }
     }
 
@@ -270,6 +281,7 @@ impl Sprite {
             clone_update: self.clone_update.clone(),
             clone_id: Some(self.clones.len() + 1),
             delete_pending: false,
+            stop_request: None,
         }
     }
 
@@ -354,10 +366,10 @@ impl Sprite {
         self.clones.push(self.new_clone());
     }
 
-    pub fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D, local_vars: &[(String, Value)]) {
+    pub fn execute_statement(&mut self, statement: &Statement, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D, local_vars: &[(String, Value)], script_id: usize) {
         match statement {
             Statement::Assignment { is_global, identifier, value } => {
-                let value = super::resolve_expression(value, project, self, local_vars, snapshots, camera); 
+                let value = super::resolve_expression(value, project, self, local_vars, snapshots, camera, script_id);
                 if *is_global {
                     project.global_variables.insert(identifier.clone(), value);
                 } else {
@@ -369,8 +381,8 @@ impl Sprite {
                 }
             }
             Statement::ListMemberAssignment { is_global, identifier, index, value } => {
-                let value = super::resolve_expression(value, project, self, local_vars, snapshots, camera);
-                let index = super::resolve_expression(index, project, self, local_vars, snapshots, camera);
+                let value = super::resolve_expression(value, project, self, local_vars, snapshots, camera, script_id);
+                let index = super::resolve_expression(index, project, self, local_vars, snapshots, camera, script_id);
                 if let Value::Number(index) = index {
                     if *is_global {
                         if let Some(global_list) = project.global_variables.get_mut(identifier.to_string().as_str()) {
@@ -404,30 +416,30 @@ impl Sprite {
                 }
             }
             Statement::If { condition, body, else_body } => {
-                let condition_value = super::resolve_expression(condition, project, self, local_vars, snapshots, camera); 
+                let condition_value = super::resolve_expression(condition, project, self, local_vars, snapshots, camera, script_id);
                 if condition_value.to_boolean() {
                     for statement in body {
-                        self.execute_statement(statement, project, snapshots, camera, local_vars);
+                        self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
                     }
                 } else if let Some(else_body) = else_body {
                     for statement in else_body {
-                        self.execute_statement(statement, project, snapshots, camera, local_vars);
+                        self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
                     }
                 }
             }
             Statement::While { condition, body } => {
-                while super::resolve_expression(condition, project, self, local_vars, snapshots, camera).to_boolean() { 
+                while super::resolve_expression(condition, project, self, local_vars, snapshots, camera, script_id).to_boolean() { 
                     for statement in body {
-                        self.execute_statement(statement, project, snapshots, camera, local_vars);
+                        self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
                     }
                 }
             }
             Statement::Repeat { times, body } => {
-                let times_value = super::resolve_expression(times, project, self, local_vars, snapshots, camera); 
+                let times_value = super::resolve_expression(times, project, self, local_vars, snapshots, camera, script_id);
                 if let Value::Number(times) = times_value {
                     for _ in 0..times as usize {
                         for statement in body {
-                            self.execute_statement(statement, project, snapshots, camera, local_vars);
+                            self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
                         }
                     }
                 } else {
@@ -438,7 +450,7 @@ impl Sprite {
                 if let Expression::Call { function, args } = c {
                     let args = args
                         .iter()
-                        .map(|arg| super::resolve_expression(arg, project, self, local_vars, snapshots, camera)) 
+                        .map(|arg| super::resolve_expression(arg, project, self, local_vars, snapshots, camera, script_id))
                         .collect::<Vec<_>>();
                     match function.as_str() {
                         // ============= MISC ============= \\
@@ -853,6 +865,30 @@ impl Sprite {
                                 println!("Invalid arguments for wait");
                             }
                         }
+                        "stop" => {
+                            if let [Value::String(action)] = args.as_slice() {
+                                match action.as_str() {
+                                    "all" => {
+                                        self.stop_request = Some(StopRequest::All);
+                                    }
+                                    "this" => {
+                                        self.stop_request = Some(StopRequest::This);
+                                    }
+                                    "script" => {
+                                        self.stop_request = Some(StopRequest::Script(script_id));
+                                    }
+                                    "other-scripts" => {
+                                        self.stop_request = Some(StopRequest::OtherScripts(script_id));
+                                    }
+                                    "other-sprites-and-scripts" => {
+                                        self.stop_request = Some(StopRequest::OtherSpritesAndScripts(script_id));
+                                    }
+                                    _ => println!("Invalid action for stop"),
+                                }
+                            } else {
+                                println!("Invalid arguments for stop");
+                            }
+                        }
                         "clone" => self.clone(),
                         "delete_clone" => {
                             if let [Value::Number(cloneid)] = args.as_slice() {
@@ -1128,7 +1164,7 @@ impl Sprite {
                                     }
                                     local_vars_.append(&mut local_vars.to_vec());
                                     for statement in body {
-                                        self.execute_statement(statement, project, snapshots, camera, &local_vars_);
+                                        self.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
                                     }
                                 } else {
                                     println!("Invalid number of arguments for function '{}'", function);
@@ -1142,6 +1178,43 @@ impl Sprite {
             }
             _ => {}
         }
+    }
+
+    fn get_script_id(&self, ast: Vec<Statement>) -> usize {
+        if self.setup_ast == ast {
+            0
+        } else {
+            self.update_ast.iter().position(|x| x == &ast).unwrap_or(0) + 1
+        }
+    }
+
+    pub fn stop_script(&mut self, script_id: usize) {
+        if script_id == 0 {
+            self.setup_ast.clear();
+        } else if let Some(ast) = self.update_ast.get_mut(script_id - 1) {
+            ast.clear();
+        }
+    }
+
+    pub fn stop_other_scripts(&mut self, script_id: usize) {
+        if script_id == 0 {
+            self.update_ast.clear();
+        } else {
+            self.setup_ast.clear();
+            let mut update_ast = std::mem::take(&mut self.update_ast);
+            for ast in &mut update_ast {
+                if self.get_script_id(ast.clone()) != script_id {
+                    ast.clear();
+                }
+            }
+            self.update_ast = update_ast;
+        }
+    }
+
+    pub fn stop_self(&mut self) {
+        self.setup_ast.clear();
+        self.update_ast.clear();
+        self.clones.clear();
     }
 
     pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
@@ -1176,19 +1249,54 @@ impl Sprite {
 
         if !self.setup_finished {
             for statement in self.setup_ast.clone() {
-                self.execute_statement(&statement, project, snapshots, camera, &vec![]);
+                self.execute_statement(&statement, project, snapshots, camera, &vec![], 0);
             }
             self.setup_finished = true;
         } else {
             for ast in self.update_ast.clone() {
-                for statement in ast {
-                    self.execute_statement(&statement, project, snapshots, camera, &vec![]);
+                // for statement in ast {
+                for (i, statement) in ast.iter().enumerate() {
+                    self.execute_statement(&statement, project, snapshots, camera, &vec![], i + 1);
                 }
             }
         }
 
         // filter out clones that are marked for deletion
         self.clones.retain(|clone| !clone.delete_pending);
+
+        let mut remove_clones = vec![];
+            let clones_len = self.clones.len();
+            for sprite in &mut self.clones {
+                if let Some(stop_request) = &sprite.stop_request {
+                    match stop_request {
+                        StopRequest::All => {
+                            for i in 0..clones_len {
+                                remove_clones.push(i);
+                            }
+                        }
+                        StopRequest::This => {
+                            sprite.stop_self();
+                        }
+                        StopRequest::Script(script_id) => {
+                            sprite.stop_script(*script_id);
+                        }
+                        StopRequest::OtherScripts(script_id) => {
+                            sprite.stop_other_scripts(*script_id);
+                        }
+                        StopRequest::OtherSpritesAndScripts(script_id) => {
+                            sprite.stop_other_scripts(*script_id);
+                            for i in 0..clones_len {
+                                if snapshots[i].name != sprite.name {
+                                    remove_clones.push(i);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            for remove_index in remove_clones.iter().rev() {
+                self.clones[*remove_index].stop_self();
+            }
 
         // idk run step for all the clones too
         for clone in &mut self.clones {

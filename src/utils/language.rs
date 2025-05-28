@@ -204,7 +204,7 @@ impl Tokenizer {
 
 // ========================= Parser ========================= \\
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Expression {
     Value(Value),
     List(Vec<Expression>),
@@ -265,7 +265,7 @@ impl std::fmt::Debug for Expression {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Statement {
     Assignment {
         is_global: bool,

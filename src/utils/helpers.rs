@@ -13,27 +13,27 @@ use super::{Expression, Function, Project, Sprite, SpriteSnapshot, Value};
 
 // Helper functions!
 
-pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut Sprite, local_vars: &[(String, Value)], snapshots: &[SpriteSnapshot], camera: &Camera2D) -> Value {
+pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut Sprite, local_vars: &[(String, Value)], snapshots: &[SpriteSnapshot], camera: &Camera2D, script_id: usize) -> Value {
     match expr {
         Expression::Value(v) => v.clone(),
         Expression::List(l) => {
             let mut list = vec![];
             for element in l {
-                list.push(resolve_expression(element, project, sprite, local_vars, snapshots, camera));
+                list.push(resolve_expression(element, project, sprite, local_vars, snapshots, camera, script_id));
             }
             Value::List(list)
         }
         Expression::Object(o) => {
             let mut object = std::collections::HashMap::new();
             for (key, value) in o {
-                let resolved_value = resolve_expression(value, project, sprite, local_vars, snapshots, camera);
+                let resolved_value = resolve_expression(value, project, sprite, local_vars, snapshots, camera, script_id);
                 object.insert(key.clone(), resolved_value);
             }
             Value::Object(object)
         }
         Expression::ListMemberAccess { list, index } => {
-            let index = resolve_expression(index, project, sprite, local_vars, snapshots, camera);
-            let list = resolve_expression(list, project, sprite, local_vars, snapshots, camera);
+            let index = resolve_expression(index, project, sprite, local_vars, snapshots, camera, script_id);
+            let list = resolve_expression(list, project, sprite, local_vars, snapshots, camera, script_id);
             if let Value::List(list) = list {
                 if let Value::Number(index) = index {
                     if index >= 0.0 && index < list.len() as f32 {
@@ -60,8 +60,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
         }
         Expression::Identifier(id) => sprite.variable(id, project, local_vars).clone(),
         Expression::Binary { left, right, operator } => {
-            let left_value = resolve_expression(left, project, sprite, local_vars, snapshots, camera);
-            let right_value = resolve_expression(right, project, sprite, local_vars, snapshots, camera);
+            let left_value = resolve_expression(left, project, sprite, local_vars, snapshots, camera, script_id);
+            let right_value = resolve_expression(right, project, sprite, local_vars, snapshots, camera, script_id);
             match operator.as_str() {
                 "+" => Value::Number(left_value.to_number() + right_value.to_number()),
                 "-" => Value::Number(left_value.to_number() - right_value.to_number()),
@@ -81,7 +81,7 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
             }
         }
         Expression::Unary { operator, operand } => {
-            let operand_value = resolve_expression(operand, project, sprite, local_vars, snapshots, camera);
+            let operand_value = resolve_expression(operand, project, sprite, local_vars, snapshots, camera, script_id);
             match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
                 "!" => Value::Boolean(!operand_value.to_boolean()),
@@ -90,7 +90,7 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
         }
         Expression::Call { function, args } => {
             let args = args.iter()
-                .map(|arg| resolve_expression(arg, project, sprite, local_vars, snapshots, camera))
+                .map(|arg| resolve_expression(arg, project, sprite, local_vars, snapshots, camera, script_id))
                 .collect::<Vec<_>>();
             match function.as_str() {
                 "args" => {
@@ -420,9 +420,9 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                             }
                             local_vars_.append(&mut local_vars.to_vec());
                             for statement in body {
-                                sprite.execute_statement(statement, project, snapshots, camera, &local_vars_);
+                                sprite.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
                             }
-                            let returns = resolve_expression(returns, project, sprite, &local_vars_, snapshots, camera);
+                            let returns = resolve_expression(returns, project, sprite, &local_vars_, snapshots, camera, script_id);
                             return returns;
                         } else {
                             return Value::Null;

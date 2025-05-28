@@ -122,7 +122,7 @@
 - [x] `if bool {} else {}`
 - [x] `if bool {} else if bool {}`
 - [x] `while bool {}`
-- [ ] `stop(all | self | script | other-scripts | other-sprites-and-scripts)`
+- [x] `stop(all | this | script | other-scripts | other-sprites-and-scripts)`
 - [x] `clone_setup {}`
 - [x] `clone_update {}`
 - [x] `clone()`

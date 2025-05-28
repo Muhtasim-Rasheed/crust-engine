@@ -5,6 +5,7 @@ use macroquad::audio::*;
 
 use serde::Deserialize;
 
+use super::StopRequest;
 use super::{
     Parser, Project, Sprite, SpriteSnapshot, Tokenizer
 };
@@ -120,6 +121,40 @@ impl Runtime {
             let mut sprites = std::mem::take(&mut self.project.sprites);
             
             let snapshots: Vec<SpriteSnapshot> = sprites.iter().map(|s| s.into()).collect();
+
+            let mut remove_sprites = vec![];
+            let sprites_len = sprites.len();
+            for sprite in &mut sprites {
+                if let Some(stop_request) = &sprite.stop_request {
+                    match stop_request {
+                        StopRequest::All => {
+                            for i in 0..sprites_len {
+                                remove_sprites.push(i);
+                            }
+                        }
+                        StopRequest::This => {
+                            sprite.stop_self();
+                        }
+                        StopRequest::Script(script_id) => {
+                            sprite.stop_script(*script_id);
+                        }
+                        StopRequest::OtherScripts(script_id) => {
+                            sprite.stop_other_scripts(*script_id);
+                        }
+                        StopRequest::OtherSpritesAndScripts(script_id) => {
+                            sprite.stop_other_scripts(*script_id);
+                            for i in 0..sprites_len {
+                                if snapshots[i].name != sprite.name {
+                                    remove_sprites.push(i);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            for remove_index in remove_sprites.iter().rev() {
+                sprites[*remove_index].stop_self();
+            }
 
             for sprite in &mut sprites {
                 sprite.step(&mut self.project, &snapshots, &camera);
