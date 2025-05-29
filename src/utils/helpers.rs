@@ -269,6 +269,7 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 }
                 "typeof" => {
                     match args.as_slice() {
+                        [Value::Null] => Value::String("null".to_string()),
                         [Value::String(_)] => Value::String("string".to_string()),
                         [Value::Number(_)] => Value::String("number".to_string()),
                         [Value::Boolean(_)] => Value::String("boolean".to_string()),
