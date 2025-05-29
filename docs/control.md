@@ -1,7 +1,7 @@
 Most of the control functions are block statements and explained in the [Crust Language](crust-language.md) page. Here is a list of all the control functions in Crust:
 
 - `wait(time)`: Waits for the specified time in seconds before continuing to the next block.
-- `stop(option)`: Stops the current script. The `option` can be `all`, `this`, or `other`. 
+- `stop(option)`: Stops the current script. The `option` can be `all`, `this`, `script`, `other-scripts`, or `other-sprites-and-scripts`:
     - `all`: Stops all scripts in all sprites.
     - `this`: Stops all scripts in the current sprite.
     - `script`: Stops the current script.
