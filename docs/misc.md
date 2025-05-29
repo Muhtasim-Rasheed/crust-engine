@@ -27,6 +27,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `import(path)`: Imports a Crust file at the specified path. The path is relative to the project root.
 - `import_binary(path)`: Imports a binary file at the specified path. The path is relative to the project root.
 - `parse_image(binary)`: Parses the given binary data as an image and returns a list [width, height, pixels]. The pixels are a list of RGBA values in the format [r, g, b, a].
+- `costume_as_image()`: Returns the image data of the current costume in the same format as `parse_image()`.
 - `screenshot()`: Takes a screenshot of the current screen and saves it to the `exports` directory in the project root.
 - `screenshot(path)`: Takes a screenshot of the current screen and saves it to the specified path. The path is relative to the project root.
 - `push(list, value)`: Pushes the given value to the end of the list and returns the new list.

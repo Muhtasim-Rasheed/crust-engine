@@ -255,6 +255,18 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
+                "costume_as_image" => {
+                    let image = sprite.costumes[sprite.costume()].get_texture_data();
+                    let pixels_ = image.get_image_data();
+                    let mut pixels: Vec<Value> = vec![];
+                    for pixel in pixels_ {
+                        pixels.push(Value::Number(pixel[0] as f32));
+                        pixels.push(Value::Number(pixel[1] as f32));
+                        pixels.push(Value::Number(pixel[2] as f32));
+                        pixels.push(Value::Number(pixel[3] as f32));
+                    }
+                    Value::List(vec![Value::Number(image.width() as f32), Value::Number(image.height() as f32), Value::List(pixels)])
+                }
                 "typeof" => {
                     match args.as_slice() {
                         [Value::String(_)] => Value::String("string".to_string()),
