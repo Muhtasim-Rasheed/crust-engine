@@ -3,7 +3,7 @@ The event functions are used to handle events in the project. They can be used t
 - `key_down(key)`: Returns `true` if the specified key is currently pressed down.
 - `key_pressed(key)`: Returns `true` if the specified key was pressed down in the current frame.
 - `key_released(key)`: Returns `true` if the specified key was released in the current frame.
-- `did_get_clicked()`: Returns `true` if the sprite was clicked in the current frame.
+- `got_clicked()`: Returns `true` if the sprite was clicked in the current frame.
 - `is_backdrop(backdrop)`: Returns `true` if the current backdrop is the specified backdrop. The backdrop is specified by its index in the stage's backdrop list, starting from 0.
 - `is_broadcasted(broadcast)`: Returns `true` if the specified broadcast message was received in the current frame. The broadcast message is specified by its name.
 - `broadcast(broadcast)`: Broadcasts the specified message to all sprites. The broadcast message is specified by its name.

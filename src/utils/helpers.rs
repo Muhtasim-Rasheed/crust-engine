@@ -387,7 +387,10 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
-                "did_get_clicked" => {
+                "got_clicked" => {
+                    if !is_mouse_button_pressed(MouseButton::Left) {
+                        return Value::Boolean(false);
+                    }
                     let xy = mouse_position();
                     let top_left = sprite.center - vec2(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
                     let bottom_right = sprite.center + vec2(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);

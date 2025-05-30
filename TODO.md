@@ -106,7 +106,7 @@
 - [x] `key_down(key)`
 - [x] `key_pressed(key)`
 - [x] `key_release(key)`
-- [x] `did_get_clicked()`
+- [x] `sprite_clicked()`
 - [x] `is_backdrop(backdrop)`
 - [ ] `when bool {}`
 - [x] `is_broadcasted(broadcast)`
