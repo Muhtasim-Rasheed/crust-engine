@@ -1230,15 +1230,6 @@ impl Sprite {
     }
 
     pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
-        // TODO: Correctly implement dialogue waiting
-        if let Some(dialogue) = &mut self.dialogue {
-            if dialogue.duration > 0.0 {
-                dialogue.duration -= 1.0;
-            } else {
-                self.dialogue = None;
-            }
-        }
-
         if let Some(glide) = &mut self.glide {
             let t = 1.0 - (glide.remaining as f32 / glide.duration as f32);
             if glide.remaining > 0 {
@@ -1253,14 +1244,20 @@ impl Sprite {
             return;
         }
         
-        // TODO: Correctly implement the wait function
-        if self.time_waiting > 0 {
-            self.time_waiting -= 1;
-            return;
-        }
-
         if !self.setup_finished {
             for statement in self.setup_ast.clone() {
+                if self.time_waiting > 0 {
+                    self.time_waiting -= 1;
+                    break;
+                }
+                if let Some(dialogue) = &mut self.dialogue {
+                    if dialogue.duration > 0.0 {
+                        dialogue.duration -= 1.0;
+                    } else {
+                        self.dialogue = None;
+                    }
+                    break;
+                }
                 self.execute_statement(&statement, project, snapshots, camera, &vec![], 0);
                 if self.skip_further_execution_of_frame {
                     self.skip_further_execution_of_frame = false;
@@ -1271,6 +1268,18 @@ impl Sprite {
         } else {
             for ast in self.update_ast.clone() {
                 for (i, statement) in ast.iter().enumerate() {
+                    if self.time_waiting > 0 {
+                        self.time_waiting -= 1;
+                        break;
+                    }
+                    if let Some(dialogue) = &mut self.dialogue {
+                        if dialogue.duration > 0.0 {
+                            dialogue.duration -= 1.0;
+                        } else {
+                            self.dialogue = None;
+                        }
+                        break;
+                    }
                     self.execute_statement(&statement, project, snapshots, camera, &vec![], i + 1);
                     if self.skip_further_execution_of_frame {
                         self.skip_further_execution_of_frame = false;
