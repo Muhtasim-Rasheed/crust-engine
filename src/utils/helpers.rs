@@ -387,7 +387,46 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
-                "got_clicked" => {
+                "mouse_button_down" => {
+                    if let [Value::String(button)] = args.as_slice() {
+                        let button = match button.to_lowercase().as_str() {
+                            "left" => MouseButton::Left,
+                            "right" => MouseButton::Right,
+                            "middle" => MouseButton::Middle,
+                            _ => MouseButton::Unknown,
+                        };
+                        Value::Boolean(is_mouse_button_down(button))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "mouse_button_pressed" => {
+                    if let [Value::String(button)] = args.as_slice() {
+                        let button = match button.to_lowercase().as_str() {
+                            "left" => MouseButton::Left,
+                            "right" => MouseButton::Right,
+                            "middle" => MouseButton::Middle,
+                            _ => MouseButton::Unknown,
+                        };
+                        Value::Boolean(is_mouse_button_pressed(button))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "mouse_button_released" => {
+                    if let [Value::String(button)] = args.as_slice() {
+                        let button = match button.to_lowercase().as_str() {
+                            "left" => MouseButton::Left,
+                            "right" => MouseButton::Right,
+                            "middle" => MouseButton::Middle,
+                            _ => MouseButton::Unknown,
+                        };
+                        Value::Boolean(is_mouse_button_released(button))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "sprite_clicked" => {
                     if !is_mouse_button_pressed(MouseButton::Left) {
                         return Value::Boolean(false);
                     }

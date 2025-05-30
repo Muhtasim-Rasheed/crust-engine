@@ -3,7 +3,10 @@ The event functions are used to handle events in the project. They can be used t
 - `key_down(key)`: Returns `true` if the specified key is currently pressed down.
 - `key_pressed(key)`: Returns `true` if the specified key was pressed down in the current frame.
 - `key_released(key)`: Returns `true` if the specified key was released in the current frame.
-- `got_clicked()`: Returns `true` if the sprite was clicked in the current frame.
+- `mouse_button_down(button)`: Returns `true` if the specified mouse button is currently pressed down.
+- `mouse_button_pressed(button)`: Returns `true` if the specified mouse button was pressed down in the current frame.
+- `mouse_button_released(button)`: Returns `true` if the specified mouse button was released in the current frame.
+- `sprite_clicked()`: Returns `true` if the sprite was clicked in the current frame.
 - `is_backdrop(backdrop)`: Returns `true` if the current backdrop is the specified backdrop. The backdrop is specified by its index in the stage's backdrop list, starting from 0.
 - `is_broadcasted(broadcast)`: Returns `true` if the specified broadcast message was received in the current frame. The broadcast message is specified by its name.
 - `broadcast(broadcast)`: Broadcasts the specified message to all sprites. The broadcast message is specified by its name.
@@ -47,4 +50,10 @@ The keys that can be used in the `key_down`, `key_pressed`, and `key_released` f
 - `"enter"`: The enter key.
 - `"esc"`: The escape key.
 
-Thats a lot of keys!
+## Mouse buttons
+
+The mouse buttons that can be used in the `mouse_button_down`, `mouse_button_pressed`, and `mouse_button_released` functions are:
+
+- `"left"`: The left mouse button.
+- `"middle"`: The middle mouse button (usually the scroll wheel).
+- `"right"`: The right mouse button.
