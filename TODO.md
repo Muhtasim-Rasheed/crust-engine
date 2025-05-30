@@ -113,10 +113,9 @@
 - [x] `broadcast(broadcast)`
 - [ ] `broadcast_and_wait(broadcast)`
 
-# Control
+# Control [DONE]
 
 - [x] `wait(sec)`
-- [ ] `wait_until(bool)`
 - [x] `repeat x {}`
 - [x] `if bool {}`
 - [x] `if bool {} else {}`
@@ -128,6 +127,7 @@
 - [x] `clone()`
 - [x] `delete_clone(cloneid)`
 - [x] `delete_clone()`
+- [x] `skip_further_execution_if(bool)`
 
 # Drawing [DONE]
 

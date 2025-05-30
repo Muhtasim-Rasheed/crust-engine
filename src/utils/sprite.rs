@@ -118,6 +118,7 @@ pub struct Sprite {
     time_waiting: u32,
     glide: Option<Glide>,
     delete_pending: bool,
+    skip_further_execution_of_frame: bool,
 }
 
 impl Sprite {
@@ -241,6 +242,7 @@ impl Sprite {
             clone_id: None,
             delete_pending: false,
             stop_request: None,
+            skip_further_execution_of_frame: false,
         }
     }
 
@@ -282,6 +284,7 @@ impl Sprite {
             clone_id: Some(self.clones.len() + 1),
             delete_pending: false,
             stop_request: None,
+            skip_further_execution_of_frame: false,
         }
     }
 
@@ -899,6 +902,15 @@ impl Sprite {
                                 self.delete_pending = true;
                             }
                         }
+                        "skip_further_execution_if" => {
+                            if let [Value::Boolean(condition)] = args.as_slice() {
+                                if *condition {
+                                    self.skip_further_execution_of_frame = true;
+                                }
+                            } else {
+                                println!("Invalid arguments for skip_further_execution_if");
+                            }
+                        }
                         // ============= DRAWING ============= \\
                         "set_color" => {
                             if let [Value::Number(r), Value::Number(g), Value::Number(b)] = args.as_slice() {
@@ -1250,13 +1262,20 @@ impl Sprite {
         if !self.setup_finished {
             for statement in self.setup_ast.clone() {
                 self.execute_statement(&statement, project, snapshots, camera, &vec![], 0);
+                if self.skip_further_execution_of_frame {
+                    self.skip_further_execution_of_frame = false;
+                    break;
+                }
             }
             self.setup_finished = true;
         } else {
             for ast in self.update_ast.clone() {
-                // for statement in ast {
                 for (i, statement) in ast.iter().enumerate() {
                     self.execute_statement(&statement, project, snapshots, camera, &vec![], i + 1);
+                    if self.skip_further_execution_of_frame {
+                        self.skip_further_execution_of_frame = false;
+                        break;
+                    }
                 }
             }
         }
