@@ -15,8 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use macroquad::{miniquad::conf::Icon, prelude::ImageFormat, texture::Image, window::Conf};
+use clap::Parser;
 
 mod utils;
+
+#[derive(Parser)]
+#[command(name = "Crust", version = env!("CARGO_PKG_VERSION"), about = "A Scratch-like game development tool with a custom scripting language.")]
+struct Args {
+    #[arg(short, long)]
+    project: Option<String>,
+}
 
 fn window_config() -> Conf {
     let small = utils::flatten(Image::from_file_with_format(include_bytes!("../icons/icon16.png"), Some(ImageFormat::Png)).unwrap().get_image_data().to_vec());
@@ -38,8 +46,9 @@ fn window_config() -> Conf {
 
 #[macroquad::main(window_config)]
 async fn main() {
-    let mut args = std::env::args();
-    let project_file = args.nth(1).unwrap_or_else(|| {
+    // let mut args = std::env::args();
+    let args = Args::parse();
+    let project_file = args.project.unwrap_or_else(|| {
         rfd::FileDialog::new()
             .set_title("Select Desired Crust Project")
             .add_filter("Crust Project", &["toml"])
