@@ -34,6 +34,9 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.
 - `remove(list, index)`: Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
 - `extend(list1, list2)`: Extends the first list with the second list and returns the new list.
+- `range(end)`: Returns a list of numbers from 0 to `end - 1`.
+- `range(start, end)`: Returns a list of numbers from `start` to `end - 1`.
+- `range(start, end, step)`: Returns a list of numbers from `start` to `end - 1`, incrementing by `step`.
 - `whoami()`: Returns the name of the current sprite. Works for clones as well.
 - `clone_id()`: Returns the ID of the current clone. Returns 0 if the sprite is not a clone.
 - `frame()`: Returns the current frame number. Starts at 0.

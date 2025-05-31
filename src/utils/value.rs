@@ -90,16 +90,19 @@ impl Value {
         }
     }
 
-    // pub fn to_list(&self) -> Vec<Value> {
-    //     match self {
-    //         Value::Null => vec![],
-    //         Value::List(l) => l.clone(),
-    //         Value::String(s) => s.chars()
-    //             .map(|c| Value::String(c.to_string()))
-    //             .collect(),
-    //         _ => vec![self.clone()],
-    //     }
-    // }
+    pub fn to_list(&self) -> Vec<Value> {
+        match self {
+            Value::Null => vec![],
+            Value::List(l) => l.clone(),
+            Value::String(s) => s.chars()
+                .map(|c| Value::String(c.to_string()))
+                .collect(),
+            Value::Object(o) => o.iter()
+                .map(|(k, v)| Value::List(vec![Value::String(k.clone()), v.clone()]))
+                .collect(),
+            _ => vec![self.clone()],
+        }
+    }
 
     // pub fn to_object(&self) -> HashMap<String, Value> {
     //     match self {

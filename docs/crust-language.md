@@ -51,7 +51,12 @@ if x > 0 {
 }
 ```
 - `while condition { ... }`: Executes the block repeatedly while the condition is true. Example: `while x < 10 { x += 1 }`
-- `repeat n { ... }`: Executes the block a specific number of times. Example: `repeat 5 { print("Hello") }`
+- `for variable in iterable { ... }`: Iterates over the values in the iterable (list or object) and executes the block for each value. Example: 
+```
+for item in range(5) {
+    print(item)
+}
+```
 - `clone_setup { ... }`: The clone setup block is executed once for each clone of a sprite. It is used to initialize variables and set up the clone's state. Libraries ignore the clone setup block.
 - `clone_update { ... }`: The clone update block is executed every frame for each clone of a sprite. It is used to update the clone's state and draw graphics. Libraries ignore the clone update block.
 - `fn function_name(arguments) return { ... }`: Defines a function with the given name and arguments. The function can be called later using `function_name(arguments)`. Example: 
@@ -60,7 +65,6 @@ fn add(a, b) result {
     result = a + b
 }
 ```
-
 !!! note 
     No `return` statement exists, and the return is embedded in the function header. The function can return a value by assigning it to the `result` variable.
 

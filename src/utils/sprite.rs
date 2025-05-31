@@ -437,16 +437,13 @@ impl Sprite {
                     }
                 }
             }
-            Statement::Repeat { times, body } => {
-                let times_value = super::resolve_expression(times, project, self, local_vars, snapshots, camera, script_id);
-                if let Value::Number(times) = times_value {
-                    for _ in 0..times as usize {
-                        for statement in body {
-                            self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
-                        }
+            Statement::For { identifier, iterable, body } => {
+                for value in super::resolve_expression(iterable, project, self, local_vars, snapshots, camera, script_id).to_list() {
+                    let mut new_local_vars = local_vars.to_vec();
+                    new_local_vars.push((identifier.clone(), value));
+                    for statement in body {
+                        self.execute_statement(statement, project, snapshots, camera, &new_local_vars, script_id);
                     }
-                } else {
-                    println!("Invalid argument for repeat");
                 }
             }
             Statement::Call(c) => {

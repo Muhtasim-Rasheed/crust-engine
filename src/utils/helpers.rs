@@ -328,6 +328,38 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 },
+                "range" => {
+                    match args.as_slice() {
+                        [Value::Number(end)] => {
+                            let end = *end as usize;
+                            if end == 0 {
+                                Value::List(vec![])
+                            } else {
+                                Value::List((0..end).map(|i| Value::Number(i as f32)).collect())
+                            }
+                        }
+                        [Value::Number(start), Value::Number(end)] => {
+                            let start = *start as usize;
+                            let end = *end as usize;
+                            if start >= end {
+                                Value::List(vec![])
+                            } else {
+                                Value::List((start..end).map(|i| Value::Number(i as f32)).collect())
+                            }
+                        }
+                        [Value::Number(start), Value::Number(end), Value::Number(step)] => {
+                            let start = *start as usize;
+                            let end = *end as usize;
+                            let step = *step as usize;
+                            if start >= end || step == 0 {
+                                Value::List(vec![])
+                            } else {
+                                Value::List((start..end).step_by(step).map(|i| Value::Number(i as f32)).collect())
+                            }
+                        }
+                        _ => Value::Null,
+                    }
+                }
                 "whoami" => Value::String(sprite.name.clone()),
                 "cloneid" => Value::Number(sprite.clone_id.unwrap_or(0) as f32),
                 "frame" => Value::Number(get_time() as f32 * 60.0),

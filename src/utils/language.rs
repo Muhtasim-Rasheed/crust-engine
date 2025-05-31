@@ -74,7 +74,7 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "if", "else", "while", "repeat", "global",
+            "if", "else", "while", "for", "in", "global",
             "setup", "update", "clone_setup", "clone_update", "fn",
             "import",
         ];
@@ -287,8 +287,9 @@ pub enum Statement {
         condition: Expression,
         body: Vec<Statement>,
     },
-    Repeat {
-        times: Expression,
+    For {
+        identifier: String,
+        iterable: Expression,
         body: Vec<Statement>,
     },
     Setup {
@@ -322,7 +323,7 @@ impl std::fmt::Debug for Statement {
             Statement::ListMemberAssignment { is_global, identifier, index, value } => write!(f, "LIST_ASSIGN[{} {:?}[{}] = {}]", if *is_global { "global" } else { "" }, identifier, index.to_string(), value.to_string()),
             Statement::If { condition, body, else_body } => write!(f, "IF[{}] {{ {:?} }} ELSE {{ {:?} }}", condition.to_string(), body, else_body),
             Statement::While { condition, body } => write!(f, "WHILE[{}] {{ {:?} }}", condition.to_string(), body),
-            Statement::Repeat { times, body } => write!(f, "REPEAT[{}] {{ {:?} }}", times.to_string(), body),
+            Statement::For { identifier, iterable, body } => write!(f, "FOR[{} IN {}] {{ {:?} }}", identifier, iterable.to_string(), body),
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
             Statement::CloneSetup { body } => write!(f, "CLONE_SETUP {{ {:?} }}", body),
@@ -396,7 +397,7 @@ impl Parser {
         match self.peek().unwrap_or(&Token::EOF) {
             Token::Keyword(k) if k == "if" => self.parse_if(),
             Token::Keyword(k) if k == "while" => self.parse_while(),
-            Token::Keyword(k) if k == "repeat" => self.parse_repeat(),
+            Token::Keyword(k) if k == "for" => self.parse_for(),
             Token::Keyword(k) if k == "setup" => {
                 self.advance();
                 let body = self.parse_block()?;
@@ -630,11 +631,20 @@ impl Parser {
         Ok(Statement::While { condition, body })
     }
 
-    fn parse_repeat(&mut self) -> Result<Statement, String> {
+    fn parse_for(&mut self) -> Result<Statement, String> {
         self.advance();
-        let times = self.parse_binary(0)?;
-        let body = self.parse_block()?;
-        Ok(Statement::Repeat { times, body })
+        if let Some(Token::Identifier(id)) = self.peek() {
+            let identifier = id.clone();
+            self.advance();
+            if !self.eat(&Token::Keyword("in".to_string())) {
+                return Err("Expected 'in' after for loop identifier".to_string());
+            }
+            let iterable = self.parse_binary(0)?;
+            let body = self.parse_block()?;
+            Ok(Statement::For { identifier, iterable, body })
+        } else {
+            Err("Expected identifier after 'for'".to_string())
+        }
     }
 
     fn parse_function_definition(&mut self) -> Result<Statement, String> {
