@@ -74,7 +74,7 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "if", "else", "while", "for", "in", "global",
+            "if", "else", "while", "for", "global",
             "setup", "update", "clone_setup", "clone_update", "fn",
             "import",
         ];
@@ -147,7 +147,7 @@ impl Tokenizer {
 
         // Multi-char operators first
         let two = &self.code[self.pointer..self.pointer + 2.min(self.code.len() - self.pointer)];
-        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", ".."].contains(&two) {
+        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", "in", ".."].contains(&two) {
             self.pointer += 2;
             return Some(Token::Operator(two.to_string()));
         }
@@ -636,7 +636,7 @@ impl Parser {
         if let Some(Token::Identifier(id)) = self.peek() {
             let identifier = id.clone();
             self.advance();
-            if !self.eat(&Token::Keyword("in".to_string())) {
+            if !self.eat(&Token::Operator("in".to_string())) {
                 return Err("Expected 'in' after for loop identifier".to_string());
             }
             let iterable = self.parse_binary(0)?;
