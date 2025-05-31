@@ -77,6 +77,7 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 ">=" => Value::Boolean(left_value.to_number() >= right_value.to_number()),
                 "&&" => Value::Boolean(left_value.to_boolean() && right_value.to_boolean()),
                 "||" => Value::Boolean(left_value.to_boolean() || right_value.to_boolean()),
+                ".." => Value::String(format!("{}{}", left_value.to_string(), right_value.to_string())),
                 _ => panic!("Unknown operator: {}", operator),
             }
         }
@@ -114,13 +115,6 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                     }
                 }
                 "time" => Value::Number(get_time() as f32),
-                "concat" => {
-                    let mut result = String::new();
-                    for arg in args {
-                        result.push_str(&arg.to_string());
-                    }
-                    Value::String(result)
-                }
                 "abs" => Value::Number(args[0].to_number().abs()),
                 "sqrt" => Value::Number(args[0].to_number().sqrt()),
                 "sin" => Value::Number(args[0].to_number().sin()),

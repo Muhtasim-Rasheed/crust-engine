@@ -4,7 +4,6 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `print(values...)`: Prints the given values to the console. Can take multiple values, separated by commas.
 - `input(prompt)`: Prompts the user for input and returns the input as a string. The prompt is displayed in the console.
 - `time()`: Returns the current time in seconds since the program started.
-- `concat(strings...)`: Concatenates the given strings and returns the result. Can take multiple strings, separated by commas.
 - `abs(num)`: Returns the absolute value of the given number.
 - `sqrt(num)`: Returns the square root of the given number.
 - `sin(num)`: Returns the sine of the given number (in radians).

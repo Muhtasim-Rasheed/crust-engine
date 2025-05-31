@@ -458,7 +458,7 @@ impl Sprite {
                     match function.as_str() {
                         // ============= MISC ============= \\
                         "print" => {
-                            println!("{} => {:?}", self.name, args);
+                            println!("{} => {}", self.name, args.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(" "));
                         }
                         "export" => {
                             match args.as_slice() {

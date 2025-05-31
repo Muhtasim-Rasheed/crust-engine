@@ -147,7 +147,7 @@ impl Tokenizer {
 
         // Multi-char operators first
         let two = &self.code[self.pointer..self.pointer + 2.min(self.code.len() - self.pointer)];
-        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||"].contains(&two) {
+        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", ".."].contains(&two) {
             self.pointer += 2;
             return Some(Token::Operator(two.to_string()));
         }

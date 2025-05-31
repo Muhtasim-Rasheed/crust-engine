@@ -1,10 +1,9 @@
 # Misc
 
 - `args()`
-- `print(string)`
+- `print(values...)`
 - `input(prompt)`
 - `time()`
-- `concat(strings..)`
 - `abs(num)`
 - `sqrt(num)`
 - `sin(num)`
