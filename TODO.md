@@ -33,6 +33,9 @@
 - `insert(list, index, value)`
 - `remove(list, index)`
 - `extend(list1, list2)`
+- `range(end)`
+- `range(start, end)`
+- `range(start, end, step)`
 - `whoami()`
 - `clone_id()`
 - `frame()`
@@ -107,8 +110,8 @@
 - [x] `key_release(key)`
 - [x] `sprite_clicked()`
 - [x] `is_backdrop(backdrop)`
-- [ ] `when bool {}`
-- [x] `is_broadcasted(broadcast)`
+- [x] `when bool {}`
+- [x] `when broadcast {}`
 - [x] `broadcast(broadcast)`
 - [ ] `broadcast_and_wait(broadcast)`
 
@@ -120,6 +123,7 @@
 - [x] `if bool {} else {}`
 - [x] `if bool {} else if bool {}`
 - [x] `while bool {}`
+- [x] `for i in iterable {}`
 - [x] `stop(all | this | script | other-scripts | other-sprites-and-scripts)`
 - [x] `clone_setup {}`
 - [x] `clone_update {}`

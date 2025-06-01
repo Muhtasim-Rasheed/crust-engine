@@ -115,6 +115,8 @@ pub struct Sprite {
     setup_ast: Vec<Statement>,
     update_ast: Vec<Vec<Statement>>,
     setup_finished: bool,
+    broadcast_recievers: HashMap<String, Vec<Statement>>,
+    boolean_recievers: Vec<(Expression, Vec<Statement>, bool)>,
     time_waiting: u32,
     glide: Option<Glide>,
     delete_pending: bool,
@@ -125,6 +127,8 @@ impl Sprite {
     pub fn new(name: String, costumes: Vec<Texture2D>, sounds: HashMap<String, Sound>, ast: Vec<Statement>, w: f32, h: f32, x: f32, y: f32, base_dir: String) -> Self {
         let mut setup_ast = vec![];
         let mut update_ast = vec![];
+        let mut broadcast_recievers = HashMap::new();
+        let mut boolean_recievers = vec![];
         let mut functions = HashMap::new();
         let mut clone_setup = vec![];
         let mut clone_update = vec![];
@@ -148,6 +152,12 @@ impl Sprite {
                         body: body.clone(),
                         returns: returns.clone(),
                     });
+                }
+                Statement::WhenBroadcasted { broadcast, body } => {
+                    broadcast_recievers.insert(broadcast.clone(), body);
+                }
+                Statement::WhenBoolean { condition, body } => {
+                    boolean_recievers.push((condition.clone(), body, false));
                 }
                 Statement::Import { path } => {
                     fn import_module(path: &str, base_dir: &str, visited: &mut Vec<String>, setup_ast: &mut Vec<Statement>) -> HashMap<String, Function> {
@@ -242,6 +252,8 @@ impl Sprite {
             clone_id: None,
             delete_pending: false,
             stop_request: None,
+            broadcast_recievers,
+            boolean_recievers,
             skip_further_execution_of_frame: false,
         }
     }
@@ -284,6 +296,8 @@ impl Sprite {
             clone_id: Some(self.clones.len() + 1),
             delete_pending: false,
             stop_request: None,
+            broadcast_recievers: self.broadcast_recievers.clone(),
+            boolean_recievers: self.boolean_recievers.clone(),
             skip_further_execution_of_frame: false,
         }
     }
@@ -1188,27 +1202,65 @@ impl Sprite {
             _ => {}
         }
     }
-
+    
     fn get_script_id(&self, ast: Vec<Statement>) -> usize {
         if self.setup_ast == ast {
-            0
-        } else {
-            self.update_ast.iter().position(|x| x == &ast).unwrap_or(0) + 1
+            return 0;
         }
+
+        if let Some(index) = self.update_ast.iter().position(|x| x == &ast) {
+            return index + 1;
+        }
+
+        if let Some(index) = self.broadcast_recievers.iter().position(|(_, body)| body == &ast) {
+            return index + self.update_ast.len() + 1;
+        }
+
+        if let Some(index) = self.boolean_recievers.iter().position(|(_, body, _)| body == &ast) {
+            return index + self.update_ast.len() + self.broadcast_recievers.len() + 1;
+        }
+
+        0
     }
 
     pub fn stop_script(&mut self, script_id: usize) {
         if script_id == 0 {
             self.setup_ast.clear();
-        } else if let Some(ast) = self.update_ast.get_mut(script_id - 1) {
+            return;
+        }
+
+        if let Some(ast) = self.update_ast.get_mut(script_id - 1) {
             ast.clear();
+            return;
+        }
+
+        if script_id <= self.update_ast.len() + self.broadcast_recievers.len() + 1 {
+            let index = script_id - self.update_ast.len() - 1;
+            if index < self.broadcast_recievers.len() {
+                let name = self.broadcast_recievers.keys().nth(index).cloned();
+                if let Some(name) = name {
+                    self.broadcast_recievers.retain(|broadcast, _| *broadcast != name.clone());
+                    return;
+                }
+            }
+        }
+
+        if script_id <= self.update_ast.len() + self.broadcast_recievers.len() + self.boolean_recievers.len() + 1 {
+            let index = script_id - self.update_ast.len() - self.broadcast_recievers.len() - 1;
+            if index < self.boolean_recievers.len() {
+                let (_, _, called) = &mut self.boolean_recievers[index];
+                *called = true; // mark as called so it won't be executed
+            }
         }
     }
 
     pub fn stop_other_scripts(&mut self, script_id: usize) {
         if script_id == 0 {
             self.update_ast.clear();
-        } else {
+            return;
+        }
+
+        if script_id <= self.update_ast.len() {
             self.setup_ast.clear();
             let mut update_ast = std::mem::take(&mut self.update_ast);
             for ast in &mut update_ast {
@@ -1217,13 +1269,37 @@ impl Sprite {
                 }
             }
             self.update_ast = update_ast;
+            return;
+        }
+
+        if script_id <= self.update_ast.len() + self.broadcast_recievers.len() + 1 {
+            let index = script_id - self.update_ast.len() - 1;
+            if index < self.broadcast_recievers.len() {
+                let name = self.broadcast_recievers.keys().nth(index).cloned();
+                if let Some(name) = name {
+                    self.broadcast_recievers.retain(|broadcast, _| *broadcast != name.clone());
+                    return;
+                }
+            }
+        }
+
+        if script_id <= self.update_ast.len() + self.broadcast_recievers.len() + self.boolean_recievers.len() + 1 {
+            let index = script_id - self.update_ast.len() - self.broadcast_recievers.len() - 1;
+            if index < self.boolean_recievers.len() {
+                let (_, _, called) = &mut self.boolean_recievers[index];
+                *called = true; // mark as called so it won't be executed
+            }
         }
     }
 
     pub fn stop_self(&mut self) {
         self.setup_ast.clear();
         self.update_ast.clear();
-        self.clones.clear();
+        self.broadcast_recievers.clear();
+        self.boolean_recievers.clear();
+        self.clones.iter_mut().for_each(|clone| {
+            clone.stop_self();
+        });
     }
 
     pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
@@ -1283,6 +1359,66 @@ impl Sprite {
                         break;
                     }
                 }
+            }
+        }
+
+        for (i, (broadcast, body)) in self.broadcast_recievers.clone().iter().enumerate() {
+            if project.broadcasted_message.as_ref() == Some(&broadcast) {
+                for statement in body {
+                    if self.time_waiting > 0 {
+                        self.time_waiting -= 1;
+                        break;
+                    }
+                    if let Some(dialogue) = &mut self.dialogue {
+                        if dialogue.duration > 0.0 {
+                            dialogue.duration -= 1.0;
+                        } else {
+                            self.dialogue = None;
+                        }
+                        break;
+                    }
+                    self.execute_statement(&statement, project, snapshots, camera, &vec![], i + self.update_ast.len() + 1);
+                    if self.skip_further_execution_of_frame {
+                        self.skip_further_execution_of_frame = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        self.boolean_recievers.retain(|(_, _, called)| { !called });
+
+        let mut called_s = vec![];
+        for (i, (expr, body, _)) in self.boolean_recievers.clone().iter().enumerate() {
+            let value = super::resolve_expression(&expr, project, self, &vec![], snapshots, camera, i + self.update_ast.len() + self.broadcast_recievers.len() + 1);
+            if value.to_boolean() {
+                for statement in body {
+                    if self.time_waiting > 0 {
+                        self.time_waiting -= 1;
+                        break;
+                    }
+                    if let Some(dialogue) = &mut self.dialogue {
+                        if dialogue.duration > 0.0 {
+                            dialogue.duration -= 1.0;
+                        } else {
+                            self.dialogue = None;
+                        }
+                        break;
+                    }
+                    self.execute_statement(&statement, project, snapshots, camera, &vec![], i + self.update_ast.len() + self.broadcast_recievers.len() + 1);
+                    if self.skip_further_execution_of_frame {
+                        self.skip_further_execution_of_frame = false;
+                        break;
+                    }
+                }
+                called_s.push(i);
+            }
+        }
+
+        // mark all called boolean recievers as called
+        for i in called_s {
+            if let Some((_, _, called)) = self.boolean_recievers.get_mut(i) {
+                *called = true;
             }
         }
 

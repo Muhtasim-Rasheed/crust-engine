@@ -469,13 +469,6 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 }
                 "mouse_x" => Value::Number(mouse_position().0 * 2.0 - screen_width()),
                 "mouse_y" => Value::Number(mouse_position().1 * 2.0 - screen_height()),
-                "is_broadcasted" => {
-                    if let [Value::String(broadcast)] = args.as_slice() {
-                        Value::Boolean(project.broadcasted_message.is_some() && project.broadcasted_message.as_ref().unwrap() == broadcast)
-                    } else {
-                        Value::Null
-                    }
-                }
                 "is_backdrop" => {
                     if let [Value::Number(backdrop)] = args.as_slice() {
                         Value::Boolean(project.stage.backdrop() == *backdrop as usize)

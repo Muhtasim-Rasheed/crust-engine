@@ -33,7 +33,7 @@ To assign a list's or object's value, you can use the following syntax:
 
 ### Block Statements
 
-Block statements are multi-line statements that perform a many actions in one go. They are used to define functions, loops, and conditionals. Block statements are enclosed in curly braces `{}`. There are 8 block statements in Crust:
+Block statements are multi-line statements that perform a many actions in one go. They are used to define functions, loops, and conditionals. Block statements are enclosed in curly braces `{}`. There are 9 block statements in Crust:
 
 - `setup { ... }`: The setup block is executed once at the start of the program. It is used to initialize variables and set up the game environment.
   In library files, variable assignments are appended to the importing file from the setup block. Everything else is ignored.
@@ -59,14 +59,27 @@ for item in range(5) {
 ```
 - `clone_setup { ... }`: The clone setup block is executed once for each clone of a sprite. It is used to initialize variables and set up the clone's state. Libraries ignore the clone setup block.
 - `clone_update { ... }`: The clone update block is executed every frame for each clone of a sprite. It is used to update the clone's state and draw graphics. Libraries ignore the clone update block.
+- `when broadcast { ... }` and `when boolean { ... }`: Executes the block when the specified broadcast message is received or when the boolean expression evaluates to true for the first time. Example: 
+```
+when "start_game" {
+    print("Game started!")
+}
+when x > 0 {
+    print("x just turned positive!")
+}
+```
 - `fn function_name(arguments) return { ... }`: Defines a function with the given name and arguments. The function can be called later using `function_name(arguments)`. Example: 
 ```
 fn add(a, b) result {
     result = a + b
 }
 ```
+
 !!! note 
     No `return` statement exists, and the return is embedded in the function header. The function can return a value by assigning it to the `result` variable.
+
+!!! note
+    If the reciver sprite is placed before the sender sprite in the `project.toml` file or the reciver sprite has a lower layer than the sender sprite, the receiver will not receive the broadcast message. This is because Crust processes sprites in the order they are stored in the project's sprite array. To ensure that all sprites can receive broadcast messages, place the sender sprite before all receiver sprites in the `project.toml` file and/or ensure that the sender sprite has a lower layer than the receiver sprite.
 
 ## Expressions
 

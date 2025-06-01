@@ -75,8 +75,10 @@ impl Tokenizer {
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
             "if", "else", "while", "for", "global",
-            "setup", "update", "clone_setup", "clone_update", "fn",
-            "import",
+            "setup", "update",
+            "clone_setup", "clone_update",
+            "when_broadcasted",
+            "fn", "import",
         ];
 
         if self.pointer >= self.code.len() {
@@ -304,6 +306,14 @@ pub enum Statement {
     CloneUpdate {
         body: Vec<Statement>,
     },
+    WhenBroadcasted {
+        broadcast: String,
+        body: Vec<Statement>,
+    },
+    WhenBoolean {
+        condition: Expression,
+        body: Vec<Statement>,
+    },
     Import {
         path: String,
     },
@@ -319,8 +329,8 @@ pub enum Statement {
 impl std::fmt::Debug for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Statement::Assignment { is_global, identifier, value } => write!(f, "ASSIGN[{} {:?} = {}]", if *is_global { "global" } else { "" }, identifier, value.to_string()),
-            Statement::ListMemberAssignment { is_global, identifier, index, value } => write!(f, "LIST_ASSIGN[{} {:?}[{}] = {}]", if *is_global { "global" } else { "" }, identifier, index.to_string(), value.to_string()),
+            Statement::Assignment { is_global, identifier, value } => write!(f, "ASSIGN[{}{:?} = {}]", if *is_global { "global " } else { "" }, identifier, value.to_string()),
+            Statement::ListMemberAssignment { is_global, identifier, index, value } => write!(f, "LIST_ASSIGN[{}{:?}[{}] = {}]", if *is_global { "global " } else { "" }, identifier, index.to_string(), value.to_string()),
             Statement::If { condition, body, else_body } => write!(f, "IF[{}] {{ {:?} }} ELSE {{ {:?} }}", condition.to_string(), body, else_body),
             Statement::While { condition, body } => write!(f, "WHILE[{}] {{ {:?} }}", condition.to_string(), body),
             Statement::For { identifier, iterable, body } => write!(f, "FOR[{} IN {}] {{ {:?} }}", identifier, iterable.to_string(), body),
@@ -328,6 +338,8 @@ impl std::fmt::Debug for Statement {
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
             Statement::CloneSetup { body } => write!(f, "CLONE_SETUP {{ {:?} }}", body),
             Statement::CloneUpdate { body } => write!(f, "CLONE_UPDATE {{ {:?} }}", body),
+            Statement::WhenBroadcasted { broadcast, body } => write!(f, "WHEN_BROADCASTED[{}] {{ {:?} }}", broadcast, body),
+            Statement::WhenBoolean { condition, body } => write!(f, "WHEN_BOOLEAN[{}] {{ {:?} }}", condition.to_string(), body),
             Statement::Import { path } => write!(f, "IMPORT[{}]", path),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
             Statement::FunctionDefinition { name, args, body, returns } => write!(f, "FUNCTION[{}({:?}) -> {}] {{ {:?} }}", name, args, returns.to_string(), body),
@@ -417,6 +429,19 @@ impl Parser {
                 self.advance();
                 let body = self.parse_block()?;
                 Ok(Statement::CloneUpdate { body })
+            }
+            Token::Keyword(k) if k == "when" => {
+                self.advance();
+                if let Some(Token::Value(Value::String(broadcast))) = self.peek().cloned() {
+                    self.advance();
+                    let body = self.parse_block()?;
+                    Ok(Statement::WhenBroadcasted { broadcast: broadcast.clone(), body })
+                } else {
+                    self.advance();
+                    let condition = self.parse_binary(0)?;
+                    let body = self.parse_block()?;
+                    Ok(Statement::WhenBoolean { condition, body })
+                }
             }
             Token::Keyword(k) if k == "fn" => self.parse_function_definition(),
             Token::Keyword(k) if k == "import" => self.parse_import(),

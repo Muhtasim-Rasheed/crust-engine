@@ -8,11 +8,7 @@ The event functions are used to handle events in the project. They can be used t
 - `mouse_button_released(button)`: Returns `true` if the specified mouse button was released in the current frame.
 - `sprite_clicked()`: Returns `true` if the sprite was clicked in the current frame.
 - `is_backdrop(backdrop)`: Returns `true` if the current backdrop is the specified backdrop. The backdrop is specified by its index in the stage's backdrop list, starting from 0.
-- `is_broadcasted(broadcast)`: Returns `true` if the specified broadcast message was received in the current frame. The broadcast message is specified by its name.
 - `broadcast(broadcast)`: Broadcasts the specified message to all sprites. The broadcast message is specified by its name.
-
-!!! note
-    If the reciver sprite is placed before the sender sprite in the `project.toml` file, the receiver will not receive the broadcast message. This is because Crust processes sprites in the order they are defined in the `project.toml` file. To ensure that all sprites can receive broadcast messages, place the sender sprite before all receiver sprites in the `project.toml` file.
 
 ## Keys
 
