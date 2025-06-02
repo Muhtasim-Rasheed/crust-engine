@@ -329,6 +329,22 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 },
+                "split" => {
+                    if let [Value::String(s), Value::String(delimiter)] = args.as_slice() {
+                        let parts: Vec<Value> = s.split(delimiter).map(|part| Value::String(part.to_string())).collect();
+                        Value::List(parts)
+                    } else {
+                        Value::Null
+                    }
+                }
+                "join" => {
+                    if let [Value::List(list), Value::String(delimiter)] = args.as_slice() {
+                        let joined: String = list.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(delimiter);
+                        Value::String(joined)
+                    } else {
+                        Value::Null
+                    }
+                }
                 "range" => {
                     match args.as_slice() {
                         [Value::Number(end)] => {
