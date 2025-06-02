@@ -34,12 +34,19 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.
 - `remove(list, index)`: Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
 - `extend(list1, list2)`: Extends the first list with the second list and returns the new list.
+- `split(string, delimiter)`: Splits the given string by the specified delimiter and returns a list of substrings.
+- `join(list, delimiter)`: Joins the elements of the list into a single string, separated by the specified delimiter.
 - `starts_with(string, prefix)`: Returns true if the given string starts with the specified prefix, false otherwise.
 - `ends_with(string, suffix)`: Returns true if the given string ends with the specified suffix, false otherwise.
 - `trim(string)`: Trims the whitespace from the beginning and end of the given string and returns the trimmed string.
 - `range(end)`: Returns a list of numbers from 0 to `end - 1`.
 - `range(start, end)`: Returns a list of numbers from `start` to `end - 1`.
 - `range(start, end, step)`: Returns a list of numbers from `start` to `end - 1`, incrementing by `step`.
+- `to_string(value)`: Converts the given value to a string.
+- `to_number(value)`: Converts the given value to a number.
+- `to_boolean(value)`: Converts the given value to a boolean.
+- `to_list(value)`: Converts the given value to a list.
+- `to_object(value)`: Converts the given value to an object.
 - `whoami()`: Returns the name of the current sprite. Works for clones as well.
 - `clone_id()`: Returns the ID of the current clone. Returns 0 if the sprite is not a clone.
 - `frame()`: Returns the current frame number. Starts at 0.

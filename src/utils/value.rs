@@ -104,15 +104,15 @@ impl Value {
         }
     }
 
-    // pub fn to_object(&self) -> HashMap<String, Value> {
-    //     match self {
-    //         Value::Null => HashMap::new(),
-    //         Value::Object(o) => o.clone(),
-    //         Value::List(l) => l.iter()
-    //             .enumerate()
-    //             .map(|(i, v)| (i.to_string(), v.clone()))
-    //             .collect(),
-    //         _ => HashMap::new(),
-    //     }
-    // }
+    pub fn to_object(&self) -> HashMap<String, Value> {
+        match self {
+            Value::Null => HashMap::new(),
+            Value::Object(o) => o.clone(),
+            Value::List(l) => l.iter()
+                .enumerate()
+                .map(|(i, v)| (i.to_string(), v.clone()))
+                .collect(),
+            _ => HashMap::new(),
+        }
+    }
 }

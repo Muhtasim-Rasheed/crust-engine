@@ -345,6 +345,27 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
+                "starts_with" => {
+                    if let [Value::String(s), Value::String(prefix)] = args.as_slice() {
+                        Value::Boolean(s.starts_with(prefix))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "ends_with" => {
+                    if let [Value::String(s), Value::String(suffix)] = args.as_slice() {
+                        Value::Boolean(s.ends_with(suffix))
+                    } else {
+                        Value::Null
+                    }
+                }
+                "trim" => {
+                    if let [Value::String(s)] = args.as_slice() {
+                        Value::String(s.trim().to_string())
+                    } else {
+                        Value::Null
+                    }
+                }
                 "range" => {
                     match args.as_slice() {
                         [Value::Number(end)] => {
@@ -375,6 +396,41 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                             }
                         }
                         _ => Value::Null,
+                    }
+                }
+                "to_string" => {
+                    if let [value] = args.as_slice() {
+                        Value::String(value.to_string())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "to_number" => {
+                    if let [value] = args.as_slice() {
+                        Value::Number(value.to_number())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "to_boolean" => {
+                    if let [value] = args.as_slice() {
+                        Value::Boolean(value.to_boolean())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "to_list" => {
+                    if let [value] = args.as_slice() {
+                        Value::List(value.to_list())
+                    } else {
+                        Value::Null
+                    }
+                }
+                "to_object" => {
+                    if let [value] = args.as_slice() {
+                        Value::Object(value.to_object())
+                    } else {
+                        Value::Null
                     }
                 }
                 "whoami" => Value::String(sprite.name.clone()),
