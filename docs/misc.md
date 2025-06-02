@@ -21,10 +21,10 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `random(min, max)`: Returns a random number between the given minimum and maximum values.
 - `distance(x1, y1, x2, y2)`: Returns the distance between the two points `(x1, y1)` and `(x2, y2)`.
 - `distance_to(x, y)`: Returns the distance from the sprite to the point `(x, y)`.
-- `export(content)`: Exports the given content to a file. The file is created in a the `exports` directory in the project root.
-- `export(content, path)`: Exports the given content to a file at the specified path. The path is relative to the project root.
-- `import(path)`: Imports a Crust file at the specified path. The path is relative to the project root.
-- `import_binary(path)`: Imports a binary file at the specified path. The path is relative to the project root.
+- `write(content)`: Exports the given content to a file. The file is created in a the `exports` directory in the project root.
+- `write(content, path)`: Exports the given content to a file at the specified path. The path is relative to the project root.
+- `read(path)`: Imports a Crust file at the specified path. The path is relative to the project root.
+- `read_binary(path)`: Imports a binary file at the specified path. The path is relative to the project root.
 - `parse_image(binary)`: Parses the given binary data as an image and returns a list [width, height, pixels]. The pixels are a list of RGBA values in the format [r, g, b, a].
 - `costume_as_image()`: Returns the image data of the current costume in the same format as `parse_image()`.
 - `screenshot()`: Takes a screenshot of the current screen and saves it to the `exports` directory in the project root.
@@ -34,6 +34,9 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.
 - `remove(list, index)`: Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
 - `extend(list1, list2)`: Extends the first list with the second list and returns the new list.
+- `starts_with(string, prefix)`: Returns true if the given string starts with the specified prefix, false otherwise.
+- `ends_with(string, suffix)`: Returns true if the given string ends with the specified suffix, false otherwise.
+- `trim(string)`: Trims the whitespace from the beginning and end of the given string and returns the trimmed string.
 - `range(end)`: Returns a list of numbers from 0 to `end - 1`.
 - `range(start, end)`: Returns a list of numbers from `start` to `end - 1`.
 - `range(start, end, step)`: Returns a list of numbers from `start` to `end - 1`, incrementing by `step`.
