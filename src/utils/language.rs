@@ -142,7 +142,10 @@ impl Tokenizer {
             while self.pointer < self.code.len() && !self.code[self.pointer..].starts_with('"') {
                 self.pointer += 1;
             }
-            let string = &self.code[start..self.pointer];
+            let string = &self.code[start..self.pointer]
+                .replace("\\\"", "\"") // Unescape quotes
+                .replace("\\n", "\n") // Unescape newlines
+                .replace("\\t", "\t"); // Unescape tabs
             self.pointer += 1; // Skip closing "
             return Some(Token::Value(Value::String(string.to_string())));
         }
