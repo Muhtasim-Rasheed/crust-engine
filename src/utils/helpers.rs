@@ -217,7 +217,7 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
-                "import" => {
+                "read" => {
                     if let [Value::String(path)] = args.as_slice() {
                         let path = Path::new(&project.home_path).join(path);
                         let file = File::open(path).expect("Failed to open file");
@@ -229,7 +229,7 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
-                "import_binary" => {
+                "read_binary" => {
                     if let [Value::String(path)] = args.as_slice() {
                         let path = Path::new(&project.home_path).join(path);
                         let file = File::open(path).expect("Failed to open file");

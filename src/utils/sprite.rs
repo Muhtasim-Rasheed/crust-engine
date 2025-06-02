@@ -471,7 +471,7 @@ impl Sprite {
                         "print" => {
                             println!("{} => {}", self.name, args.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(" "));
                         }
-                        "export" => {
+                        "write" => {
                             match args.as_slice() {
                                 [Value::String(content)] => {
                                     let time = chrono::Local::now();
