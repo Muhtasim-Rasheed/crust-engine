@@ -2,6 +2,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 
 - `args()`: Returns the command line arguments passed to the program.
 - `print(values...)`: Prints the given values to the console. Can take multiple values, separated by commas.
+- `print_raw(values...)`: Prints the given values to the console without the automatic newline at the end and the name of the sprite. Can take multiple values, separated by commas.
 - `input(prompt)`: Prompts the user for input and returns the input as a string. The prompt is displayed in the console.
 - `time()`: Returns the current time in seconds since the program started.
 - `abs(num)`: Returns the absolute value of the given number.

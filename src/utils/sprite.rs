@@ -361,12 +361,12 @@ impl Sprite {
     }
 
     pub fn variable(&self, name: &str, project: &Project, local_vars: &[(String, Value)]) -> Value {
-        if let Some(var) = self.variables.get(name) {
+        if let Some(var) = local_vars.iter().find(|(n, _)| n == name) {
+            return var.1.clone();
+        } else if let Some(var) = self.variables.get(name) {
             var.clone()
         } else if let Some(var) = project.global_variables.get(name) {
             var.clone()
-        } else if let Some(var) = local_vars.iter().find(|(n, _)| n == name) {
-            var.1.clone()
         } else {
             match name {
                 "PI" => Value::Number(PI),
@@ -470,6 +470,9 @@ impl Sprite {
                         // ============= MISC ============= \\
                         "print" => {
                             println!("{} => {}", self.name, args.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(" "));
+                        }
+                        "print_raw" => {
+                            print!("{}", args.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(" "));
                         }
                         "write" => {
                             match args.as_slice() {
