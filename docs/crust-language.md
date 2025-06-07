@@ -19,10 +19,11 @@ Crust statements are basically Scratch blocks, but in text form. Crust statement
 
 ### Inline Statements
 
-Inline statements are single-line statements that perform a specific action. They can be used to assign values, call functions, or import files. There are 4 inline statements in Crust:
+Inline statements are single-line statements that perform a specific action. They can be used to assign values, call functions, or import files. There are 5 inline statements in Crust:
 
 - `variable = value`: Assigns a value to a variable. Example: `x = 42`. Variables can change their datatype at any time.
 - `global variable = value`: Assigns a value to a global variable. Global variables can be accessed from any sprite. Example: `global score = 0`
+- `nop`: Does absolutely nothing.
 - `function_name(arguments)`: Calls a function with the given arguments. Example: `goto("mouse")`
 - `import "file.crst"`: Imports a Crust file. The file can contain functions and variables. Import statements are defined at the head of the program. Example: `import "utils.crst"`
 

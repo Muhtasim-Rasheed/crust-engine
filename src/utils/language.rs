@@ -74,7 +74,7 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "if", "else", "while", "for", "global",
+            "nop", "if", "else", "while", "for", "global",
             "setup", "update",
             "clone_setup", "clone_update",
             "when_broadcasted",
@@ -283,9 +283,11 @@ pub enum Statement {
         index: Expression,
         value: Expression,
     },
+    Nop,
     If {
         condition: Expression,
         body: Vec<Statement>,
+        else_if_bodies: Vec<(Expression, Vec<Statement>)>,
         else_body: Option<Vec<Statement>>,
     },
     While {
@@ -334,7 +336,18 @@ impl std::fmt::Debug for Statement {
         match self {
             Statement::Assignment { is_global, identifier, value } => write!(f, "ASSIGN[{}{:?} = {}]", if *is_global { "global " } else { "" }, identifier, value.to_string()),
             Statement::ListMemberAssignment { is_global, identifier, index, value } => write!(f, "LIST_ASSIGN[{}{:?}[{}] = {}]", if *is_global { "global " } else { "" }, identifier, index.to_string(), value.to_string()),
-            Statement::If { condition, body, else_body } => write!(f, "IF[{}] {{ {:?} }} ELSE {{ {:?} }}", condition.to_string(), body, else_body),
+            Statement::Nop => write!(f, "NOP"),
+            Statement::If { condition, body, else_if_bodies, else_body } => {
+                let else_if_str = else_if_bodies.iter()
+                    .map(|(cond, body)| format!("ELSE_IF[{}] {{ {:?} }}", cond.to_string(), body))
+                    .collect::<Vec<_>>().join(" ");
+                let else_str = if let Some(else_body) = else_body {
+                    format!("ELSE {{ {:?} }}", else_body)
+                } else {
+                    "".to_string()
+                };
+                write!(f, "IF[{}] {{ {:?} }} {} {}", condition.to_string(), body, else_if_str, else_str)
+            },
             Statement::While { condition, body } => write!(f, "WHILE[{}] {{ {:?} }}", condition.to_string(), body),
             Statement::For { identifier, iterable, body } => write!(f, "FOR[{} IN {}] {{ {:?} }}", identifier, iterable.to_string(), body),
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
@@ -397,12 +410,32 @@ impl Parser {
     pub fn parse(&mut self) -> Vec<Statement> {
         let mut statements = vec![];
 
+        let mut errors = vec![];
+
         while self.peek() != Some(&Token::EOF) {
             if self.eat(&Token::Newline) {
                 continue;
             }
-            let statement = self.parse_statement().unwrap();
+            let statement = self.parse_statement().unwrap_or_else(|e| {
+                // Just skip it ¯\_(ツ)_/¯ (also show the error)
+                errors.push(e.replace("\n", "\\n"));
+                self.advance();
+                Statement::Nop
+            });
             statements.push(statement);
+        }
+
+        if errors.len() > 0 {
+            if errors.len() == 1 {
+                eprintln!("There was a parsing error. Details are given below:");
+                eprintln!("\t=> {}", errors[0]);
+            } else {
+                eprintln!("There were {} parsing errors. Details are given below:", errors.len());
+                for (i, error) in errors.into_iter().enumerate() {
+                    eprintln!("\t#{} => {}", i + 1, error);
+                }
+            }
+            eprintln!("");
         }
 
         statements
@@ -410,6 +443,10 @@ impl Parser {
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
         match self.peek().unwrap_or(&Token::EOF) {
+            Token::Keyword(k) if k == "nop" => {
+                self.advance();
+                Ok(Statement::Nop)
+            },
             Token::Keyword(k) if k == "if" => self.parse_if(),
             Token::Keyword(k) if k == "while" => self.parse_while(),
             Token::Keyword(k) if k == "for" => self.parse_for(),
@@ -637,19 +674,20 @@ impl Parser {
         self.advance();
         let condition = self.parse_binary(0)?;
         let body = self.parse_block()?;
-        let else_body = if self.eat(&Token::Keyword("else".to_string())) {
+        let mut else_body = None;
+        let mut else_if_bodies = vec![];
+        while self.eat(&Token::Keyword("else".to_string())) {
             if self.eat(&Token::Keyword("if".to_string())) {
-                if let Statement::If { body, .. } = self.parse_if()? {
-                    Some(body)
-                } else {
-                    return Err(format!("This error should not happen here"))
-                }
+                let else_if_condition = self.parse_binary(0)?;
+                let else_if_body = self.parse_block()?;
+                else_if_bodies.push((else_if_condition, else_if_body))
             } else {
-                Some(self.parse_block()?)
+                let else_body_ = self.parse_block()?;
+                else_body = Some(else_body_);
             }
-        } else { None };
+        }
 
-        Ok(Statement::If { condition, body, else_body })
+        Ok(Statement::If { condition, body, else_if_bodies, else_body })
     }
 
     fn parse_while(&mut self) -> Result<Statement, String> {

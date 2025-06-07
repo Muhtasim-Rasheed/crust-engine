@@ -432,15 +432,25 @@ impl Sprite {
                     println!("Invalid index type for list assignment (expected number or string)");
                 }
             }
-            Statement::If { condition, body, else_body } => {
-                let condition_value = super::resolve_expression(condition, project, self, local_vars, snapshots, camera, script_id);
-                if condition_value.to_boolean() {
+            Statement::Nop => {}
+            Statement::If { condition, body, else_if_bodies, else_body } => {
+                if super::resolve_expression(condition, project, self, local_vars, snapshots, camera, script_id).to_boolean() {
                     for statement in body {
                         self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
                     }
-                } else if let Some(else_body) = else_body {
-                    for statement in else_body {
-                        self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
+                } else {
+                    for (else_if_condition, else_if_body) in else_if_bodies {
+                        if super::resolve_expression(else_if_condition, project, self, local_vars, snapshots, camera, script_id).to_boolean() {
+                            for statement in else_if_body {
+                                self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
+                            }
+                            return;
+                        }
+                    }
+                    if let Some(else_body) = else_body {
+                        for statement in else_body {
+                            self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
+                        }
                     }
                 }
             }
