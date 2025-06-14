@@ -121,6 +121,7 @@ pub struct Sprite {
     glide: Option<Glide>,
     delete_pending: bool,
     skip_further_execution_of_frame: bool,
+    completed_broadcasts: Vec<usize>,
 }
 
 impl Sprite {
@@ -255,6 +256,7 @@ impl Sprite {
             broadcast_recievers,
             boolean_recievers,
             skip_further_execution_of_frame: false,
+            completed_broadcasts: vec![],
         }
     }
 
@@ -299,6 +301,7 @@ impl Sprite {
             broadcast_recievers: self.broadcast_recievers.clone(),
             boolean_recievers: self.boolean_recievers.clone(),
             skip_further_execution_of_frame: false,
+            completed_broadcasts: vec![],
         }
     }
 
@@ -879,7 +882,7 @@ impl Sprite {
                         // ============= EVENTS ============= \\
                         "broadcast" => {
                             if let [Value::String(message)] = args.as_slice() {
-                                project.broadcasted_message = Some(message.clone());
+                                project.broadcast(message.clone());
                             } else {
                                 println!("Invalid arguments for broadcast");
                             }
@@ -1376,7 +1379,10 @@ impl Sprite {
         }
 
         for (i, (broadcast, body)) in self.broadcast_recievers.clone().iter().enumerate() {
-            if project.broadcasted_message.as_ref() == Some(&broadcast) {
+            if let Some(broadcasted) = project.get_broadcast(broadcast).cloned() {
+                if self.completed_broadcasts.contains(&broadcasted.id) {
+                    continue;
+                }
                 for statement in body {
                     if self.time_waiting > 0 {
                         self.time_waiting -= 1;
@@ -1396,6 +1402,7 @@ impl Sprite {
                         break;
                     }
                 }
+                self.completed_broadcasts.push(broadcasted.id);
             }
         }
 

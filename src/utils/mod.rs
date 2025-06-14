@@ -11,7 +11,7 @@ pub mod stage;
 pub use stage::Stage;
 
 pub mod project;
-pub use project::Project;
+pub use project::*;
 
 pub mod language;
 pub use language::*;

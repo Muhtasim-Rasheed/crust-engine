@@ -116,8 +116,6 @@ impl Runtime {
             clear_background(WHITE);
             self.project.stage.draw();
 
-            self.project.broadcasted_message = None;
-            
             let mut sprites = std::mem::take(&mut self.project.sprites);
             
             let snapshots: Vec<SpriteSnapshot> = sprites.iter().map(|s| s.into()).collect();

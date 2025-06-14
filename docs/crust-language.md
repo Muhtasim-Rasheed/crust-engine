@@ -79,9 +79,6 @@ fn add(a, b) result {
 !!! note 
     No `return` statement exists, and the return is embedded in the function header. The function can return a value by assigning it to the `result` variable.
 
-!!! note
-    If the reciver sprite is placed before the sender sprite in the `project.toml` file or the reciver sprite has a lower layer than the sender sprite, the receiver will not receive the broadcast message. This is because Crust processes sprites in the order they are stored in the project's sprite array. To ensure that all sprites can receive broadcast messages, place the sender sprite before all receiver sprites in the `project.toml` file and/or ensure that the sender sprite has a lower layer than the receiver sprite.
-
 ## Expressions
 
 Expressions evaluate to a value and can be used in inline statements or block statements. There are 6 types of expressions in Crust:

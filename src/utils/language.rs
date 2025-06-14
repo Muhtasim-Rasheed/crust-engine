@@ -77,7 +77,7 @@ impl Tokenizer {
             "nop", "if", "else", "while", "for", "global",
             "setup", "update",
             "clone_setup", "clone_update",
-            "when_broadcasted",
+            "when",
             "fn", "import",
         ];
 
