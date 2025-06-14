@@ -548,6 +548,17 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
+                "broadcast_id_of" => {
+                    if let [Value::String(message)] = args.as_slice() {
+                        if let Some(broadcast) = project.get_broadcast(message) {
+                            Value::Number(broadcast.id as f32)
+                        } else {
+                            Value::Null
+                        }
+                    } else {
+                        Value::Null
+                    }
+                }
                 "r" => Value::Number(sprite.draw_color.r),
                 "g" => Value::Number(sprite.draw_color.g),
                 "b" => Value::Number(sprite.draw_color.b),

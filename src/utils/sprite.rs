@@ -18,6 +18,7 @@ pub struct SpriteSnapshot {
     pub size: Vec2,
     pub scale: f32,
     pub direction: f32,
+    pub completed_broadcasts: Vec<usize>,
 }
 
 impl SpriteSnapshot {
@@ -29,6 +30,7 @@ impl SpriteSnapshot {
             "size" => Some(Value::List(vec![Value::Number(self.size.x), Value::Number(self.size.y)])),
             "scale" => Some(Value::Number(self.scale)),
             "direction" => Some(Value::Number(self.direction)),
+            "completed_broadcasts" => Some(Value::List(self.completed_broadcasts.iter().map(|id| Value::Number(*id as f32)).collect())),
             _ => None,
         }
     }
@@ -42,6 +44,7 @@ impl From<&Sprite> for SpriteSnapshot {
             size: sprite.size,
             scale: sprite.scale,
             direction: sprite.direction,
+            completed_broadcasts: sprite.completed_broadcasts.clone(),
         }
     }
 }

@@ -14,7 +14,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `acos(num)`: Returns the arccosine of the given number (in radians).
 - `atan(num)`: Returns the arctangent of the given number (in radians).
 - `lerp(a, b, t)`: Returns the linear interpolation between `a` and `b` at `t`, where `t` is a value between 0 and 1.
-- `property_of(sprite, property)`: Returns the value of the given property of the sprite. The property can be `name`, `x`, `y`, `size`, `scale`, and `direction`.
+- `property_of(sprite, property)`: Returns the value of the given property of the sprite. The property can be `name`, `x`, `y`, `size`, `scale`, `direction`, and `completed_broadcasts`.
 - `to_rad(deg)`: Converts the given angle in degrees to radians.
 - `to_deg(rad)`: Converts the given angle in radians to degrees.
 - `clamp(value, min, max)`: Clamps the given value between the minimum and maximum values.

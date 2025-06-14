@@ -8,6 +8,7 @@ The event functions are used to handle events in the project. They can be used t
 - `mouse_button_released(button)`: Returns `true` if the specified mouse button was released in the current frame.
 - `sprite_clicked()`: Returns `true` if the sprite was clicked in the current frame.
 - `is_backdrop(backdrop)`: Returns `true` if the current backdrop is the specified backdrop. The backdrop is specified by its index in the stage's backdrop list, starting from 0.
+- `broadcast_id_of(broadcast)`: Returns the ID of the specified broadcast.
 - `broadcast(broadcast)`: Broadcasts the specified message to all sprites. The broadcast message is specified by its name.
 
 ## Keys
