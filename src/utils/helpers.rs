@@ -269,6 +269,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         [Value::Number(_)] => Value::String("number".to_string()),
                         [Value::Boolean(_)] => Value::String("boolean".to_string()),
                         [Value::List(_)] => Value::String("list".to_string()),
+                        [Value::Object(_)] => Value::String("object".to_string()),
+                        [Value::Closure(_)] => Value::String("closure".to_string()),
                         _ => Value::Null,
                     }
                 }
@@ -329,6 +331,36 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 },
+                "sort" => {
+                    if let [Value::List(list), Value::Closure(closure)] = args.as_slice() {
+                        let mut new_list = list.clone();
+                        let Function { args, body, returns } = &**closure;
+                        if args.len() == 2 {
+                            new_list.sort_by(|a, b| {
+                                let mut local_vars_: Vec<(String, Value)> = vec![];
+                                local_vars_.push((args[0].clone(), a.clone()));
+                                local_vars_.push((args[1].clone(), b.clone()));
+                                local_vars_.append(&mut local_vars.to_vec());
+                                for statement in body {
+                                    sprite.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
+                                }
+                                let result = resolve_expression(returns, project, sprite, &local_vars_, snapshots, camera, script_id);
+                                if let Value::Boolean(b) = result {
+                                    if b {
+                                        std::cmp::Ordering::Less
+                                    } else {
+                                        std::cmp::Ordering::Greater
+                                    }
+                                } else {
+                                    std::cmp::Ordering::Equal
+                                }
+                            });
+                        }
+                        Value::List(new_list)
+                    } else {
+                        Value::Null
+                    }
+                }
                 "split" => {
                     if let [Value::String(s), Value::String(delimiter)] = args.as_slice() {
                         let parts: Vec<Value> = s.split(delimiter).map(|part| Value::String(part.to_string())).collect();
@@ -583,6 +615,31 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                             let returns = resolve_expression(returns, project, sprite, &local_vars_, snapshots, camera, script_id);
                             return returns;
                         } else {
+                            return Value::Null;
+                        }
+                    } else if let Some(variable) = sprite.variables.get(function).cloned() {
+                        let Value::Closure(closure) = variable else {
+                            println!("Variable '{}' is not a function", function);
+                            return Value::Null;
+                        };
+                        let Function { args: args_, body, .. } = &*closure;
+                        if args_.len() == args.len() {
+                            let mut local_vars_: Vec<(String, Value)> = vec![];
+                            for (i, arg) in args_.iter().enumerate() {
+                                if let Some(arg_value) = args.get(i) {
+                                    local_vars_.push((arg.clone(), arg_value.clone()));
+                                } else {
+                                    println!("Missing argument for function '{}'", function);
+                                }
+                            }
+                            local_vars_.append(&mut local_vars.to_vec());
+                            for statement in body {
+                                sprite.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
+                            }
+                            let returns = resolve_expression(&closure.returns, project, sprite, &local_vars_, snapshots, camera, script_id);
+                            return returns;
+                        } else {
+                            println!("Invalid number of arguments for function '{}'", function);
                             return Value::Null;
                         }
                     } else {

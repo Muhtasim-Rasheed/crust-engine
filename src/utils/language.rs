@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::Value;
+use super::{Function, Value};
 
 // ========================= Tokenizer ========================= \\
 
@@ -598,6 +598,39 @@ impl Parser {
         Ok(Expression::Object(object))
     }
 
+    fn parse_closure(&mut self) -> Result<Expression, String> {
+        if !self.eat(&Token::Symbol("(".to_string())) {
+            return Err("Expected '(' after 'fn'".to_string());
+        }
+        let mut args = vec![];
+        while self.peek() != Some(&Token::Symbol(")".to_string())) {
+            if self.eat(&Token::Newline) {
+                continue;
+            }
+            if let Some(Token::Identifier(arg)) = self.peek() {
+                args.push(arg.clone());
+                self.advance();
+            } else {
+                return Err("Expected identifier in closure arguments".to_string());
+            }
+            if !self.eat(&Token::Symbol(",".to_string())) {
+                break;
+            }
+        }
+        if !self.eat(&Token::Symbol(")".to_string())) {
+            return Err("Expected ')' after closure arguments".to_string());
+        }
+        let returns = self.parse_binary(0)?;
+        let body = self.parse_block()?;
+        Ok(Expression::Value(Value::Closure(
+            Box::new(Function {
+                args,
+                body,
+                returns,
+            }
+        ))))
+    }
+
     fn parse_primary(&mut self) -> Result<Expression, String> {
         let peeked = self.peek().unwrap_or(&Token::EOF).clone();
         match peeked {
@@ -679,6 +712,10 @@ impl Parser {
             Token::Symbol(s) if s == "{" => {
                 self.advance();
                 Ok(self.parse_object()?)
+            }
+            Token::Keyword(k) if k == "fn" => {
+                self.advance();
+                Ok(self.parse_closure()?)
             }
             _ => Err(format!("Unexpected token in expression: {:?}", self.peek())),
         }

@@ -35,6 +35,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.
 - `remove(list, index)`: Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
 - `extend(list1, list2)`: Extends the first list with the second list and returns the new list.
+- `sort(list, closure)`: Sorts the list using the given closure as the comparison function. The closure should take two arguments and return a boolean. Check the [Crust Language](crust-language.md) documentation for more information on closures.
 - `split(string, delimiter)`: Splits the given string by the specified delimiter and returns a list of substrings.
 - `join(list, delimiter)`: Joins the elements of the list into a single string, separated by the specified delimiter.
 - `starts_with(string, prefix)`: Returns true if the given string starts with the specified prefix, false otherwise.

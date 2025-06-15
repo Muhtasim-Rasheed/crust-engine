@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use super::Function;
+
 #[derive(Clone, PartialEq)]
 pub enum Value {
     Null,
@@ -8,6 +10,7 @@ pub enum Value {
     Boolean(bool),
     List(Vec<Value>),
     Object(HashMap<String, Value>),
+    Closure(Box<Function>),
 }
 
 impl std::fmt::Debug for Value {
@@ -37,6 +40,20 @@ impl std::fmt::Debug for Value {
                     string.pop();
                 }
                 write!(f, "{{ {} }}", string)
+            }
+            Value::Closure(c) => {
+                let mut string = String::new();
+                string.push_str("(");
+                for (i, arg) in c.args.iter().enumerate() {
+                    string.push_str(&arg.to_string());
+                    if i < c.args.len() - 1 {
+                        string.push_str(", ");
+                    }
+                }
+                string.push_str(") ");
+                string.push_str(&c.returns.to_string().as_str());
+                string.push_str(" { ... }");
+                write!(f, "{}", string)
             }
         }
     }
@@ -76,6 +93,13 @@ impl Value {
                     .collect::<Vec<_>>()
                     .join(", "))
             }
+            Value::Closure(c) => {
+                let args = c.args.iter()
+                    .map(|arg| arg.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("({}) -> {}", args, c.returns.to_string())
+            }
         }
     }
 
@@ -87,6 +111,7 @@ impl Value {
             Value::String(s) => !s.is_empty(),
             Value::List(l) => !l.is_empty(),
             Value::Object(o) => !o.is_empty(),
+            Value::Closure(c) => !c.body.is_empty(),
         }
     }
 

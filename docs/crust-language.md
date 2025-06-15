@@ -12,6 +12,7 @@ There are 6 main datatypes in Crust:
 - `Boolean`: A boolean value, can be either `true` or `false`. Example: `true`, `false`
 - `List`: A list of values, enclosed in square brackets. Example: `[1, 2, 3]`, `["apple", "banana", "cherry"]`
 - `Object`: An object, which is a collection of key-value pairs. Example: `{ name: "John", age: 30 }`
+- `Closure`: A closure is a function but as a value. Example: `fn (x, y) result { result = x + y }`
 
 ## Crust Statements
 
@@ -24,7 +25,7 @@ Inline statements are single-line statements that perform a specific action. The
 - `variable = value`: Assigns a value to a variable. Example: `x = 42`. Variables can change their datatype at any time.
 - `global variable = value`: Assigns a value to a global variable. Global variables can be accessed from any sprite. Example: `global score = 0`
 - `nop`: Does absolutely nothing.
-- `function_name(arguments)`: Calls a function with the given arguments. Example: `goto("mouse")`
+- `function_name(arguments)`: Calls a function or a closure with the given arguments. Example: `goto("mouse")`
 - `import "file.crst"`: Imports a Crust file. The file can contain functions and variables. Import statements are defined at the head of the program. Example: `import "utils.crst"`
 
 To assign a list's or object's value, you can use the following syntax:

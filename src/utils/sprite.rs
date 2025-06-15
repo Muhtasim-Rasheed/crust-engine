@@ -84,7 +84,7 @@ struct Dialogue {
     think: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     pub args: Vec<String>,
     pub body: Vec<Statement>,
@@ -1211,8 +1211,30 @@ impl Sprite {
                                 } else {
                                     println!("Invalid number of arguments for function '{}'", function);
                                 }
+                            } else if let Some(variable) = self.variables.get(function).cloned() {
+                                let Value::Closure(closure) = variable else {
+                                    println!("Variable '{}' is not a function", function);
+                                    return;
+                                };
+                                let Function { args: args_, body, .. } = &*closure;
+                                if args_.len() == args.len() {
+                                    let mut local_vars_: Vec<(String, Value)> = vec![];
+                                    for (i, arg) in args_.iter().enumerate() {
+                                        if let Some(arg_value) = args.get(i) {
+                                            local_vars_.push((arg.clone(), arg_value.clone()));
+                                        } else {
+                                            println!("Missing argument for function '{}'", function);
+                                        }
+                                    }
+                                    local_vars_.append(&mut local_vars.to_vec());
+                                    for statement in body {
+                                        self.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
+                                    }
+                                } else {
+                                    println!("Invalid number of arguments for function '{}'", function);
+                                }
                             } else {
-                                println!("Unknown function: {}", function);
+                                println!("Unknown function or variable '{}'", function);
                             }
                         }
                     }
