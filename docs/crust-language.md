@@ -32,6 +32,9 @@ To assign a list's or object's value, you can use the following syntax:
 - `list[index] = value`: Assigns a value to a specific index in a list. Example: `my_list[0] = "apple"`
 - `object["key"] = value`: Assigns a value to a specific key in an object. Example: `my_object["name"] = "John"`
 
+!!! note
+    As of 0.3.2, the syntax `list.0` and `object.name` are supported.
+
 ### Block Statements
 
 Block statements are multi-line statements that perform a many actions in one go. They are used to define functions, loops, and conditionals. Block statements are enclosed in curly braces `{}`. There are 9 block statements in Crust:

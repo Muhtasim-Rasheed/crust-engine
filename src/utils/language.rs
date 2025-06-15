@@ -165,7 +165,7 @@ impl Tokenizer {
         }
 
         // Symbols
-        if ["(", ")", "[", "]", "{", "}", ",", ":"].contains(&one) {
+        if ["(", ")", "[", "]", "{", "}", ",", ":", "."].contains(&one) {
             self.pointer += 1;
             return Some(Token::Symbol(one.to_string()));
         }
@@ -625,21 +625,35 @@ impl Parser {
                         return Err("Expected ')' after function call".to_string());
                     }
                     Ok(Expression::Call { function: name, args })
-                } else {
-                    // Wait! Might be a list member access!
-                    if self.eat(&Token::Symbol("[".to_string())) {
-                        let index = self.parse_binary(0)?;
-                        if !self.eat(&Token::Symbol("]".to_string())) {
-                            return Err("Expected ']' after list member access".to_string());
-                        }
-                        Ok(Expression::ListMemberAccess {
-                            list: Box::new(Expression::Identifier(name)),
-                            index: Box::new(index),
-                        })
-                    } else {
-                        // * ACTUALLY * an identifier
-                        Ok(Expression::Identifier(name))
+                } else if self.eat(&Token::Symbol("[".to_string())) {
+                    let index = self.parse_binary(0)?;
+                    if !self.eat(&Token::Symbol("]".to_string())) {
+                        return Err("Expected ']' after list member access".to_string());
                     }
+                    Ok(Expression::ListMemberAccess {
+                        list: Box::new(Expression::Identifier(name)),
+                        index: Box::new(index),
+                    })
+                } else if self.eat(&Token::Symbol(".".to_string())) {
+                    let index = self.parse_primary()?;
+                    match index {
+                        Expression::Identifier(index_name) => {
+                            Ok(Expression::ListMemberAccess {
+                                list: Box::new(Expression::Identifier(name)),
+                                index: Box::new(Expression::Value(Value::String(index_name))),
+                            })
+                        }
+                        Expression::Value(Value::Number(num)) => {
+                            Ok(Expression::ListMemberAccess {
+                                list: Box::new(Expression::Identifier(name)),
+                                index: Box::new(Expression::Value(Value::Number(num))),
+                            })
+                        }
+                        _ => Err(format!("Expected identifier or number after '.' but got {:?}", index)),
+                    }
+                } else {
+                    // * ACTUALLY * an identifier
+                    Ok(Expression::Identifier(name))
                 }
             }
             Token::Operator(op) if op == "-" || op == "!" => {
