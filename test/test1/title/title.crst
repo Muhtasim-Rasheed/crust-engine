@@ -1,6 +1,0 @@
-setup {
-	go_to_layer(9999)
-}
-update {
-	point(sin(time() * 2) * 5)
-}
