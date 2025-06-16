@@ -74,7 +74,7 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "nop", "if", "else", "while", "for", "global",
+            "nop", "if", "else", "while", "for", "in", "global",
             "setup", "update",
             "clone_setup", "clone_update",
             "when",
@@ -152,7 +152,7 @@ impl Tokenizer {
 
         // Multi-char operators first
         let two = &self.code[self.pointer..self.pointer + 2.min(self.code.len() - self.pointer)];
-        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", "in", ".."].contains(&two) {
+        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", ".."].contains(&two) {
             self.pointer += 2;
             return Some(Token::Operator(two.to_string()));
         }
@@ -528,7 +528,13 @@ impl Parser {
     fn parse_binary(&mut self, min_prec: u8) -> Result<Expression, String> {
         let mut left = self.parse_primary()?;
 
-        while let Some(Token::Operator(op)) = self.peek() {
+        while let Some(token) = self.peek() {
+            let op = match token {
+                Token::Operator(op) => op,
+                Token::Keyword(k) if k == "in" => k,
+                _ => break,
+            };
+
             let prec = Parser::precedence(op);
             if prec < min_prec {
                 break;
