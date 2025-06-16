@@ -1,0 +1,22 @@
+setup {
+	image = parse_image(import_binary("glung.png"))
+	w = image[0]
+	h = image[1]
+	pixels = image[2]
+}
+update {
+	y = 0
+	repeat h {
+		x = 0
+		repeat w {
+			index = (y * w + x) * 4
+			r = pixels[index]
+			g = pixels[index + 1]
+			b = pixels[index + 2]
+			set_color(r, g, b)
+			rect(100 + x, 100 + y, 1, 1)
+			x += 1
+		}
+		y += 1
+	}
+}

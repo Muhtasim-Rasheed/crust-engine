@@ -1,0 +1,30 @@
+setup {
+	vx = 0
+	x = 0
+	vy = 0
+	y = 0
+}
+
+update {
+	if key_down("w") {
+		vy -= 3
+	}
+	if key_down("s") {
+		vy += 3
+	}
+	if key_down("a") {
+		vx -= 3
+	}
+	if key_down("d") {
+		vx += 3
+	}
+	x += vx
+	y += vy
+	vx *= 0.9
+	vy *= 0.9
+	set_window_position(x, y)
+}
+
+when "yoo" {
+	print("yoo")
+}

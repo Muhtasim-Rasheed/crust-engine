@@ -1,0 +1,42 @@
+setup {
+	angular_vel  = 0
+	movement_vel = 0
+	angular_spd  = 0.5
+	movement_spd = 1
+	print(get_42() == 42)
+}
+
+update {
+	if key_down("p") {
+		if key_down("lshift") || key_down("rshift") {
+			clear_all_stamps()
+		} else {
+			stamp()
+		}
+	}
+	update_movement(angular_spd, movement_spd)
+}
+
+fn update_movement(angular, movement) null {
+	if key_down("d") {
+		angular_vel += angular
+	}
+	if key_down("a") {
+		angular_vel -= angular
+	}
+	if key_down("w") {
+		movement_vel += movement
+	}
+	if key_down("s") {
+		movement_vel -= movement
+	}
+	angular_vel  *= 0.9
+	movement_vel *= 0.9
+	point(direction() + angular_vel - 90)
+	move(movement_vel)
+	turn_cw(90)
+}
+
+fn get_42() 7 * 3 * val {
+	val = 2
+}

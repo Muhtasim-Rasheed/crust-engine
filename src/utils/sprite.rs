@@ -361,6 +361,14 @@ impl Sprite {
     pub fn set_variable(&mut self, name: &str, value: Value) {
         if let Some(var) = self.variables.get_mut(name) {
             *var = value;
+        } else if let Some(function) = self.functions.get_mut(name) {
+            if let Value::Closure(closure) = value {
+                function.args = closure.args.clone();
+                function.body = closure.body.clone();
+                function.returns = closure.returns.clone();
+            } else {
+                println!("Cannot set function '{}' to non-closure value", name);
+            }
         } else {
             println!("Variable '{}' not found", name);
         }
@@ -373,6 +381,12 @@ impl Sprite {
             var.clone()
         } else if let Some(var) = project.global_variables.get(name) {
             var.clone()
+        } else if let Some(function) = self.functions.get(name) {
+            Value::Closure(Box::new(Function {
+                args: function.args.clone(),
+                body: function.body.clone(),
+                returns: function.returns.clone(),
+            }))
         } else {
             match name {
                 "PI" => Value::Number(PI),

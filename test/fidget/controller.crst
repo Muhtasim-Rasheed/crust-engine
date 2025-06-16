@@ -1,0 +1,81 @@
+setup {
+		goto(960,-512)
+    set_size(0.4)
+
+    scale = 200
+		ten_by_three = 10/3
+    vert_1_x = 0
+    vert_1_y = 0
+    vert_2_x = 0
+    vert_2_y = 0
+    vert_3_x = 0
+    vert_3_y = 0
+
+    velocity=0
+    a=0.1
+}
+
+update {
+    set_color(255,255,255)
+    set_effect("ghost",sin(a)*25+30)
+
+    vert_1_x = cos(a)
+    vert_1_y = 0.5*sin(a)
+    vert_2_x = cos(a-(ten_by_three*PI))
+    vert_2_y = 0.5*sin(a-(ten_by_three*PI))
+    vert_3_x = cos(a+(ten_by_three*PI))
+    vert_3_y = 0.5*sin(a+(ten_by_three*PI))
+
+    vert_1_x *= 210
+    vert_1_y *= 210
+    vert_2_x *= 210
+    vert_2_y *= 210
+    vert_3_x *= 210
+    vert_3_y *= 210
+
+    // Bottom Face
+    hellipse(0,0,100,50,5)
+    // Top Face
+    hellipse(0,25,100,50,5)
+    
+    
+    // 1st Cylinder
+
+    // Bottom Face
+    hellipse(vert_1_x,vert_1_y,100,50,5)
+    // Top Face
+    hellipse(vert_1_x,vert_1_y+25,100,50,5)
+
+    // 2nd Cylinder
+
+    // Bottom Face
+    hellipse(vert_2_x,vert_2_y,100,50,5)
+    // Top Face
+    hellipse(vert_2_x,vert_2_y+25,100,50,5)
+
+    // 3rd Cylinder
+
+    // Bottom Face
+    hellipse(vert_3_x,vert_3_y,100,50,5)
+    // Top Face
+    hellipse(vert_3_x,vert_3_y+25,100,50,5)
+
+
+    if velocity>0 {
+        velocity-=0.08
+    }
+    if velocity<0 {
+        velocity+=0.08
+    }
+    if velocity<0.1 && velocity>-0.1 {
+        velocity=0
+    }
+    if (key_down("d")&&velocity>-50) {
+        velocity-=0.3
+    }
+    if (key_down("a")&&velocity<50) {
+        velocity+=0.3
+    }
+    angle+=velocity
+    a=angle/150
+}
