@@ -16,7 +16,7 @@ keywords = [
     "text-based",
     "gamedev"
 ]
-categories = ["graphics", "development-tools", "education"]
+categories = ["graphics"]
 license = "GPL-3.0-or-later"
 exclude = ["target/*", "docs/*"]
 
