@@ -5,8 +5,8 @@ If you want to run Crust projects, you need to have the Crust engine installed o
 Firstly, clone the Crust repository from GitHub:
 
 ```bash
-git clone https://github.com/Muhtasim-Rasheed/crust.git
-cd crust
+git clone https://github.com/Muhtasim-Rasheed/crust-engine.git
+cd crust-engine
 ```
 
 To build Crust, you need to have the Rust toolchain installed on your system. You can install Rust by following the instructions on the [official Rust website](https://www.rust-lang.org/tools/install).
@@ -25,11 +25,11 @@ Once you have Crust installed, you can run your project using the following comm
 
 === "Linux / macOS / Windows (WSL)"
     ```bash
-    crust --project path/to/your_project.toml
+    crust-engine --project path/to/your_project.toml
     ```
 === "Windows"
     ```batch
-    crust --project path\to\your_project.toml
+    crust-engine --project path\to\your_project.toml
     ```
 
 Replace the path with the path to your project's `project.toml` file. This will start the Crust engine and run your project.
