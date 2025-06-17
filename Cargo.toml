@@ -11,7 +11,7 @@ repository = "https://github.com/Muhtasim-Rasheed/crust-engine"
 documentation = "https://muhtasim-rasheed.github.io/crust-engine/"
 readme = "README.md"
 keywords = [
-    "game development",
+    "game-development",
     "scratch",
     "text-based",
     "gamedev"
