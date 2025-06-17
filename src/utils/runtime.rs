@@ -10,18 +10,18 @@ use super::{
     Parser, Project, Sprite, SpriteSnapshot, Tokenizer
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct StageConfig {
     backdrops: Vec<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct SoundConfig {
     name: String,
     file: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct SpriteConfig {
     name: String,
     code: String,
@@ -33,10 +33,10 @@ struct SpriteConfig {
     h: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct ProjectConfig {
     debug_options: Option<Vec<String>>,
-    stage: StageConfig,
+    stage: Option<StageConfig>,
     sprites: Vec<SpriteConfig>,
 }
 
@@ -51,12 +51,18 @@ impl Runtime {
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
 
+        println!("{:#?}", config);
+
         let mut project = Project::new(dir.to_string_lossy().to_string(), dir.join("export").to_string_lossy().to_string());
 
-        for path in config.stage.backdrops {
+        for path in config.stage.unwrap_or(StageConfig { backdrops: vec![] }).backdrops {
             let path = dir.join(path);
             let tex = load_texture(&path.to_string_lossy()).await.unwrap();
             project.stage.backdrops.push(tex);
+        }
+
+        if project.stage.backdrops.is_empty() {
+            project.stage.backdrops.push(Texture2D::empty());
         }
 
         for sprite in config.sprites {

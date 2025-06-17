@@ -2,9 +2,13 @@
 
 ✨ **Crust** ✨ is a Scratch-like game development tool with its own programming language, also named Crust.
 
+<p align="center">
+  <img src="./assets/logo_background.svg" alt="Crust Logo" width="150"/>
+</p>
+
 ## What is Crust?
 
-Crust is a game development tool that allows users to create games using text-based programming instead unlike Scratch, which is drag-and-drop based. Main features include but are not limited to:
+Crust is a game development tool that allows users to create games using text-based programming, unlike Scratch, which is drag-and-drop based. Main features include but are not limited to:
 
 - Text-based programming language
 - A lot of functions from Scratch
@@ -46,6 +50,10 @@ update {
     circle(100, 100, 50) // Draw a circle at (100, 100) with a radius of 50
 }
 ```
+
+The output:
+
+![Example Output](./assets/example_result.png)
 
 ## Contributing
 
