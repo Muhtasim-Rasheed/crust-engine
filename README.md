@@ -18,7 +18,7 @@ Crust is a game development tool that allows users to create games using text-ba
 
 ## Documentation
 
-You can find the documentation for Crust by going [here](https://muhtasim-rasheed.github.io/crust/). The documentation covers everything from the Crust programming language to how to run Crust projects.
+You can find the documentation for Crust by going [here](https://muhtasim-rasheed.github.io/crust-engine/). The documentation covers everything from the Crust programming language to how to run Crust projects.
 
 ## Example
 

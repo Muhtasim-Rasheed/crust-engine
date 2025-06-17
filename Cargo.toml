@@ -1,8 +1,24 @@
 [package]
-name = "crust"
+name = "crust-engine"
 version = "0.3.2"
 edition = "2024"
+authors = [
+    "Muhtasim Noor Al Rasheed <mutasimos5101@gmail.com>",
+    "P4ncake"
+]
+description = "A Scratch-inspired game development tool with its own text-based programming language"
+repository = "https://github.com/Muhtasim-Rasheed/crust-engine"
+documentation = "https://muhtasim-rasheed.github.io/crust-engine/"
+readme = "README.md"
+keywords = [
+    "game development",
+    "scratch",
+    "text-based",
+    "gamedev"
+]
+categories = ["graphics", "development-tools", "education"]
 license = "GPL-3.0-or-later"
+exclude = ["target/*", "docs/*"]
 
 [dependencies]
 chrono = "0.4.41"
