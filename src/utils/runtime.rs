@@ -46,14 +46,14 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub async fn new(file_path: &str) -> Self {
+    pub async fn new(file_path: &str, args: Vec<String>) -> Self {
         let dir = std::path::Path::new(file_path).parent().unwrap();
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
 
         println!("{:#?}", config);
 
-        let mut project = Project::new(dir.to_string_lossy().to_string(), dir.join("export").to_string_lossy().to_string());
+        let mut project = Project::new(dir.to_string_lossy().to_string(), dir.join("export").to_string_lossy().to_string(), args);
 
         for path in config.stage.unwrap_or(StageConfig { backdrops: vec![] }).backdrops {
             let path = dir.join(path);

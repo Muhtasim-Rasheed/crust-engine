@@ -1,6 +1,6 @@
 [package]
 name = "crust-engine"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2024"
 authors = [
     "Muhtasim Noor Al Rasheed <mutasimos5101@gmail.com>",
@@ -18,7 +18,7 @@ keywords = [
 ]
 categories = ["graphics"]
 license = "GPL-3.0-or-later"
-exclude = ["target/*", "docs/*"]
+exclude = ["target/*", "docs/*", "mkdocs.yml"]
 
 [dependencies]
 chrono = "0.4.41"

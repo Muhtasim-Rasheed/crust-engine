@@ -96,7 +96,7 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 .collect::<Vec<_>>();
             match function.as_str() {
                 "args" => {
-                    let args = std::env::args().collect::<Vec<_>>();
+                    let args = project.args.clone();
                     Value::List(args.iter().map(|arg| Value::String(arg.clone())).collect())
                 }
                 "input" => {

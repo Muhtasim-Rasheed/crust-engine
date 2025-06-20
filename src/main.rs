@@ -24,6 +24,8 @@ mod utils;
 struct Args {
     #[arg(short, long)]
     project: Option<String>,
+    #[arg(last = true)]
+    additional_args: Vec<String>,
 }
 
 fn window_config() -> Conf {
@@ -57,7 +59,7 @@ async fn main() {
             .unwrap_or_else(|| panic!("No project file selected"))
     });
     let project_file = project_file.trim_matches('"');
-    let mut runtime = utils::Runtime::new(&project_file).await;
+    let mut runtime = utils::Runtime::new(&project_file, args.additional_args).await;
     println!("Loaded project: {}", project_file);
     runtime.run().await;
 }

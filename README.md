@@ -1,5 +1,9 @@
 # Crust
 
+[![Crates.io Downloads (recent)](https://img.shields.io/crates/dr/crust-engine?color=blue)](https://crates.io/crates/crust-engine)
+[![GitHub License](https://img.shields.io/github/license/Muhtasim-Rasheed/crust-engine)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+![GitHub Stars](https://img.shields.io/github/stars/Muhtasim-Rasheed/crust-engine?style=social)
+
 ✨ **Crust** ✨ is a Scratch-like game development tool with its own programming language, also named Crust.
 
 <p align="center">
@@ -15,6 +19,29 @@ Crust is a game development tool that allows users to create games using text-ba
 - Runs at a smooth 60 FPS instead of 30 FPS in Scratch
 - Supports all major platforms (Windows, macOS, Linux) except mobile
 - Open-source and free to use
+
+## Installation
+
+To install Crust, you need to have Rust installed on your system. You can install Rust by following the instructions on the [official Rust website](https://www.rust-lang.org/tools/install).
+You have the following options to install Crust:
+
+### Using Cargo
+
+To install Crust from crates.io, run the following command:
+
+```bash
+cargo install crust-engine
+```
+
+### Building from Source
+
+To build Crust from source, run the following commands:
+
+```bash
+git clone https://github.com/Muhtasim-Rasheed/crust-engine.git
+cd crust-engine
+cargo install --path .
+```
 
 ## Documentation
 

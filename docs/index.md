@@ -1,5 +1,9 @@
 # Crust
 
+[![Crates.io Downloads (recent)](https://img.shields.io/crates/dr/crust-engine?color=blue)](https://crates.io/crates/crust-engine)
+[![GitHub License](https://img.shields.io/github/license/Muhtasim-Rasheed/crust-engine)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+![GitHub Stars](https://img.shields.io/github/stars/Muhtasim-Rasheed/crust-engine?style=social)
+
 Welcome to the documentation for ✨ **Crust** ✨ - a Scratch-like game development tool with its own programming language, also named Crust.
 
 ---
@@ -43,6 +47,10 @@ update {
     circle(100, 100, 50) // Draw a circle at (100, 100) with a radius of 50
 }
 ```
+
+The output:
+
+![Example Output](./assets/example_result.png)
 
 ## Contributing
 
