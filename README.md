@@ -1,5 +1,7 @@
 # Crust
 
+![Contributors Are Welcome!](https://img.shields.io/badge/Contributors%20Are%20Welcome!-22bb22)
+
 [![Crates.io Downloads (recent)](https://img.shields.io/crates/dr/crust-engine?color=blue)](https://crates.io/crates/crust-engine)
 [![GitHub License](https://img.shields.io/github/license/Muhtasim-Rasheed/crust-engine)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ![GitHub Stars](https://img.shields.io/github/stars/Muhtasim-Rasheed/crust-engine?style=social)
@@ -84,7 +86,8 @@ The output:
 
 ## Contributing
 
-If you want to contribute to Crust or want to report a bug, please visit our [GitHub repository](https://github.com/Muhtasim-Rasheed/crust).
+If you want to contribute to Crust or want to report a bug, please visit our [GitHub repository](https://github.com/Muhtasim-Rasheed/crust) and also
+check out the [contributing guidelines](./CONTRIBUTING.md).
 
 ## License
 

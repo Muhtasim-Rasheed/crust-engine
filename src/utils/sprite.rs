@@ -1,3 +1,17 @@
+// Hello fellow contributor, welcome to Crust's `sprite.rs` file!
+//
+// This file is BIG (1800+ lines) and contains the core logic for handling sprites, their
+// behaviors, and interactions in the Crust game engine.
+//
+// Don't worry: You don't need to understand everything at once. Take your time to read through the code.
+//
+// We plan to refactor this file in the future to make it more modular and easier to understand.
+// But for now, it's a big crusty file.
+//
+// Happy coding!
+
+
+
 use std::collections::HashMap;
 use std::f32::consts::*;
 use std::fs::File;
