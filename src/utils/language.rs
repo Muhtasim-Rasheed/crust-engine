@@ -74,7 +74,7 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "nop", "if", "else", "while", "for", "in", "global",
+            "nop", "if", "else", "while", "for", "in", "global", "assert",
             "setup", "update",
             "clone_setup", "clone_update",
             "when",
@@ -100,7 +100,7 @@ impl Tokenizer {
         let c = &self.code[self.pointer..];
         
         // Comments
-        if c.starts_with("//") {
+        if c.starts_with("//") || c.starts_with("#") {
             while self.pointer < self.code.len() && !self.code[self.pointer..].starts_with('\n') {
                 self.pointer += 1;
             }
@@ -284,6 +284,9 @@ pub enum Statement {
         value: Expression,
     },
     Nop,
+    Assert {
+        condition: Expression,
+    },
     If {
         condition: Expression,
         body: Vec<Statement>,
@@ -337,6 +340,7 @@ impl std::fmt::Debug for Statement {
             Statement::Assignment { is_global, identifier, value } => write!(f, "ASSIGN[{}{:?} = {}]", if *is_global { "global " } else { "" }, identifier, value.to_string()),
             Statement::ListMemberAssignment { is_global, identifier, index, value } => write!(f, "LIST_ASSIGN[{}{:?}[{}] = {}]", if *is_global { "global " } else { "" }, identifier, index.to_string(), value.to_string()),
             Statement::Nop => write!(f, "NOP"),
+            Statement::Assert { condition } => write!(f, "ASSERT[{}]", condition.to_string()),
             Statement::If { condition, body, else_if_bodies, else_body } => {
                 let else_if_str = else_if_bodies.iter()
                     .map(|(cond, body)| format!("ELSE_IF[{}] {{ {:?} }}", cond.to_string(), body))
@@ -447,6 +451,11 @@ impl Parser {
                 self.advance();
                 Ok(Statement::Nop)
             },
+            Token::Keyword(k) if k == "assert" => {
+                self.advance();
+                let condition = self.parse_binary(0)?;
+                Ok(Statement::Assert { condition })
+            }
             Token::Keyword(k) if k == "if" => self.parse_if(),
             Token::Keyword(k) if k == "while" => self.parse_while(),
             Token::Keyword(k) if k == "for" => self.parse_for(),
@@ -568,6 +577,8 @@ impl Parser {
             }
         }
 
+        self.eat(&Token::Newline);
+
         if !self.eat(&Token::Symbol("]".to_string())) {
             return Err("Expected ']' at the end of list".to_string());
         }
@@ -582,7 +593,7 @@ impl Parser {
                 continue;
             }
             let peeked = self.peek().unwrap_or(&Token::EOF).clone();
-            if let Token::Identifier(key) = peeked {
+            if let Token::Identifier(key) | Token::Value(Value::String(key)) = peeked {
                 self.advance();
                 if !self.eat(&Token::Symbol(":".to_string())) {
                     return Err(format!("Expected ':' after key in object but got {:?}", self.peek()));
@@ -596,6 +607,8 @@ impl Parser {
                 return Err("Expected identifier as key in object".to_string());
             }
         }
+
+        self.eat(&Token::Newline);
 
         if !self.eat(&Token::Symbol("}".to_string())) {
             return Err("Expected '}' at the end of object".to_string());
@@ -623,6 +636,7 @@ impl Parser {
                 break;
             }
         }
+        self.eat(&Token::Newline);
         if !self.eat(&Token::Symbol(")".to_string())) {
             return Err("Expected ')' after closure arguments".to_string());
         }

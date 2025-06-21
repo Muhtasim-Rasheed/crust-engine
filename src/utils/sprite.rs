@@ -453,6 +453,13 @@ impl Sprite {
                 }
             }
             Statement::Nop => {}
+            Statement::Assert { condition } => {
+                if !super::resolve_expression(condition, project, self, local_vars, snapshots, camera, script_id).to_boolean() {
+                    println!("assert {:?}: Failed", condition);
+                } else {
+                    println!("assert {:?}: Passed", condition);
+                }
+            }
             Statement::If { condition, body, else_if_bodies, else_body } => {
                 if super::resolve_expression(condition, project, self, local_vars, snapshots, camera, script_id).to_boolean() {
                     for statement in body {
