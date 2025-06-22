@@ -1,6 +1,6 @@
 # Crust
 
-![Contributors Are Welcome!](https://img.shields.io/badge/Contributors%20Are%20Welcome!-22bb22)
+[![Contributors Are Welcome!](https://img.shields.io/badge/Contributors%20Are%20Welcome!-22bb22)](./CONTRIBUTING.md)
 
 [![Crates.io Downloads (recent)](https://img.shields.io/crates/dr/crust-engine?color=blue)](https://crates.io/crates/crust-engine)
 [![GitHub License](https://img.shields.io/github/license/Muhtasim-Rasheed/crust-engine)](https://www.gnu.org/licenses/gpl-3.0.en.html)
@@ -21,6 +21,11 @@ Crust is a game development tool that allows users to create games using text-ba
 - Runs at a smooth 60 FPS instead of 30 FPS in Scratch
 - Supports all major platforms (Windows, macOS, Linux) except mobile
 - Open-source and free to use
+
+## Contributing
+
+We are looking for contributors, even tiny PRs help!
+Please check out [the contributing guidelines](./CONTRIBUTING.md) to get started, you'll earn a place in the hall of contributors!
 
 ## Installation
 
@@ -83,11 +88,6 @@ update {
 The output:
 
 ![Example Output](./assets/example_result.png)
-
-## Contributing
-
-If you want to contribute to Crust or want to report a bug, please visit our [GitHub repository](https://github.com/Muhtasim-Rasheed/crust) and also
-check out the [contributing guidelines](./CONTRIBUTING.md).
 
 ## License
 
