@@ -45,6 +45,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `range(start, end)`: Returns a list of numbers from `start` to `end - 1`.
 - `range(start, end, step)`: Returns a list of numbers from `start` to `end - 1`, incrementing by `step`.
 - `to_string(value)`: Converts the given value to a string.
+- `to_string(number, base)`: Converts the given decimal number to a string in the specified base (2 to 36).
 - `to_number(value)`: Converts the given value to a number.
 - `to_boolean(value)`: Converts the given value to a boolean.
 - `to_list(value)`: Converts the given value to a list.

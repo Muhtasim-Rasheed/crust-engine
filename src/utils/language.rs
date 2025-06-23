@@ -171,6 +171,24 @@ impl Tokenizer {
         }
 
         // Numbers
+        if c.starts_with("0x") || c.starts_with("0b") || c.starts_with("0o") {
+            // Hex, binary, or octal numbers
+            let base = if c.starts_with("0x") {
+                16
+            } else if c.starts_with("0b") {
+                2
+            } else {
+                8
+            };
+            self.pointer += 2; // Skip 0x, 0b, or 0o
+            let start = self.pointer;
+            while self.pointer < self.code.len() && self.code[self.pointer..].starts_with(char::is_alphanumeric) {
+                self.pointer += 1;
+            }
+            let number = &self.code[start..self.pointer];
+            return Some(Token::Value(Value::Number(i64::from_str_radix(number, base).unwrap() as f32)));
+        }
+        
         if c.chars().next().unwrap().is_ascii_digit() {
             let number = self.get_number();
             return Some(Token::Value(Value::Number(number.parse().unwrap())));

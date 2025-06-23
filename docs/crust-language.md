@@ -7,7 +7,7 @@ Crust is Crust's programming language, and it's syntax is similar to Rust. Crust
 There are 6 main datatypes in Crust:
 
 - `Null`: A null value, useful if you want to set a variable to nothing. Example: `null`
-- `Number`: A number, can be an integer or a float. Example: `42`, `3.14`
+- `Number`: A number, can be an integer or a float. Example: `42`, `3.14`, `0xFF` (hexadecimal), `0b1010` (binary), `0o755` (octal)
 - `String`: A string of characters, enclosed in double quotes. Example: `"Hello, world!"`
 - `Boolean`: A boolean value, can be either `true` or `false`. Example: `true`, `false`
 - `List`: A list of values, enclosed in square brackets. Example: `[1, 2, 3]`, `["apple", "banana", "cherry"]`

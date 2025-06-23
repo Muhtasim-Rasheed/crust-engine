@@ -433,6 +433,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "to_string" => {
                     if let [value] = args.as_slice() {
                         Value::String(value.to_string())
+                    } else if let [Value::Number(value), Value::Number(base)] = args.as_slice() {
+                        Value::String(format_radix(*value as u32, *base as u32))
                     } else {
                         Value::Null
                     }
@@ -718,25 +720,6 @@ pub fn sample_texture(texture: &Image, uv: Vec2) -> Color {
     texture.get_pixel(x, y)
 }
 
-// pub fn compute_resolution(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2, texture: &Image) -> usize {
-//     let width = texture.width();
-//     let height = texture.height();
-
-//     let screen_diag = [
-//         p1.distance(p2),
-//         p2.distance(p3),
-//         p3.distance(p4),
-//         p4.distance(p1),
-//     ]
-//     .into_iter()
-//     .fold(0.0, f32::max);
-
-//     // One step per screen-space pixel of the longest side (scaled by tex size)
-//     let longest_tex_side = width.max(height);
-//     (screen_diag * longest_tex_side as f32 / width.max(1) as f32)
-//         .clamp(4.0, 512.0) as usize
-// }
-
 pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
     let mut flat = vec![0; pixels.len() * 4];
     for (i, pixel) in pixels.iter().enumerate() {
@@ -752,6 +735,21 @@ pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
 fn cubic_bezier(t: f32, p0: f32, p1: f32, p2: f32, p3: f32) -> f32 {
     let u = 1.0 - t;
     u*u*u*p0 + 3.0*u*u*t*p1 + 3.0*u*t*t*p2 + t*t*t*p3
+}
+
+fn format_radix(mut x: u32, radix: u32) -> String {
+    let mut result = vec![];
+
+    loop {
+        let m = x % radix;
+        x = x / radix;
+
+        result.push(std::char::from_digit(m, radix).unwrap());
+        if x == 0 {
+            break;
+        }
+    }
+    result.into_iter().rev().collect()
 }
 
 fn string_to_keycode(s: &str) -> Option<KeyCode> {
