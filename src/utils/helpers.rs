@@ -68,7 +68,7 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "*" => Value::Number(left_value.to_number() * right_value.to_number()),
                 "/" => Value::Number(left_value.to_number() / right_value.to_number()),
                 "%" => Value::Number(left_value.to_number() % right_value.to_number()),
-                "^" => Value::Number(left_value.to_number().powf(right_value.to_number())),
+                "**" => Value::Number(left_value.to_number().powf(right_value.to_number())),
                 "==" => Value::Boolean(left_value == right_value),
                 "!=" => Value::Boolean(left_value != right_value),
                 "<" => Value::Boolean(left_value.to_number() < right_value.to_number()),
@@ -79,6 +79,11 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "||" => Value::Boolean(left_value.to_boolean() || right_value.to_boolean()),
                 "in" => Value::Boolean(right_value.to_list().contains(&left_value)),
                 ".." => Value::String(format!("{}{}", left_value.to_string(), right_value.to_string())),
+                "^" => Value::Number((left_value.to_number() as u32 ^ right_value.to_number() as u32) as f32),
+                "&" => Value::Number((left_value.to_number() as u32 & right_value.to_number() as u32) as f32),
+                "|" => Value::Number((left_value.to_number() as u32 | right_value.to_number() as u32) as f32),
+                "<<" => Value::Number(((left_value.to_number() as u32) << right_value.to_number() as u32) as f32),
+                ">>" => Value::Number((left_value.to_number() as u32 >> right_value.to_number() as u32) as f32),
                 _ => panic!("Unknown operator: {}", operator),
             }
         }

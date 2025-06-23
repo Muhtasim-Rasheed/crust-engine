@@ -152,14 +152,14 @@ impl Tokenizer {
 
         // Multi-char operators first
         let two = &self.code[self.pointer..self.pointer + 2.min(self.code.len() - self.pointer)];
-        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", ".."].contains(&two) {
+        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", "..", "**", "<<", ">>"].contains(&two) {
             self.pointer += 2;
             return Some(Token::Operator(two.to_string()));
         }
 
         // Single-char operators
         let one = &self.code[self.pointer..self.pointer + 1];
-        if ["=", "+", "-", "*", "/", "%", "^", "<", ">", "!"].contains(&one) {
+        if ["=", "+", "-", "*", "/", "%", "^", "&", "|", "<", ">", "!"].contains(&one) {
             self.pointer += 1;
             return Some(Token::Operator(one.to_string()));
         }
@@ -559,7 +559,8 @@ impl Parser {
     
     fn precedence(op: &str) -> u8 {
         match op {
-            "^" => 7,
+            "**" => 8,
+            "^" | "&" | "|" | "<<" | ">>" => 7,
             "*" | "/" | "%" => 6,
             "+" | "-" => 5,
             "==" | "!=" | "<" | ">" | "<=" | ">=" => 4,
