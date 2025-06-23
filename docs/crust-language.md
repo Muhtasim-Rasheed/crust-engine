@@ -39,11 +39,20 @@ To assign a list's or object's value, you can use the following syntax:
 
 ### Block Statements
 
-Block statements are multi-line statements that perform a many actions in one go. They are used to define functions, loops, and conditionals. Block statements are enclosed in curly braces `{}`. There are 9 block statements in Crust:
+Block statements are multi-line statements that perform a many actions in one go. They are used to define functions, loops, and conditionals. Block statements are enclosed in curly braces `{}`. There are 10 block statements in Crust:
 
 - `setup { ... }`: The setup block is executed once at the start of the program. It is used to initialize variables and set up the game environment.
   In library files, variable assignments are appended to the importing file from the setup block. Everything else is ignored.
 - `update { ... }`: The update block is executed every frame, and is used to update the game state, handle input, and draw graphics. Libraries ignore the update block.
+- `match expression { ... }`: The match block is used to match an expression against multiple patterns. It is similar to a switch statement in other languages. It may also contain an else block, which is executed if no patterns match. Example:
+```
+os = "Linux"
+match os {
+    "Windows": { print("You probably like gaming.") }
+    "Linux": { print("You probably like programming.") }
+    "macOS": { print("You probably like design.") }
+} else { print("Hello, stranger!") } # no offence to FreeBSD users
+```
 - `if condition { ... }`: Executes the block if the condition is true. Example: `if x > 0 { print("x is positive") }`
 - `if condition { ... } else { ... }`: Executes the first block if the condition is true, otherwise executes the second block. Example: `if x > 0 { print("x is positive") } else { print("x is negative or zero") }`
 - `if condition { ... } else if condition { ... } else { ... }`: Executes the first block if the first condition is true, otherwise checks the second condition, and so on. Example: 

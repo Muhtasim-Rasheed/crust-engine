@@ -474,6 +474,22 @@ impl Sprite {
                     println!("assert {:?}: Passed", condition);
                 }
             }
+            Statement::Match { value, cases, default } => {
+                let resolved_value = super::resolve_expression(value, project, self, local_vars, snapshots, camera, script_id);
+                for (case_value, body) in cases {
+                    if resolved_value == super::resolve_expression(case_value, project, self, local_vars, snapshots, camera, script_id) {
+                        for statement in body {
+                            self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
+                        }
+                        return;
+                    }
+                }
+                if let Some(default_body) = default {
+                    for statement in default_body {
+                        self.execute_statement(statement, project, snapshots, camera, local_vars, script_id);
+                    }
+                }
+            }
             Statement::If { condition, body, else_if_bodies, else_body } => {
                 if super::resolve_expression(condition, project, self, local_vars, snapshots, camera, script_id).to_boolean() {
                     for statement in body {

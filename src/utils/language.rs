@@ -74,7 +74,7 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "nop", "if", "else", "while", "for", "in", "global", "assert",
+            "nop", "match", "if", "else", "while", "for", "in", "global", "assert",
             "setup", "update",
             "clone_setup", "clone_update",
             "when",
@@ -287,6 +287,11 @@ pub enum Statement {
     Assert {
         condition: Expression,
     },
+    Match {
+        value: Expression,
+        cases: Vec<(Expression, Vec<Statement>)>,
+        default: Option<Vec<Statement>>,
+    },
     If {
         condition: Expression,
         body: Vec<Statement>,
@@ -341,6 +346,17 @@ impl std::fmt::Debug for Statement {
             Statement::ListMemberAssignment { is_global, identifier, index, value } => write!(f, "LIST_ASSIGN[{}{:?}[{}] = {}]", if *is_global { "global " } else { "" }, identifier, index.to_string(), value.to_string()),
             Statement::Nop => write!(f, "NOP"),
             Statement::Assert { condition } => write!(f, "ASSERT[{}]", condition.to_string()),
+            Statement::Match { value, cases, default } => {
+                let cases_str = cases.iter()
+                    .map(|(case_value, body)| format!("CASE[{}] {{ {:?} }}", case_value.to_string(), body))
+                    .collect::<Vec<_>>().join(" ");
+                let default_str = if let Some(default_body) = default {
+                    format!("DEFAULT {{ {:?} }}", default_body)
+                } else {
+                    "".to_string()
+                };
+                write!(f, "MATCH[{}] {{ {} }} {}", value.to_string(), cases_str, default_str)
+            },
             Statement::If { condition, body, else_if_bodies, else_body } => {
                 let else_if_str = else_if_bodies.iter()
                     .map(|(cond, body)| format!("ELSE_IF[{}] {{ {:?} }}", cond.to_string(), body))
@@ -456,6 +472,7 @@ impl Parser {
                 let condition = self.parse_binary(0)?;
                 Ok(Statement::Assert { condition })
             }
+            Token::Keyword(k) if k == "match" => self.parse_match(),
             Token::Keyword(k) if k == "if" => self.parse_if(),
             Token::Keyword(k) if k == "while" => self.parse_while(),
             Token::Keyword(k) if k == "for" => self.parse_for(),
@@ -524,6 +541,7 @@ impl Parser {
     
     fn precedence(op: &str) -> u8 {
         match op {
+            "^" => 7,
             "*" | "/" | "%" => 6,
             "+" | "-" => 5,
             "==" | "!=" | "<" | ">" | "<=" | ">=" => 4,
@@ -739,6 +757,36 @@ impl Parser {
             }
             _ => Err(format!("Unexpected token in expression: {:?}", self.peek())),
         }
+    }
+
+    fn parse_match(&mut self) -> Result<Statement, String> {
+        self.advance();
+        let value = self.parse_binary(0)?;
+        if !self.eat(&Token::Symbol("{".to_string())) {
+            return Err("Expected '{' after 'match'".to_string());
+        }
+        let mut cases = vec![];
+        while self.peek() != Some(&Token::Symbol("}".to_string())) {
+            if self.eat(&Token::Newline) {
+                continue;
+            }
+            let case_value = self.parse_binary(0)?;
+            if !self.eat(&Token::Symbol(":".to_string())) {
+                return Err("Expected ':' after case value".to_string());
+            }
+            let body = self.parse_block()?;
+            cases.push((case_value, body));
+        }
+        if !self.eat(&Token::Symbol("}".to_string())) {
+            return Err("Expected '}' at the end of match".to_string());
+        }
+        let default = if self.eat(&Token::Keyword("else".to_string())) {
+            let body = self.parse_block()?;
+            Some(body)
+        } else {
+            None
+        };
+        Ok(Statement::Match { value, cases, default })
     }
 
     fn parse_if(&mut self) -> Result<Statement, String> {
