@@ -189,3 +189,49 @@ impl Runtime {
         }
     }
 }
+
+pub fn create_new_project(name: &str) -> std::path::PathBuf {
+    let dir = std::path::Path::new(name);
+    if dir.exists() {
+        panic!("Project directory already exists: {}", name);
+    }
+    std::fs::create_dir_all(dir).expect("Failed to create project directory");
+
+    let toml_file_content = r#"debug_options = ["show_fps", "show_mouse_pos"]
+
+[stage]
+backdrops = []
+
+[[sprites]]
+name = "default-sprite"
+code = "sprites/default.crst"
+costumes = ["sprites/crust.png"]
+x = 0
+y = 0
+w = 200
+h = 200"#;
+
+    let default_sprite_code = r#"// Default Sprite Code
+
+setup {
+    print("Hello, World!");
+}
+
+update {}
+
+// For more information on how to write Crust code, please visit the documentation:
+// https://muhtasim-rasheed.github.io/crust-engine/"#;
+
+    let toml_file_path = dir.join("project.toml");
+    std::fs::write(toml_file_path.clone(), toml_file_content).expect("Failed to write project.toml");
+
+    std::fs::create_dir_all(dir.join("sprites")).expect("Failed to create sprites directory");
+
+    let default_sprite_code_path = dir.join("sprites").join("default.crst");
+    std::fs::write(default_sprite_code_path, default_sprite_code).expect("Failed to write default sprite code");
+
+    let default_sprite_costume_path = dir.join("sprites").join("crust.png");
+    std::fs::write(default_sprite_costume_path, include_bytes!("../../assets/logo_background.png")).expect("Failed to write default sprite costume");
+
+    toml_file_path
+}

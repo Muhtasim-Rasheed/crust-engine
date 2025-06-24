@@ -17,4 +17,4 @@ pub mod language;
 pub use language::*;
 
 pub mod runtime;
-pub use runtime::Runtime;
+pub use runtime::*;

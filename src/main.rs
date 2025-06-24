@@ -20,10 +20,15 @@ use clap::Parser;
 mod utils;
 
 #[derive(Parser)]
-#[command(name = "Crust", version = env!("CARGO_PKG_VERSION"), about = "A Scratch-like game development tool with a custom scripting language.")]
+#[command(name = "Crust", version, about)]
 struct Args {
+    /// Create a new Crust project with the given name.
+    #[arg(short, long)]
+    new: Option<String>,
+    /// The path to the Crust project file. If not provided, a file dialog will open to select one.
     #[arg(short, long)]
     project: Option<String>,
+    /// Additional arguments to pass to the Crust runtime.
     #[arg(last = true)]
     additional_args: Vec<String>,
 }
@@ -50,6 +55,14 @@ fn window_config() -> Conf {
 async fn main() {
     // let mut args = std::env::args();
     let args = Args::parse();
+
+    if let Some(new_project_name) = args.new {
+        let toml_path = utils::create_new_project(&new_project_name);
+        println!("Created new project: {}", new_project_name);
+        println!("run `crust --project {}` to run the project.", toml_path.display());
+        return;
+    }
+
     let project_file = args.project.unwrap_or_else(|| {
         rfd::FileDialog::new()
             .set_title("Select Desired Crust Project")

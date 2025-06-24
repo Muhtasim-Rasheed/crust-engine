@@ -1,6 +1,13 @@
 !!! note
     The words "Stage" and "Backdrop" are used interchangeably in Crust.
 
+!!! note
+    As of version 0.3.5, Crust allows you to create projects by writing:
+    ```sh
+    crust-engine --new my_project
+    ```
+    This creates a new project with the name `my_project` in the current directory, and initializes it with a default `project.toml` with an empty stage and a single sprite named "default-sprite".
+
 Projects are defined by a `project.toml` file in the root directory. This file contains metadata about the project, such as allowing debug features, the stages, the sprites and their costumes, etc. Here is an example of a `project.toml` file:
 
 ```toml
