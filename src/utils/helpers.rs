@@ -605,50 +605,20 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "window_height" => Value::Number(screen_height()),
                 _ => {
                     if let Some(function_struct) = sprite.functions.clone().get(function) {
-                        let Function { args: args_, body, returns } = function_struct;
-                        if args_.len() == args.len() {
-                            let mut local_vars_: Vec<(String, Value)> = vec![];
-                            for (i, arg) in args_.iter().enumerate() {
-                                if let Some(arg_value) = args.get(i) {
-                                    local_vars_.push((arg.clone(), arg_value.clone()));
-                                } else {
-                                    println!("Missing argument for function '{}'", function);
-                                }
-                            }
-                            local_vars_.append(&mut local_vars.to_vec());
-                            for statement in body {
-                                sprite.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
-                            }
-                            let returns = resolve_expression(returns, project, sprite, &local_vars_, snapshots, camera, script_id);
-                            return returns;
-                        } else {
-                            return Value::Null;
-                        }
+                        function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args).unwrap_or_else(|e| {
+                            println!("Error calling function '{}': {}", function, e);
+                            Value::Null
+                        })
                     } else if let Some(variable) = sprite.variables.get(function).cloned() {
                         let Value::Closure(closure) = variable else {
                             println!("Variable '{}' is not a function", function);
                             return Value::Null;
                         };
-                        let Function { args: args_, body, .. } = &*closure;
-                        if args_.len() == args.len() {
-                            let mut local_vars_: Vec<(String, Value)> = vec![];
-                            for (i, arg) in args_.iter().enumerate() {
-                                if let Some(arg_value) = args.get(i) {
-                                    local_vars_.push((arg.clone(), arg_value.clone()));
-                                } else {
-                                    println!("Missing argument for function '{}'", function);
-                                }
-                            }
-                            local_vars_.append(&mut local_vars.to_vec());
-                            for statement in body {
-                                sprite.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
-                            }
-                            let returns = resolve_expression(&closure.returns, project, sprite, &local_vars_, snapshots, camera, script_id);
-                            return returns;
-                        } else {
-                            println!("Invalid number of arguments for function '{}'", function);
-                            return Value::Null;
-                        }
+                        let function_struct = &*closure;
+                        function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args).unwrap_or_else(|e| {
+                            println!("Error calling function '{}': {}", function, e);
+                            Value::Null
+                        })
                     } else {
                         return Value::Null;
                     }

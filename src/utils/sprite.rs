@@ -105,6 +105,34 @@ pub struct Function {
     pub returns: Expression,
 }
 
+impl Function {
+    pub fn call(
+        &self,
+        sprite: &mut Sprite,
+        project: &mut Project,
+        snapshots: &[SpriteSnapshot],
+        camera: &Camera2D,
+        local_vars: &[(String, Value)],
+        script_id: usize,
+        args: &[Value]
+    ) -> Result<Value, String> {
+        if args.len() != self.args.len() {
+            return Err(format!("Called with incorrect number of arguments: expected {}, got {}", self.args.len(), args.len()));
+        }
+        
+        let mut new_local_vars = local_vars.to_vec();
+        for (i, arg) in self.args.iter().enumerate() {
+            new_local_vars.push((arg.clone(), args[i].clone()));
+        }
+
+        for statement in &self.body {
+            sprite.execute_statement(statement, project, snapshots, camera, &new_local_vars, script_id);
+        }
+
+        Ok(super::resolve_expression(&self.returns, project, sprite, &new_local_vars, snapshots, camera, script_id))
+    }
+}
+
 #[derive(Debug)]
 pub struct Sprite {
     pub name: String,
@@ -1245,45 +1273,20 @@ impl Sprite {
                         }
                         _ => {
                             if let Some(function_struct) = self.functions.clone().get(function) {
-                                let Function { args: args_, body, .. } = function_struct;
-                                if args_.len() == args.len() {
-                                    let mut local_vars_: Vec<(String, Value)> = vec![];
-                                    for (i, arg) in args_.iter().enumerate() {
-                                        if let Some(arg_value) = args.get(i) {
-                                            local_vars_.push((arg.clone(), arg_value.clone()));
-                                        } else {
-                                            println!("Missing argument for function '{}'", function);
-                                        }
-                                    }
-                                    local_vars_.append(&mut local_vars.to_vec());
-                                    for statement in body {
-                                        self.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
-                                    }
-                                } else {
-                                    println!("Invalid number of arguments for function '{}'", function);
-                                }
+                                let _ = function_struct.call(self, project, snapshots, camera, local_vars, script_id, &args).unwrap_or_else(|e| {
+                                    println!("Error calling function '{}': {}", function, e);
+                                    Value::Null
+                                });
                             } else if let Some(variable) = self.variables.get(function).cloned() {
                                 let Value::Closure(closure) = variable else {
                                     println!("Variable '{}' is not a function", function);
                                     return;
                                 };
-                                let Function { args: args_, body, .. } = &*closure;
-                                if args_.len() == args.len() {
-                                    let mut local_vars_: Vec<(String, Value)> = vec![];
-                                    for (i, arg) in args_.iter().enumerate() {
-                                        if let Some(arg_value) = args.get(i) {
-                                            local_vars_.push((arg.clone(), arg_value.clone()));
-                                        } else {
-                                            println!("Missing argument for function '{}'", function);
-                                        }
-                                    }
-                                    local_vars_.append(&mut local_vars.to_vec());
-                                    for statement in body {
-                                        self.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
-                                    }
-                                } else {
-                                    println!("Invalid number of arguments for function '{}'", function);
-                                }
+                                let function_struct = &*closure;
+                                let _ = function_struct.call(self, project, snapshots, camera, local_vars, script_id, &args).unwrap_or_else(|e| {
+                                    println!("Error calling closure '{}': {}", function, e);
+                                    Value::Null
+                                });
                             } else {
                                 println!("Unknown function or variable '{}'", function);
                             }
