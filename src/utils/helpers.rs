@@ -9,7 +9,7 @@ use std::{
 
 use macroquad::prelude::*;
 
-use super::{Expression, Function, Project, Sprite, SpriteSnapshot, Value};
+use super::{Expression, Project, Sprite, SpriteSnapshot, Value};
 
 // Helper functions!
 
@@ -339,29 +339,59 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "sort" => {
                     if let [Value::List(list), Value::Closure(closure)] = args.as_slice() {
                         let mut new_list = list.clone();
-                        let Function { args, body, returns } = &**closure;
-                        if args.len() == 2 {
-                            new_list.sort_by(|a, b| {
-                                let mut local_vars_: Vec<(String, Value)> = vec![];
-                                local_vars_.push((args[0].clone(), a.clone()));
-                                local_vars_.push((args[1].clone(), b.clone()));
-                                local_vars_.append(&mut local_vars.to_vec());
-                                for statement in body {
-                                    sprite.execute_statement(statement, project, snapshots, camera, &local_vars_, script_id);
-                                }
-                                let result = resolve_expression(returns, project, sprite, &local_vars_, snapshots, camera, script_id);
-                                if let Value::Boolean(b) = result {
-                                    if b {
-                                        std::cmp::Ordering::Less
-                                    } else {
-                                        std::cmp::Ordering::Greater
-                                    }
-                                } else {
-                                    std::cmp::Ordering::Equal
-                                }
+                        let function_struct = &**closure;
+                        new_list.sort_by(|a, b| {
+                            let args_ = [a.clone(), b.clone()];
+                            let result = function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args_).unwrap_or_else(|e| {
+                                println!("Error calling closure in sort: {}", e);
+                                Value::Null
                             });
-                        }
+                            if let Value::Boolean(b) = result {
+                                if b {
+                                    std::cmp::Ordering::Less
+                                } else {
+                                    std::cmp::Ordering::Greater
+                                }
+                            } else {
+                                std::cmp::Ordering::Equal
+                            }
+                        });
                         Value::List(new_list)
+                    } else {
+                        Value::Null
+                    }
+                }
+                "filter" => {
+                    if let [Value::List(list), Value::Closure(closure)] = args.as_slice() {
+                        let function_struct = &**closure;
+                        let filtered: Vec<Value> = list.iter().filter_map(|item| {
+                            let args_ = [item.clone()];
+                            let result = function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args_).unwrap_or_else(|e| {
+                                println!("Error calling closure in filter: {}", e);
+                                Value::Null
+                            });
+                            if let Value::Boolean(true) = result {
+                                Some(item.clone())
+                            } else {
+                                None
+                            }
+                        }).collect();
+                        Value::List(filtered)
+                    } else {
+                        Value::Null
+                    }
+                }
+                "map" => {
+                    if let [Value::List(list), Value::Closure(closure)] = args.as_slice() {
+                        let function_struct = &**closure;
+                        let mapped: Vec<Value> = list.iter().map(|item| {
+                            let args_ = [item.clone()];
+                            function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args_).unwrap_or_else(|e| {
+                                println!("Error calling closure in map: {}", e);
+                                Value::Null
+                            })
+                        }).collect();
+                        Value::List(mapped)
                     } else {
                         Value::Null
                     }
