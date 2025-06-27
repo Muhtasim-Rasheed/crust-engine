@@ -152,7 +152,7 @@ impl Tokenizer {
 
         // Multi-char operators first
         let two = &self.code[self.pointer..self.pointer + 2.min(self.code.len() - self.pointer)];
-        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", "..", "**", "<<", ">>"].contains(&two) {
+        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", "..", "**", "<<", ">>", "++", "--"].contains(&two) {
             self.pointer += 2;
             return Some(Token::Operator(two.to_string()));
         }
@@ -237,6 +237,10 @@ pub enum Expression {
         index: Box<Expression>,
     },
     Identifier(String),
+    PostIncrement(String),
+    PostDecrement(String),
+    PreIncrement(String),
+    PreDecrement(String),
     Binary {
         left: Box<Expression>,
         operator: String,
@@ -268,6 +272,10 @@ impl Expression {
                 format!("{}[{}]", list.to_string(), index.to_string())
             }
             Expression::Identifier(id) => id.clone(),
+            Expression::PostIncrement(id) => format!("{}++", id),
+            Expression::PostDecrement(id) => format!("{}--", id),
+            Expression::PreIncrement(id) => format!("++{}", id),
+            Expression::PreDecrement(id) => format!("--{}", id),
             Expression::Binary { left, operator, right } => {
                 format!("({} {} {})", left.to_string(), operator, right.to_string())
             }
@@ -559,6 +567,7 @@ impl Parser {
     
     fn precedence(op: &str) -> u8 {
         match op {
+            "++" | "--" => 9,
             "**" => 8,
             "^" | "&" | "|" | "<<" | ">>" => 7,
             "*" | "/" | "%" => 6,
@@ -574,16 +583,31 @@ impl Parser {
     fn parse_binary(&mut self, min_prec: u8) -> Result<Expression, String> {
         let mut left = self.parse_primary()?;
 
-        while let Some(token) = self.peek() {
+        while let Some(token) = self.peek().cloned() {
             let op = match token {
                 Token::Operator(op) => op,
                 Token::Keyword(k) if k == "in" => k,
                 _ => break,
             };
 
-            let prec = Parser::precedence(op);
+            let prec = Parser::precedence(op.as_str());
             if prec < min_prec {
                 break;
+            }
+
+            if op == "++" || op == "--" {
+                // Handle post-increment and post-decrement
+                self.advance();
+                if let Expression::Identifier(name) = left {
+                    if op == "++" {
+                        left = Expression::PostIncrement(name);
+                    } else {
+                        left = Expression::PostDecrement(name);
+                    }
+                } else {
+                    return Err(format!("Expected identifier for post-{} but got {:?}", if op == "++" { "increment" } else { "decrement" }, left));
+                }
+                continue;
             }
 
             let op = op.clone();
@@ -753,6 +777,19 @@ impl Parser {
                     operator: op.clone(),
                     operand: Box::new(operand),
                 })
+            }
+            Token::Operator(op) if op == "++" || op == "--" => {
+                self.advance();
+                if let Some(Token::Identifier(id)) = self.peek().cloned() {
+                    self.advance();
+                    if op == "++" {
+                        Ok(Expression::PreIncrement(id.clone()))
+                    } else {
+                        Ok(Expression::PreDecrement(id.clone()))
+                    }
+                } else {
+                    Err("Expected identifier after '++' or '--'".to_string())
+                }
             }
             Token::Symbol(s) if s == "(" => {
                 self.advance();
