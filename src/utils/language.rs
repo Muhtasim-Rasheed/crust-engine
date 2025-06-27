@@ -1029,6 +1029,49 @@ impl Parser {
                 }
                 Ok(Statement::Call(Expression::Call { function: identifier, args }))
             }
+        } else if self.eat(&Token::Symbol(".".to_string())) {
+            // List member access with dot notation
+            let index = self.parse_primary()?;
+            match index {
+                Expression::Identifier(index_name) => {
+                    if self.eat(&Token::Operator("=".to_string())) {
+                        let value = self.parse_binary(0)?;
+                        Ok(Statement::ListMemberAssignment {
+                            is_global: false,
+                            identifier: Expression::Identifier(identifier),
+                            index: Expression::Value(Value::String(index_name)),
+                            value,
+                        })
+                    } else if let Some(Token::Operator(op)) = self.eat_any(
+                        &[
+                            Token::Operator("+=".to_string()),
+                            Token::Operator("-=".to_string()),
+                            Token::Operator("*=".to_string()),
+                            Token::Operator("/=".to_string()),
+                        ]) {
+                        let real_op = op[0..1].to_string(); // extract +, -, *, /
+                        let right = self.parse_binary(0)?;
+                        let left_expr = Expression::ListMemberAccess {
+                            list: Box::new(Expression::Identifier(identifier.clone())),
+                            index: Box::new(Expression::Value(Value::String(index_name.clone()))),
+                        };
+                        let combined_expr = Expression::Binary {
+                            left: Box::new(left_expr),
+                            operator: real_op,
+                            right: Box::new(right),
+                        };
+                        Ok(Statement::ListMemberAssignment {
+                            is_global: false,
+                            identifier: Expression::Identifier(identifier),
+                            index: Expression::Value(Value::String(index_name)),
+                            value: combined_expr,
+                        })
+                    } else {
+                        Err("Expected '=' or operator after '.'".to_string())
+                    }
+                }
+                _ => Err(format!("Expected identifier after '.' but got {:?}", index)),
+            }
         } else {
             // Function call
             let mut args = vec![];
@@ -1127,6 +1170,48 @@ impl Parser {
                     })
                 } else {
                     Err("Expected '=' or operator after list member access".to_string())
+                }
+            } else if self.eat(&Token::Symbol(".".to_string())) {
+                let index = self.parse_primary()?;
+                match index {
+                    Expression::Identifier(index_name) => {
+                        if self.eat(&Token::Operator("=".to_string())) {
+                            let value = self.parse_binary(0)?;
+                            Ok(Statement::ListMemberAssignment {
+                                is_global: true,
+                                identifier: Expression::Identifier(identifier),
+                                index: Expression::Value(Value::String(index_name)),
+                                value,
+                            })
+                        } else if let Some(Token::Operator(op)) = self.eat_any(
+                            &[
+                                Token::Operator("+=".to_string()),
+                                Token::Operator("-=".to_string()),
+                                Token::Operator("*=".to_string()),
+                                Token::Operator("/=".to_string()),
+                            ]) {
+                            let real_op = op[0..1].to_string(); // extract +, -, *, /
+                            let right = self.parse_binary(0)?;
+                            let left_expr = Expression::ListMemberAccess {
+                                list: Box::new(Expression::Identifier(identifier.clone())),
+                                index: Box::new(Expression::Value(Value::String(index_name.clone()))),
+                            };
+                            let combined_expr = Expression::Binary {
+                                left: Box::new(left_expr),
+                                operator: real_op,
+                                right: Box::new(right),
+                            };
+                            Ok(Statement::ListMemberAssignment {
+                                is_global: true,
+                                identifier: Expression::Identifier(identifier),
+                                index: Expression::Value(Value::String(index_name)),
+                                value: combined_expr,
+                            })
+                        } else {
+                            Err("Expected '=' or operator after '.'".to_string())
+                        }
+                    }
+                    _ => Err(format!("Expected identifier after '.' but got {:?}", index)),
                 }
             } else {
                 Err("Expected '=' or operator after identifier".to_string())
