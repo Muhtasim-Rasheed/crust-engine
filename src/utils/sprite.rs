@@ -143,7 +143,7 @@ pub struct Sprite {
     pub direction: f32,
     pub rotation_style: RotationStyle,
     pub scale: f32,
-    pub layer: usize,
+    pub layer: isize,
     pub variables: HashMap<String, Value>,
     pub effects: HashMap<String, f32>,
     pub sound_effects: HashMap<String, f32>,
@@ -151,6 +151,7 @@ pub struct Sprite {
     pub functions: HashMap<String, Function>,
     pub clone_id: Option<usize>,
     pub stop_request: Option<StopRequest>,
+    visible: bool,
     clones: Vec<Sprite>,
     clone_setup: Vec<Statement>,
     clone_update: Vec<Vec<Statement>>,
@@ -170,7 +171,17 @@ pub struct Sprite {
 }
 
 impl Sprite {
-    pub fn new(name: String, costumes: Vec<Texture2D>, sounds: HashMap<String, Sound>, ast: Vec<Statement>, w: f32, h: f32, x: f32, y: f32, base_dir: String) -> Self {
+    pub fn new(
+        name: String,
+        costumes: Vec<Texture2D>,
+        sounds: HashMap<String, Sound>,
+        ast: Vec<Statement>,
+        w: f32, h: f32, x: f32, y: f32,
+        visibility: bool,
+        layer: isize,
+        direction: f32,
+        base_dir: String
+    ) -> Self {
         let mut setup_ast = vec![];
         let mut update_ast = vec![];
         let mut broadcast_recievers = HashMap::new();
@@ -281,8 +292,9 @@ impl Sprite {
             current_costume: 0,
             sounds,
             scale: 1.0,
-            layer: 0,
-            direction: 0.0,
+            layer: layer,
+            visible: visibility,
+            direction: direction,
             rotation_style: RotationStyle::AllAround,
             variables: HashMap::new(),
             effects: HashMap::new(),
@@ -327,6 +339,7 @@ impl Sprite {
             sounds,
             scale: self.scale,
             layer: self.layer,
+            visible: true,
             direction: self.direction,
             rotation_style: self.rotation_style.clone(),
             variables: self.variables.clone(),
@@ -774,6 +787,8 @@ impl Sprite {
                             }
                         }
                         // ============= LOOKS ============= \\
+                        "hide" => self.visible = false,
+                        "show" => self.visible = true,
                         "say" => {
                             match args.as_slice() {
                                 [text] => {
@@ -881,7 +896,7 @@ impl Sprite {
                         }
                         "go_to_layer" => {
                             if let [Value::Number(layer)] = args.as_slice() {
-                                self.layer = *layer as usize;
+                                self.layer = *layer as isize;
                             } else {
                                 println!("Invalid arguments for go_to_layer");
                             }
@@ -889,9 +904,9 @@ impl Sprite {
                         "go_by_layers" => {
                             if let [Value::String(direction), Value::Number(steps)] = args.as_slice() {
                                 if direction == "forwards" {
-                                    self.layer += *steps as usize;
+                                    self.layer += *steps as isize;
                                 } else if direction == "backwards" {
-                                    self.layer -= *steps as usize;
+                                    self.layer -= *steps as isize;
                                 }
                             } else {
                                 println!("Invalid arguments for go_by_layers");
@@ -1565,6 +1580,15 @@ impl Sprite {
     }
 
     pub fn draw(&self) {
+        // draw all the clones first so they are behind
+        for clone in &self.clones {
+            clone.draw();
+        }
+
+        if !self.visible {
+            return;
+        }
+
         let scaled_size = self.size * self.scale;
         let top_left = self.center - scaled_size / 2.0;
         
@@ -1838,11 +1862,6 @@ impl Sprite {
         }
         let processed_texture = Texture2D::from_image(&effect_image);
         processed_texture.set_filter(FilterMode::Nearest);
-
-        // draw all the clones first so they are behind
-        for clone in &self.clones {
-            clone.draw();
-        }
 
         draw_texture_ex(
             &processed_texture,

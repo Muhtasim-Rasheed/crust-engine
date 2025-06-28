@@ -31,6 +31,9 @@ struct SpriteConfig {
     y: f32,
     w: f32,
     h: f32,
+    visible: Option<bool>,
+    layer: Option<isize>,
+    direction: Option<f32>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -95,7 +98,20 @@ impl Runtime {
             let mut parser = Parser::new(tokens);
             let ast = parser.parse();
 
-            let s = Sprite::new(sprite.name.clone(), textures, sounds, ast, sprite.w, sprite.h, sprite.x, sprite.y, dir.to_string_lossy().to_string());
+            let s = Sprite::new(
+                sprite.name.clone(),
+                textures,
+                sounds,
+                ast,
+                sprite.w,
+                sprite.h,
+                sprite.x,
+                sprite.y,
+                sprite.visible.unwrap_or(true),
+                sprite.layer.unwrap_or(0),
+                sprite.rotation.unwrap_or(0.0),
+                dir.to_string_lossy().to_string()
+            );
 
             project.sprites.push(s);
         }

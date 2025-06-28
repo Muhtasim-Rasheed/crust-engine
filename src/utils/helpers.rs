@@ -61,7 +61,6 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
         Expression::Identifier(id) => sprite.variable(id, project, local_vars).clone(),
         Expression::PostIncrement(id) => {
             let value = sprite.variable(id, project, local_vars).clone();
-            println!("PostIncrement: {} = {:?}", id, value);
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num + 1.0);
                 sprite.set_variable(id, new_value);

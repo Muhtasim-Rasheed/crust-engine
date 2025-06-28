@@ -62,10 +62,11 @@ All paths mentioned are relative to the `project.toml` file.
                 - `file`: The path to the sound file. Can only be a `.wav` file.
         - `x`: The x-coordinate of the sprite. Center is 0, left is negative, right is positive.
         - `y`: The y-coordinate of the sprite. Center is 0, up is negative, down is positive.
-        - `w`: The width of the sprite in pixels. Defaults to 100.
-        - `h`: The height of the sprite in pixels. Defaults to 100.
-
-The keys `debug_options` and `[sprites.sounds]` are optional. If they are not present, the default values will be used.
+        - `w`: The width of the sprite in pixels.
+        - `h`: The height of the sprite in pixels.
+        - `visible`: Whether the sprite is visible. Defaults to `true`. If set to `false`, the sprite will not be rendered on the stage.
+        - `layer`: The layer of the sprite. Defaults to `0`. A higher value means the sprite will be rendered on top of sprites with a lower layer value. Also effects the order of the sprite in the sprite list after the first frame.
+        - `direction`: The rotation of the sprite in degrees. Defaults to `0`. A positive value rotates the sprite clockwise, a negative value rotates it counter-clockwise.
 
 ## Recommended Project Structure
 
