@@ -109,7 +109,7 @@ impl Runtime {
                 sprite.y,
                 sprite.visible.unwrap_or(true),
                 sprite.layer.unwrap_or(0),
-                sprite.rotation.unwrap_or(0.0),
+                sprite.direction.unwrap_or(0.0),
                 dir.to_string_lossy().to_string()
             );
 

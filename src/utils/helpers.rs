@@ -253,7 +253,21 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 }
                 "distance_to" => {
                     if let [Value::Number(x), Value::Number(y)] = args.as_slice() {
-                        Value::Number(((sprite.center.x - x).powi(2) + (sprite.center.y - y).powi(2)).sqrt())
+                        return Value::Number(sprite.center.distance(vec2(*x, *y)));
+                    } if let [Value::String(spritename)] = args.as_slice() {
+                        let self_center = sprite.center;
+                        for snapshot in snapshots {
+                            if snapshot.name == *spritename {
+                                let snapshot_center = snapshot.center;
+                                return Value::Number(self_center.distance(snapshot_center));
+                            }
+                        }
+                        if spritename == "mouse" {
+                            let mouse = Vec2::from(mouse_position()) * 2.0 - Vec2::from(miniquad::window::screen_size());
+                            return Value::Number(self_center.distance(mouse));
+                        }
+                        println!("Sprite '{}' not found in snapshots", spritename);
+                        Value::Null
                     } else {
                         Value::Null
                     }

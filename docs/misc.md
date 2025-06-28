@@ -22,6 +22,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `random(min, max)`: Returns a random number between the given minimum and maximum values.
 - `distance(x1, y1, x2, y2)`: Returns the distance between the two points `(x1, y1)` and `(x2, y2)`.
 - `distance_to(x, y)`: Returns the distance from the sprite to the point `(x, y)`.
+- `distance_to(spritename | "mouse")`: Returns the distance from the sprite to the other sprite or the mouse.
 - `write(content)`: Exports the given content to a file. The file is created in a the `exports` directory in the project root.
 - `write(content, path)`: Exports the given content to a file at the specified path. The path is relative to the project root.
 - `read(path)`: Imports a Crust file at the specified path. The path is relative to the project root.
