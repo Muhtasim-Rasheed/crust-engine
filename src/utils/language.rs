@@ -42,22 +42,23 @@ pub struct Tokenizer {
 
 impl Tokenizer {
     pub fn new(code: String) -> Self {
-        Self {
-            code,
-            pointer: 0,
-        }
+        Self { code, pointer: 0 }
     }
 
     fn skip_whitespace(&mut self) {
-        while self.pointer < self.code.len() && self.code[self.pointer..].starts_with(char::is_whitespace) {
+        while self.pointer < self.code.len()
+            && self.code[self.pointer..].starts_with(char::is_whitespace)
+        {
             self.pointer += 1;
         }
     }
 
     fn get_number(&mut self) -> String {
         let start = self.pointer;
-        while self.pointer < self.code.len() && self.code[self.pointer..].starts_with(char::is_numeric) |
-              self.code[self.pointer..].starts_with('.') {
+        while self.pointer < self.code.len()
+            && self.code[self.pointer..].starts_with(char::is_numeric)
+                | self.code[self.pointer..].starts_with('.')
+        {
             self.pointer += 1;
         }
         self.code[start..self.pointer].to_string()
@@ -65,8 +66,10 @@ impl Tokenizer {
 
     fn get_identifier(&mut self) -> String {
         let start = self.pointer;
-        while self.pointer < self.code.len() && (self.code[self.pointer..].starts_with(char::is_alphanumeric) ||
-              self.code[self.pointer..].starts_with('_')) {
+        while self.pointer < self.code.len()
+            && (self.code[self.pointer..].starts_with(char::is_alphanumeric)
+                || self.code[self.pointer..].starts_with('_'))
+        {
             self.pointer += 1;
         }
         self.code[start..self.pointer].to_string()
@@ -74,11 +77,22 @@ impl Tokenizer {
 
     fn tokenize(&mut self) -> Option<Token> {
         let keyword_list = vec![
-            "nop", "match", "if", "else", "while", "for", "in", "global", "assert",
-            "setup", "update",
-            "clone_setup", "clone_update",
+            "nop",
+            "match",
+            "if",
+            "else",
+            "while",
+            "for",
+            "in",
+            "global",
+            "assert",
+            "setup",
+            "update",
+            "clone_setup",
+            "clone_update",
             "when",
-            "fn", "import",
+            "fn",
+            "import",
         ];
 
         if self.pointer >= self.code.len() {
@@ -98,7 +112,7 @@ impl Tokenizer {
         }
 
         let c = &self.code[self.pointer..];
-        
+
         // Comments
         if c.starts_with("//") || c.starts_with("#") {
             while self.pointer < self.code.len() && !self.code[self.pointer..].starts_with('\n') {
@@ -152,7 +166,12 @@ impl Tokenizer {
 
         // Multi-char operators first
         let two = &self.code[self.pointer..self.pointer + 2.min(self.code.len() - self.pointer)];
-        if ["+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", "..", "**", "<<", ">>", "++", "--"].contains(&two) {
+        if [
+            "+=", "-=", "*=", "/=", "==", "!=", "<=", ">=", "&&", "||", "..", "**", "<<", ">>",
+            "++", "--",
+        ]
+        .contains(&two)
+        {
             self.pointer += 2;
             return Some(Token::Operator(two.to_string()));
         }
@@ -182,13 +201,17 @@ impl Tokenizer {
             };
             self.pointer += 2; // Skip 0x, 0b, or 0o
             let start = self.pointer;
-            while self.pointer < self.code.len() && self.code[self.pointer..].starts_with(char::is_alphanumeric) {
+            while self.pointer < self.code.len()
+                && self.code[self.pointer..].starts_with(char::is_alphanumeric)
+            {
                 self.pointer += 1;
             }
             let number = &self.code[start..self.pointer];
-            return Some(Token::Value(Value::Number(i64::from_str_radix(number, base).unwrap() as f32)));
+            return Some(Token::Value(Value::Number(
+                i64::from_str_radix(number, base).unwrap() as f32,
+            )));
         }
-        
+
         if c.chars().next().unwrap().is_ascii_digit() {
             let number = self.get_number();
             return Some(Token::Value(Value::Number(number.parse().unwrap())));
@@ -197,7 +220,9 @@ impl Tokenizer {
         if c.chars().next().unwrap() == '.' {
             self.pointer += 1;
             let number = self.get_number();
-            return Some(Token::Value(Value::Number(format!(".{}", number).parse().unwrap())));
+            return Some(Token::Value(Value::Number(
+                format!(".{}", number).parse().unwrap(),
+            )));
         }
 
         // Identifiers or keywords
@@ -261,11 +286,19 @@ impl Expression {
         match self {
             Expression::Value(v) => v.to_string(),
             Expression::List(l) => {
-                let list_str = l.iter().map(|e| e.to_string()).collect::<Vec<_>>().join(", ");
+                let list_str = l
+                    .iter()
+                    .map(|e| e.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 format!("[{}]", list_str)
             }
             Expression::Object(o) => {
-                let obj_str = o.iter().map(|(k, v)| format!("{}: {}", k, v.to_string())).collect::<Vec<_>>().join(", ");
+                let obj_str = o
+                    .iter()
+                    .map(|(k, v)| format!("{}: {}", k, v.to_string()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 format!("{{ {} }}", obj_str)
             }
             Expression::ListMemberAccess { list, index } => {
@@ -276,14 +309,22 @@ impl Expression {
             Expression::PostDecrement(id) => format!("{}--", id),
             Expression::PreIncrement(id) => format!("++{}", id),
             Expression::PreDecrement(id) => format!("--{}", id),
-            Expression::Binary { left, operator, right } => {
+            Expression::Binary {
+                left,
+                operator,
+                right,
+            } => {
                 format!("({} {} {})", left.to_string(), operator, right.to_string())
             }
             Expression::Unary { operator, operand } => {
                 format!("({}{})", operator, operand.to_string())
             }
             Expression::Call { function, args } => {
-                let args_str = args.iter().map(|arg| arg.to_string()).collect::<Vec<_>>().join(", ");
+                let args_str = args
+                    .iter()
+                    .map(|arg| arg.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 format!("{}({})", function, args_str)
             }
         }
@@ -368,43 +409,124 @@ pub enum Statement {
 impl std::fmt::Debug for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Statement::Assignment { is_global, identifier, value } => write!(f, "ASSIGN[{}{:?} = {}]", if *is_global { "global " } else { "" }, identifier, value.to_string()),
-            Statement::ListMemberAssignment { is_global, identifier, index, value } => write!(f, "LIST_ASSIGN[{}{:?}[{}] = {}]", if *is_global { "global " } else { "" }, identifier, index.to_string(), value.to_string()),
+            Statement::Assignment {
+                is_global,
+                identifier,
+                value,
+            } => write!(
+                f,
+                "ASSIGN[{}{:?} = {}]",
+                if *is_global { "global " } else { "" },
+                identifier,
+                value.to_string()
+            ),
+            Statement::ListMemberAssignment {
+                is_global,
+                identifier,
+                index,
+                value,
+            } => write!(
+                f,
+                "LIST_ASSIGN[{}{:?}[{}] = {}]",
+                if *is_global { "global " } else { "" },
+                identifier,
+                index.to_string(),
+                value.to_string()
+            ),
             Statement::Nop => write!(f, "NOP"),
             Statement::Assert { condition } => write!(f, "ASSERT[{}]", condition.to_string()),
-            Statement::Match { value, cases, default } => {
-                let cases_str = cases.iter()
-                    .map(|(case_value, body)| format!("CASE[{}] {{ {:?} }}", case_value.to_string(), body))
-                    .collect::<Vec<_>>().join(" ");
+            Statement::Match {
+                value,
+                cases,
+                default,
+            } => {
+                let cases_str = cases
+                    .iter()
+                    .map(|(case_value, body)| {
+                        format!("CASE[{}] {{ {:?} }}", case_value.to_string(), body)
+                    })
+                    .collect::<Vec<_>>()
+                    .join(" ");
                 let default_str = if let Some(default_body) = default {
                     format!("DEFAULT {{ {:?} }}", default_body)
                 } else {
                     "".to_string()
                 };
-                write!(f, "MATCH[{}] {{ {} }} {}", value.to_string(), cases_str, default_str)
-            },
-            Statement::If { condition, body, else_if_bodies, else_body } => {
-                let else_if_str = else_if_bodies.iter()
+                write!(
+                    f,
+                    "MATCH[{}] {{ {} }} {}",
+                    value.to_string(),
+                    cases_str,
+                    default_str
+                )
+            }
+            Statement::If {
+                condition,
+                body,
+                else_if_bodies,
+                else_body,
+            } => {
+                let else_if_str = else_if_bodies
+                    .iter()
                     .map(|(cond, body)| format!("ELSE_IF[{}] {{ {:?} }}", cond.to_string(), body))
-                    .collect::<Vec<_>>().join(" ");
+                    .collect::<Vec<_>>()
+                    .join(" ");
                 let else_str = if let Some(else_body) = else_body {
                     format!("ELSE {{ {:?} }}", else_body)
                 } else {
                     "".to_string()
                 };
-                write!(f, "IF[{}] {{ {:?} }} {} {}", condition.to_string(), body, else_if_str, else_str)
-            },
-            Statement::While { condition, body } => write!(f, "WHILE[{}] {{ {:?} }}", condition.to_string(), body),
-            Statement::For { identifier, iterable, body } => write!(f, "FOR[{} IN {}] {{ {:?} }}", identifier, iterable.to_string(), body),
+                write!(
+                    f,
+                    "IF[{}] {{ {:?} }} {} {}",
+                    condition.to_string(),
+                    body,
+                    else_if_str,
+                    else_str
+                )
+            }
+            Statement::While { condition, body } => {
+                write!(f, "WHILE[{}] {{ {:?} }}", condition.to_string(), body)
+            }
+            Statement::For {
+                identifier,
+                iterable,
+                body,
+            } => write!(
+                f,
+                "FOR[{} IN {}] {{ {:?} }}",
+                identifier,
+                iterable.to_string(),
+                body
+            ),
             Statement::Setup { body } => write!(f, "SETUP {{ {:?} }}", body),
             Statement::Update { body } => write!(f, "UPDATE {{ {:?} }}", body),
             Statement::CloneSetup { body } => write!(f, "CLONE_SETUP {{ {:?} }}", body),
             Statement::CloneUpdate { body } => write!(f, "CLONE_UPDATE {{ {:?} }}", body),
-            Statement::WhenBroadcasted { broadcast, body } => write!(f, "WHEN_BROADCASTED[{}] {{ {:?} }}", broadcast, body),
-            Statement::WhenBoolean { condition, body } => write!(f, "WHEN_BOOLEAN[{}] {{ {:?} }}", condition.to_string(), body),
+            Statement::WhenBroadcasted { broadcast, body } => {
+                write!(f, "WHEN_BROADCASTED[{}] {{ {:?} }}", broadcast, body)
+            }
+            Statement::WhenBoolean { condition, body } => write!(
+                f,
+                "WHEN_BOOLEAN[{}] {{ {:?} }}",
+                condition.to_string(),
+                body
+            ),
             Statement::Import { path } => write!(f, "IMPORT[{}]", path),
             Statement::Call(expr) => write!(f, "CALL[{}]", expr.to_string()),
-            Statement::FunctionDefinition { name, args, body, returns } => write!(f, "FUNCTION[{}({:?}) -> {}] {{ {:?} }}", name, args, returns.to_string(), body),
+            Statement::FunctionDefinition {
+                name,
+                args,
+                body,
+                returns,
+            } => write!(
+                f,
+                "FUNCTION[{}({:?}) -> {}] {{ {:?} }}",
+                name,
+                args,
+                returns.to_string(),
+                body
+            ),
         }
     }
 }
@@ -416,10 +538,7 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self {
-            tokens,
-            current: 0,
-        }
+        Self { tokens, current: 0 }
     }
 
     fn peek(&self) -> Option<&Token> {
@@ -476,7 +595,10 @@ impl Parser {
                 eprintln!("There was a parsing error. Details are given below:");
                 eprintln!("\t=> {}", errors[0]);
             } else {
-                eprintln!("There were {} parsing errors. Details are given below:", errors.len());
+                eprintln!(
+                    "There were {} parsing errors. Details are given below:",
+                    errors.len()
+                );
                 for (i, error) in errors.into_iter().enumerate() {
                     eprintln!("\t#{} => {}", i + 1, error);
                 }
@@ -492,7 +614,7 @@ impl Parser {
             Token::Keyword(k) if k == "nop" => {
                 self.advance();
                 Ok(Statement::Nop)
-            },
+            }
             Token::Keyword(k) if k == "assert" => {
                 self.advance();
                 let condition = self.parse_binary(0)?;
@@ -527,7 +649,10 @@ impl Parser {
                 if let Some(Token::Value(Value::String(broadcast))) = self.peek().cloned() {
                     self.advance();
                     let body = self.parse_block()?;
-                    Ok(Statement::WhenBroadcasted { broadcast: broadcast.clone(), body })
+                    Ok(Statement::WhenBroadcasted {
+                        broadcast: broadcast.clone(),
+                        body,
+                    })
                 } else {
                     self.advance();
                     let condition = self.parse_binary(0)?;
@@ -539,7 +664,10 @@ impl Parser {
             Token::Keyword(k) if k == "import" => self.parse_import(),
             Token::Keyword(k) if k == "global" => self.parse_global_assignment(),
             Token::Identifier(_) => self.parse_assignment_or_call(),
-            _ => Err(format!("Unexpected token: {:?}", self.peek().unwrap_or(&Token::EOF))),
+            _ => Err(format!(
+                "Unexpected token: {:?}",
+                self.peek().unwrap_or(&Token::EOF)
+            )),
         }
     }
 
@@ -564,7 +692,7 @@ impl Parser {
 
         Ok(statements)
     }
-    
+
     fn precedence(op: &str) -> u8 {
         match op {
             "++" | "--" => 9,
@@ -579,7 +707,7 @@ impl Parser {
             _ => 0,
         }
     }
-    
+
     fn parse_binary(&mut self, min_prec: u8) -> Result<Expression, String> {
         let mut left = self.parse_primary()?;
 
@@ -605,7 +733,11 @@ impl Parser {
                         left = Expression::PostDecrement(name);
                     }
                 } else {
-                    return Err(format!("Expected identifier for post-{} but got {:?}", if op == "++" { "increment" } else { "decrement" }, left));
+                    return Err(format!(
+                        "Expected identifier for post-{} but got {:?}",
+                        if op == "++" { "increment" } else { "decrement" },
+                        left
+                    ));
                 }
                 continue;
             }
@@ -657,7 +789,10 @@ impl Parser {
             if let Token::Identifier(key) | Token::Value(Value::String(key)) = peeked {
                 self.advance();
                 if !self.eat(&Token::Symbol(":".to_string())) {
-                    return Err(format!("Expected ':' after key in object but got {:?}", self.peek()));
+                    return Err(format!(
+                        "Expected ':' after key in object but got {:?}",
+                        self.peek()
+                    ));
                 }
                 let value = self.parse_binary(0)?;
                 object.insert(key.clone(), value);
@@ -703,13 +838,11 @@ impl Parser {
         }
         let returns = self.parse_binary(0)?;
         let body = self.parse_block()?;
-        Ok(Expression::Value(Value::Closure(
-            Box::new(Function {
-                args,
-                body,
-                returns,
-            }
-        ))))
+        Ok(Expression::Value(Value::Closure(Box::new(Function {
+            args,
+            body,
+            returns,
+        }))))
     }
 
     fn parse_primary(&mut self) -> Result<Expression, String> {
@@ -738,7 +871,10 @@ impl Parser {
                     if !self.eat(&Token::Symbol(")".to_string())) {
                         return Err("Expected ')' after function call".to_string());
                     }
-                    Ok(Expression::Call { function: name, args })
+                    Ok(Expression::Call {
+                        function: name,
+                        args,
+                    })
                 } else if self.eat(&Token::Symbol("[".to_string())) {
                     let index = self.parse_binary(0)?;
                     if !self.eat(&Token::Symbol("]".to_string())) {
@@ -751,19 +887,18 @@ impl Parser {
                 } else if self.eat(&Token::Symbol(".".to_string())) {
                     let index = self.parse_primary()?;
                     match index {
-                        Expression::Identifier(index_name) => {
-                            Ok(Expression::ListMemberAccess {
-                                list: Box::new(Expression::Identifier(name)),
-                                index: Box::new(Expression::Value(Value::String(index_name))),
-                            })
-                        }
-                        Expression::Value(Value::Number(num)) => {
-                            Ok(Expression::ListMemberAccess {
-                                list: Box::new(Expression::Identifier(name)),
-                                index: Box::new(Expression::Value(Value::Number(num))),
-                            })
-                        }
-                        _ => Err(format!("Expected identifier or number after '.' but got {:?}", index)),
+                        Expression::Identifier(index_name) => Ok(Expression::ListMemberAccess {
+                            list: Box::new(Expression::Identifier(name)),
+                            index: Box::new(Expression::Value(Value::String(index_name))),
+                        }),
+                        Expression::Value(Value::Number(num)) => Ok(Expression::ListMemberAccess {
+                            list: Box::new(Expression::Identifier(name)),
+                            index: Box::new(Expression::Value(Value::Number(num))),
+                        }),
+                        _ => Err(format!(
+                            "Expected identifier or number after '.' but got {:?}",
+                            index
+                        )),
                     }
                 } else {
                     // * ACTUALLY * an identifier
@@ -842,7 +977,11 @@ impl Parser {
         } else {
             None
         };
-        Ok(Statement::Match { value, cases, default })
+        Ok(Statement::Match {
+            value,
+            cases,
+            default,
+        })
     }
 
     fn parse_if(&mut self) -> Result<Statement, String> {
@@ -862,7 +1001,12 @@ impl Parser {
             }
         }
 
-        Ok(Statement::If { condition, body, else_if_bodies, else_body })
+        Ok(Statement::If {
+            condition,
+            body,
+            else_if_bodies,
+            else_body,
+        })
     }
 
     fn parse_while(&mut self) -> Result<Statement, String> {
@@ -882,7 +1026,11 @@ impl Parser {
             }
             let iterable = self.parse_binary(0)?;
             let body = self.parse_block()?;
-            Ok(Statement::For { identifier, iterable, body })
+            Ok(Statement::For {
+                identifier,
+                iterable,
+                body,
+            })
         } else {
             Err("Expected identifier after 'for'".to_string())
         }
@@ -916,7 +1064,12 @@ impl Parser {
             }
             let returns = self.parse_binary(0)?;
             let body = self.parse_block()?;
-            Ok(Statement::FunctionDefinition { name, args, body, returns })
+            Ok(Statement::FunctionDefinition {
+                name,
+                args,
+                body,
+                returns,
+            })
         } else {
             Err("Expected name (identifier) after 'fn'".to_string())
         }
@@ -951,13 +1104,12 @@ impl Parser {
                 identifier,
                 value,
             })
-        } else if let Some(Token::Operator(op)) = self.eat_any(
-            &[
-                Token::Operator("+=".to_string()),
-                Token::Operator("-=".to_string()),
-                Token::Operator("*=".to_string()),
-                Token::Operator("/=".to_string()),
-            ]) {
+        } else if let Some(Token::Operator(op)) = self.eat_any(&[
+            Token::Operator("+=".to_string()),
+            Token::Operator("-=".to_string()),
+            Token::Operator("*=".to_string()),
+            Token::Operator("/=".to_string()),
+        ]) {
             let real_op = op[0..1].to_string(); // extract +, -, *, /
             let right = self.parse_binary(0)?;
             let left_expr = Expression::Identifier(identifier.clone());
@@ -985,13 +1137,12 @@ impl Parser {
                     index,
                     value,
                 })
-            } else if let Some(Token::Operator(op)) = self.eat_any(
-                &[
-                    Token::Operator("+=".to_string()),
-                    Token::Operator("-=".to_string()),
-                    Token::Operator("*=".to_string()),
-                    Token::Operator("/=".to_string()),
-                ]) {
+            } else if let Some(Token::Operator(op)) = self.eat_any(&[
+                Token::Operator("+=".to_string()),
+                Token::Operator("-=".to_string()),
+                Token::Operator("*=".to_string()),
+                Token::Operator("/=".to_string()),
+            ]) {
                 let real_op = op[0..1].to_string(); // extract +, -, *, /
                 let right = self.parse_binary(0)?;
                 let left_expr = Expression::ListMemberAccess {
@@ -1027,7 +1178,10 @@ impl Parser {
                         return Err("Expected ')' after function call".to_string());
                     }
                 }
-                Ok(Statement::Call(Expression::Call { function: identifier, args }))
+                Ok(Statement::Call(Expression::Call {
+                    function: identifier,
+                    args,
+                }))
             }
         } else if self.eat(&Token::Symbol(".".to_string())) {
             // List member access with dot notation
@@ -1042,13 +1196,12 @@ impl Parser {
                             index: Expression::Value(Value::String(index_name)),
                             value,
                         })
-                    } else if let Some(Token::Operator(op)) = self.eat_any(
-                        &[
-                            Token::Operator("+=".to_string()),
-                            Token::Operator("-=".to_string()),
-                            Token::Operator("*=".to_string()),
-                            Token::Operator("/=".to_string()),
-                        ]) {
+                    } else if let Some(Token::Operator(op)) = self.eat_any(&[
+                        Token::Operator("+=".to_string()),
+                        Token::Operator("-=".to_string()),
+                        Token::Operator("*=".to_string()),
+                        Token::Operator("/=".to_string()),
+                    ]) {
                         let real_op = op[0..1].to_string(); // extract +, -, *, /
                         let right = self.parse_binary(0)?;
                         let left_expr = Expression::ListMemberAccess {
@@ -1090,7 +1243,10 @@ impl Parser {
                     return Err("Expected ')' after function call".to_string());
                 }
             }
-            Ok(Statement::Call(Expression::Call { function: identifier, args }))
+            Ok(Statement::Call(Expression::Call {
+                function: identifier,
+                args,
+            }))
         }
     }
 
@@ -1110,13 +1266,12 @@ impl Parser {
                     identifier,
                     value,
                 })
-            } else if let Some(Token::Operator(op)) = self.eat_any(
-                &[
-                    Token::Operator("+=".to_string()),
-                    Token::Operator("-=".to_string()),
-                    Token::Operator("*=".to_string()),
-                    Token::Operator("/=".to_string()),
-                ]) {
+            } else if let Some(Token::Operator(op)) = self.eat_any(&[
+                Token::Operator("+=".to_string()),
+                Token::Operator("-=".to_string()),
+                Token::Operator("*=".to_string()),
+                Token::Operator("/=".to_string()),
+            ]) {
                 let real_op = op[0..1].to_string(); // extract +, -, *, /
                 let right = self.parse_binary(0)?;
                 let left_expr = Expression::Identifier(identifier.clone());
@@ -1144,13 +1299,12 @@ impl Parser {
                         index,
                         value,
                     })
-                } else if let Some(Token::Operator(op)) = self.eat_any(
-                    &[
-                        Token::Operator("+=".to_string()),
-                        Token::Operator("-=".to_string()),
-                        Token::Operator("*=".to_string()),
-                        Token::Operator("/=".to_string()),
-                    ]) {
+                } else if let Some(Token::Operator(op)) = self.eat_any(&[
+                    Token::Operator("+=".to_string()),
+                    Token::Operator("-=".to_string()),
+                    Token::Operator("*=".to_string()),
+                    Token::Operator("/=".to_string()),
+                ]) {
                     let real_op = op[0..1].to_string(); // extract +, -, *, /
                     let right = self.parse_binary(0)?;
                     let left_expr = Expression::ListMemberAccess {
@@ -1183,18 +1337,19 @@ impl Parser {
                                 index: Expression::Value(Value::String(index_name)),
                                 value,
                             })
-                        } else if let Some(Token::Operator(op)) = self.eat_any(
-                            &[
-                                Token::Operator("+=".to_string()),
-                                Token::Operator("-=".to_string()),
-                                Token::Operator("*=".to_string()),
-                                Token::Operator("/=".to_string()),
-                            ]) {
+                        } else if let Some(Token::Operator(op)) = self.eat_any(&[
+                            Token::Operator("+=".to_string()),
+                            Token::Operator("-=".to_string()),
+                            Token::Operator("*=".to_string()),
+                            Token::Operator("/=".to_string()),
+                        ]) {
                             let real_op = op[0..1].to_string(); // extract +, -, *, /
                             let right = self.parse_binary(0)?;
                             let left_expr = Expression::ListMemberAccess {
                                 list: Box::new(Expression::Identifier(identifier.clone())),
-                                index: Box::new(Expression::Value(Value::String(index_name.clone()))),
+                                index: Box::new(Expression::Value(Value::String(
+                                    index_name.clone(),
+                                ))),
                             };
                             let combined_expr = Expression::Binary {
                                 left: Box::new(left_expr),

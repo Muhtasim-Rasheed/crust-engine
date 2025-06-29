@@ -37,6 +37,9 @@ impl Project {
     }
 
     pub fn get_broadcast(&self, message: &str) -> Option<&Broadcast> {
-        self.broadcast_history.iter().rev().find(|b| b.message == message)
+        self.broadcast_history
+            .iter()
+            .rev()
+            .find(|b| b.message == message)
     }
 }

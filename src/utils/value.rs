@@ -64,7 +64,13 @@ impl Value {
         match self {
             Value::Number(n) => *n,
             Value::String(s) => s.parse().unwrap_or(0.0),
-            Value::Boolean(b) => if *b { 1.0 } else { 0.0 },
+            Value::Boolean(b) => {
+                if *b {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
             _ => 0.0,
         }
     }
@@ -88,13 +94,18 @@ impl Value {
                 string
             }
             Value::Object(o) => {
-                format!("{{ {} }}", o.iter()
-                    .map(|(k, v)| format!("{}: {}", k, v.to_string()))
-                    .collect::<Vec<_>>()
-                    .join(", "))
+                format!(
+                    "{{ {} }}",
+                    o.iter()
+                        .map(|(k, v)| format!("{}: {}", k, v.to_string()))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
             }
             Value::Closure(c) => {
-                let args = c.args.iter()
+                let args = c
+                    .args
+                    .iter()
                     .map(|arg| arg.to_string())
                     .collect::<Vec<_>>()
                     .join(", ");
@@ -119,10 +130,9 @@ impl Value {
         match self {
             Value::Null => vec![],
             Value::List(l) => l.clone(),
-            Value::String(s) => s.chars()
-                .map(|c| Value::String(c.to_string()))
-                .collect(),
-            Value::Object(o) => o.iter()
+            Value::String(s) => s.chars().map(|c| Value::String(c.to_string())).collect(),
+            Value::Object(o) => o
+                .iter()
                 .map(|(k, v)| Value::List(vec![Value::String(k.clone()), v.clone()]))
                 .collect(),
             _ => vec![self.clone()],
@@ -133,7 +143,8 @@ impl Value {
         match self {
             Value::Null => HashMap::new(),
             Value::Object(o) => o.clone(),
-            Value::List(l) => l.iter()
+            Value::List(l) => l
+                .iter()
                 .enumerate()
                 .map(|(i, v)| (i.to_string(), v.clone()))
                 .collect(),

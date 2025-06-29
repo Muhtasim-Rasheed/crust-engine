@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use macroquad::{miniquad::conf::Icon, prelude::ImageFormat, texture::Image, window::Conf};
 use clap::Parser;
+use macroquad::{miniquad::conf::Icon, prelude::ImageFormat, texture::Image, window::Conf};
 
 mod utils;
 
@@ -34,9 +34,33 @@ struct Args {
 }
 
 fn window_config() -> Conf {
-    let small = utils::flatten(Image::from_file_with_format(include_bytes!("../icons/icon16.png"), Some(ImageFormat::Png)).unwrap().get_image_data().to_vec());
-    let medium = utils::flatten(Image::from_file_with_format(include_bytes!("../icons/icon32.png"), Some(ImageFormat::Png)).unwrap().get_image_data().to_vec());
-    let big = utils::flatten(Image::from_file_with_format(include_bytes!("../icons/icon64.png"), Some(ImageFormat::Png)).unwrap().get_image_data().to_vec());
+    let small = utils::flatten(
+        Image::from_file_with_format(
+            include_bytes!("../icons/icon16.png"),
+            Some(ImageFormat::Png),
+        )
+        .unwrap()
+        .get_image_data()
+        .to_vec(),
+    );
+    let medium = utils::flatten(
+        Image::from_file_with_format(
+            include_bytes!("../icons/icon32.png"),
+            Some(ImageFormat::Png),
+        )
+        .unwrap()
+        .get_image_data()
+        .to_vec(),
+    );
+    let big = utils::flatten(
+        Image::from_file_with_format(
+            include_bytes!("../icons/icon64.png"),
+            Some(ImageFormat::Png),
+        )
+        .unwrap()
+        .get_image_data()
+        .to_vec(),
+    );
     Conf {
         window_title: "Crust".to_owned(),
         window_width: 1024,
@@ -59,7 +83,10 @@ async fn main() {
     if let Some(new_project_name) = args.new {
         let toml_path = utils::create_new_project(&new_project_name);
         println!("Created new project: {}", new_project_name);
-        println!("run `crust --project {}` to run the project.", toml_path.display());
+        println!(
+            "run `crust --project {}` to run the project.",
+            toml_path.display()
+        );
         return;
     }
 

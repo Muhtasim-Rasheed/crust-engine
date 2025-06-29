@@ -1,14 +1,12 @@
 use std::collections::HashMap;
 
-use macroquad::prelude::*;
 use macroquad::audio::*;
+use macroquad::prelude::*;
 
 use serde::Deserialize;
 
 use super::StopRequest;
-use super::{
-    Parser, Project, Sprite, SpriteSnapshot, Tokenizer
-};
+use super::{Parser, Project, Sprite, SpriteSnapshot, Tokenizer};
 
 #[derive(Deserialize, Debug)]
 struct StageConfig {
@@ -56,9 +54,17 @@ impl Runtime {
 
         println!("{:#?}", config);
 
-        let mut project = Project::new(dir.to_string_lossy().to_string(), dir.join("export").to_string_lossy().to_string(), args);
+        let mut project = Project::new(
+            dir.to_string_lossy().to_string(),
+            dir.join("export").to_string_lossy().to_string(),
+            args,
+        );
 
-        for path in config.stage.unwrap_or(StageConfig { backdrops: vec![] }).backdrops {
+        for path in config
+            .stage
+            .unwrap_or(StageConfig { backdrops: vec![] })
+            .backdrops
+        {
             let path = dir.join(path);
             let tex = load_texture(&path.to_string_lossy()).await.unwrap();
             project.stage.backdrops.push(tex);
@@ -72,7 +78,12 @@ impl Runtime {
             let mut textures = vec![];
             for path in sprite.costumes {
                 let path = dir.join(path);
-                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or(Texture2D::from_file_with_format(include_bytes!("../../assets/missing.png"), None));
+                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or(
+                    Texture2D::from_file_with_format(
+                        include_bytes!("../../assets/missing.png"),
+                        None,
+                    ),
+                );
                 textures.push(tex);
             }
 
@@ -89,9 +100,10 @@ impl Runtime {
             }
 
             let sounds = sounds.into_iter().collect::<HashMap<_, _>>();
-            
+
             let sprite_code_file = dir.join(&sprite.code);
-            let code = std::fs::read_to_string(&sprite_code_file).expect("Failed to read sprite code");
+            let code =
+                std::fs::read_to_string(&sprite_code_file).expect("Failed to read sprite code");
 
             let mut tokenizer = Tokenizer::new(code);
             let tokens = tokenizer.tokenize_full();
@@ -110,12 +122,12 @@ impl Runtime {
                 sprite.visible.unwrap_or(true),
                 sprite.layer.unwrap_or(0),
                 sprite.direction.unwrap_or(0.0),
-                dir.to_string_lossy().to_string()
+                dir.to_string_lossy().to_string(),
             );
 
             project.sprites.push(s);
         }
-        
+
         Self {
             project,
             debug_options: config.debug_options.unwrap_or(vec![]),
@@ -129,17 +141,19 @@ impl Runtime {
             ..Default::default()
         };
         loop {
-            rand::srand(std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_millis() as u64);
+            rand::srand(
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis() as u64,
+            );
 
             set_camera(&camera);
             clear_background(WHITE);
             self.project.stage.draw();
 
             let mut sprites = std::mem::take(&mut self.project.sprites);
-            
+
             let snapshots: Vec<SpriteSnapshot> = sprites.iter().map(|s| s.into()).collect();
 
             let mut remove_sprites = vec![];
@@ -187,13 +201,22 @@ impl Runtime {
             }
 
             self.project.sprites = sprites;
-            
+
             set_default_camera();
 
             let mut debugs = HashMap::new();
             debugs.insert("show_fps", get_fps().to_string());
-            debugs.insert("show_mouse_pos", format!("({}, {})", mouse_position().0 * 2.0 - screen_width(), mouse_position().1 * 2.0 - screen_height()));
-            let debug_options: Vec<String> = self.debug_options.iter()
+            debugs.insert(
+                "show_mouse_pos",
+                format!(
+                    "({}, {})",
+                    mouse_position().0 * 2.0 - screen_width(),
+                    mouse_position().1 * 2.0 - screen_height()
+                ),
+            );
+            let debug_options: Vec<String> = self
+                .debug_options
+                .iter()
                 .filter(|option| debugs.contains_key(option.as_str()))
                 .map(|option| format!("{}: {}", option, debugs[option.as_str()]))
                 .collect();
@@ -239,15 +262,21 @@ update {}
 // https://muhtasim-rasheed.github.io/crust-engine/"#;
 
     let toml_file_path = dir.join("project.toml");
-    std::fs::write(toml_file_path.clone(), toml_file_content).expect("Failed to write project.toml");
+    std::fs::write(toml_file_path.clone(), toml_file_content)
+        .expect("Failed to write project.toml");
 
     std::fs::create_dir_all(dir.join("sprites")).expect("Failed to create sprites directory");
 
     let default_sprite_code_path = dir.join("sprites").join("default.crst");
-    std::fs::write(default_sprite_code_path, default_sprite_code).expect("Failed to write default sprite code");
+    std::fs::write(default_sprite_code_path, default_sprite_code)
+        .expect("Failed to write default sprite code");
 
     let default_sprite_costume_path = dir.join("sprites").join("crust.png");
-    std::fs::write(default_sprite_costume_path, include_bytes!("../../assets/logo_background.png")).expect("Failed to write default sprite costume");
+    std::fs::write(
+        default_sprite_costume_path,
+        include_bytes!("../../assets/logo_background.png"),
+    )
+    .expect("Failed to write default sprite costume");
 
     toml_file_path
 }

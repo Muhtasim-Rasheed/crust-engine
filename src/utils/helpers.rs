@@ -1,10 +1,7 @@
 use std::{
     fs::File,
+    io::{Read, Write},
     path::Path,
-    io::{
-        Read,
-        Write,
-    },
 };
 
 use macroquad::prelude::*;
@@ -13,27 +10,43 @@ use super::{Expression, Project, Sprite, SpriteSnapshot, Value};
 
 // Helper functions!
 
-pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut Sprite, local_vars: &[(String, Value)], snapshots: &[SpriteSnapshot], camera: &Camera2D, script_id: usize) -> Value {
+pub fn resolve_expression(
+    expr: &Expression,
+    project: &mut Project,
+    sprite: &mut Sprite,
+    local_vars: &[(String, Value)],
+    snapshots: &[SpriteSnapshot],
+    camera: &Camera2D,
+    script_id: usize,
+) -> Value {
     match expr {
         Expression::Value(v) => v.clone(),
         Expression::List(l) => {
             let mut list = vec![];
             for element in l {
-                list.push(resolve_expression(element, project, sprite, local_vars, snapshots, camera, script_id));
+                list.push(resolve_expression(
+                    element, project, sprite, local_vars, snapshots, camera, script_id,
+                ));
             }
             Value::List(list)
         }
         Expression::Object(o) => {
             let mut object = std::collections::HashMap::new();
             for (key, value) in o {
-                let resolved_value = resolve_expression(value, project, sprite, local_vars, snapshots, camera, script_id);
+                let resolved_value = resolve_expression(
+                    value, project, sprite, local_vars, snapshots, camera, script_id,
+                );
                 object.insert(key.clone(), resolved_value);
             }
             Value::Object(object)
         }
         Expression::ListMemberAccess { list, index } => {
-            let index = resolve_expression(index, project, sprite, local_vars, snapshots, camera, script_id);
-            let list = resolve_expression(list, project, sprite, local_vars, snapshots, camera, script_id);
+            let index = resolve_expression(
+                index, project, sprite, local_vars, snapshots, camera, script_id,
+            );
+            let list = resolve_expression(
+                list, project, sprite, local_vars, snapshots, camera, script_id,
+            );
             if let Value::List(list) = list {
                 if let Value::Number(index) = index {
                     if index >= 0.0 && index < list.len() as f32 {
@@ -95,9 +108,17 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
             }
             Value::Null
         }
-        Expression::Binary { left, right, operator } => {
-            let left_value = resolve_expression(left, project, sprite, local_vars, snapshots, camera, script_id);
-            let right_value = resolve_expression(right, project, sprite, local_vars, snapshots, camera, script_id);
+        Expression::Binary {
+            left,
+            right,
+            operator,
+        } => {
+            let left_value = resolve_expression(
+                left, project, sprite, local_vars, snapshots, camera, script_id,
+            );
+            let right_value = resolve_expression(
+                right, project, sprite, local_vars, snapshots, camera, script_id,
+            );
             match operator.as_str() {
                 "+" => Value::Number(left_value.to_number() + right_value.to_number()),
                 "-" => Value::Number(left_value.to_number() - right_value.to_number()),
@@ -114,17 +135,33 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "&&" => Value::Boolean(left_value.to_boolean() && right_value.to_boolean()),
                 "||" => Value::Boolean(left_value.to_boolean() || right_value.to_boolean()),
                 "in" => Value::Boolean(right_value.to_list().contains(&left_value)),
-                ".." => Value::String(format!("{}{}", left_value.to_string(), right_value.to_string())),
-                "^" => Value::Number((left_value.to_number() as u32 ^ right_value.to_number() as u32) as f32),
-                "&" => Value::Number((left_value.to_number() as u32 & right_value.to_number() as u32) as f32),
-                "|" => Value::Number((left_value.to_number() as u32 | right_value.to_number() as u32) as f32),
-                "<<" => Value::Number(((left_value.to_number() as u32) << right_value.to_number() as u32) as f32),
-                ">>" => Value::Number((left_value.to_number() as u32 >> right_value.to_number() as u32) as f32),
+                ".." => Value::String(format!(
+                    "{}{}",
+                    left_value.to_string(),
+                    right_value.to_string()
+                )),
+                "^" => Value::Number(
+                    (left_value.to_number() as u32 ^ right_value.to_number() as u32) as f32,
+                ),
+                "&" => Value::Number(
+                    (left_value.to_number() as u32 & right_value.to_number() as u32) as f32,
+                ),
+                "|" => Value::Number(
+                    (left_value.to_number() as u32 | right_value.to_number() as u32) as f32,
+                ),
+                "<<" => Value::Number(
+                    ((left_value.to_number() as u32) << right_value.to_number() as u32) as f32,
+                ),
+                ">>" => Value::Number(
+                    (left_value.to_number() as u32 >> right_value.to_number() as u32) as f32,
+                ),
                 _ => panic!("Unknown operator: {}", operator),
             }
         }
         Expression::Unary { operator, operand } => {
-            let operand_value = resolve_expression(operand, project, sprite, local_vars, snapshots, camera, script_id);
+            let operand_value = resolve_expression(
+                operand, project, sprite, local_vars, snapshots, camera, script_id,
+            );
             match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
                 "!" => Value::Boolean(!operand_value.to_boolean()),
@@ -132,8 +169,13 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
             }
         }
         Expression::Call { function, args } => {
-            let args = args.iter()
-                .map(|arg| resolve_expression(arg, project, sprite, local_vars, snapshots, camera, script_id))
+            let args = args
+                .iter()
+                .map(|arg| {
+                    resolve_expression(
+                        arg, project, sprite, local_vars, snapshots, camera, script_id,
+                    )
+                })
                 .collect::<Vec<_>>();
             match function.as_str() {
                 "args" => {
@@ -166,7 +208,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "acos" => Value::Number(args[0].to_number().acos()),
                 "atan" => Value::Number(args[0].to_number().atan()),
                 "lerp" => {
-                    if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args.as_slice() {
+                    if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args.as_slice()
+                    {
                         Value::Number(lerp(*a, *b, *t))
                     } else {
                         Value::Null
@@ -180,7 +223,10 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                                 if let Some(value) = snapshot.get(property) {
                                     return value.clone();
                                 } else {
-                                    println!("Property '{}' not found in sprite '{}'", property, sprite);
+                                    println!(
+                                        "Property '{}' not found in sprite '{}'",
+                                        property, sprite
+                                    );
                                     return Value::Null;
                                 }
                             }
@@ -206,7 +252,9 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                     }
                 }
                 "clamp" => {
-                    if let [Value::Number(value), Value::Number(min), Value::Number(max)] = args.as_slice() {
+                    if let [Value::Number(value), Value::Number(min), Value::Number(max)] =
+                        args.as_slice()
+                    {
                         Value::Number(clamp(*value, *min, *max))
                     } else {
                         Value::Null
@@ -245,7 +293,13 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                     }
                 }
                 "distance" => {
-                    if let [Value::Number(x1), Value::Number(y1), Value::Number(x2), Value::Number(y2)] = args.as_slice() {
+                    if let [
+                        Value::Number(x1),
+                        Value::Number(y1),
+                        Value::Number(x2),
+                        Value::Number(y2),
+                    ] = args.as_slice()
+                    {
                         Value::Number(((x1 - x2).powi(2) + (y1 - y2).powi(2)).sqrt())
                     } else {
                         Value::Null
@@ -254,7 +308,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "distance_to" => {
                     if let [Value::Number(x), Value::Number(y)] = args.as_slice() {
                         return Value::Number(sprite.center.distance(vec2(*x, *y)));
-                    } if let [Value::String(spritename)] = args.as_slice() {
+                    }
+                    if let [Value::String(spritename)] = args.as_slice() {
                         let self_center = sprite.center;
                         for snapshot in snapshots {
                             if snapshot.name == *spritename {
@@ -263,7 +318,8 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                             }
                         }
                         if spritename == "mouse" {
-                            let mouse = Vec2::from(mouse_position()) * 2.0 - Vec2::from(miniquad::window::screen_size());
+                            let mouse = Vec2::from(mouse_position()) * 2.0
+                                - Vec2::from(miniquad::window::screen_size());
                             return Value::Number(self_center.distance(mouse));
                         }
                         println!("Sprite '{}' not found in snapshots", spritename);
@@ -278,7 +334,9 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         let file = File::open(path).expect("Failed to open file");
                         let mut reader = std::io::BufReader::new(file);
                         let mut contents = String::new();
-                        reader.read_to_string(&mut contents).expect("Failed to read file");
+                        reader
+                            .read_to_string(&mut contents)
+                            .expect("Failed to read file");
                         Value::String(contents)
                     } else {
                         Value::Null
@@ -290,7 +348,9 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         let file = File::open(path).expect("Failed to open file");
                         let mut reader = std::io::BufReader::new(file);
                         let mut contents = Vec::new();
-                        reader.read_to_end(&mut contents).expect("Failed to read file");
+                        reader
+                            .read_to_end(&mut contents)
+                            .expect("Failed to read file");
                         Value::List(contents.iter().map(|&b| Value::Number(b as f32)).collect())
                     } else {
                         Value::Null
@@ -298,9 +358,25 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 }
                 "parse_image" => {
                     if let [Value::List(contents)] = args.as_slice() {
-                        let image = image::load_from_memory(contents.iter().map(|v| v.to_number() as u8).collect::<Vec<u8>>().as_slice()).expect("Failed to load image");
-                        let pixels: Vec<Value> = image.to_rgba8().into_raw().iter().map(|&b| Value::Number(b as f32)).collect();
-                        Value::List(vec![Value::Number(image.width() as f32), Value::Number(image.height() as f32), Value::List(pixels)])
+                        let image = image::load_from_memory(
+                            contents
+                                .iter()
+                                .map(|v| v.to_number() as u8)
+                                .collect::<Vec<u8>>()
+                                .as_slice(),
+                        )
+                        .expect("Failed to load image");
+                        let pixels: Vec<Value> = image
+                            .to_rgba8()
+                            .into_raw()
+                            .iter()
+                            .map(|&b| Value::Number(b as f32))
+                            .collect();
+                        Value::List(vec![
+                            Value::Number(image.width() as f32),
+                            Value::Number(image.height() as f32),
+                            Value::List(pixels),
+                        ])
                     } else {
                         Value::Null
                     }
@@ -315,20 +391,22 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         pixels.push(Value::Number(pixel[2] as f32));
                         pixels.push(Value::Number(pixel[3] as f32));
                     }
-                    Value::List(vec![Value::Number(image.width() as f32), Value::Number(image.height() as f32), Value::List(pixels)])
+                    Value::List(vec![
+                        Value::Number(image.width() as f32),
+                        Value::Number(image.height() as f32),
+                        Value::List(pixels),
+                    ])
                 }
-                "typeof" => {
-                    match args.as_slice() {
-                        [Value::Null] => Value::String("null".to_string()),
-                        [Value::String(_)] => Value::String("string".to_string()),
-                        [Value::Number(_)] => Value::String("number".to_string()),
-                        [Value::Boolean(_)] => Value::String("boolean".to_string()),
-                        [Value::List(_)] => Value::String("list".to_string()),
-                        [Value::Object(_)] => Value::String("object".to_string()),
-                        [Value::Closure(_)] => Value::String("closure".to_string()),
-                        _ => Value::Null,
-                    }
-                }
+                "typeof" => match args.as_slice() {
+                    [Value::Null] => Value::String("null".to_string()),
+                    [Value::String(_)] => Value::String("string".to_string()),
+                    [Value::Number(_)] => Value::String("number".to_string()),
+                    [Value::Boolean(_)] => Value::String("boolean".to_string()),
+                    [Value::List(_)] => Value::String("list".to_string()),
+                    [Value::Object(_)] => Value::String("object".to_string()),
+                    [Value::Closure(_)] => Value::String("closure".to_string()),
+                    _ => Value::Null,
+                },
                 "push" => {
                     if let [Value::List(list), value] = args.as_slice() {
                         let mut new_list = list.clone();
@@ -385,17 +463,22 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                     } else {
                         Value::Null
                     }
-                },
+                }
                 "sort" => {
                     if let [Value::List(list), Value::Closure(closure)] = args.as_slice() {
                         let mut new_list = list.clone();
                         let function_struct = &**closure;
                         new_list.sort_by(|a, b| {
                             let args_ = [a.clone(), b.clone()];
-                            let result = function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args_).unwrap_or_else(|e| {
-                                println!("Error calling closure in sort: {}", e);
-                                Value::Null
-                            });
+                            let result = function_struct
+                                .call(
+                                    sprite, project, snapshots, camera, local_vars, script_id,
+                                    &args_,
+                                )
+                                .unwrap_or_else(|e| {
+                                    println!("Error calling closure in sort: {}", e);
+                                    Value::Null
+                                });
                             if let Value::Boolean(b) = result {
                                 if b {
                                     std::cmp::Ordering::Less
@@ -414,18 +497,26 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "filter" => {
                     if let [Value::List(list), Value::Closure(closure)] = args.as_slice() {
                         let function_struct = &**closure;
-                        let filtered: Vec<Value> = list.iter().filter_map(|item| {
-                            let args_ = [item.clone()];
-                            let result = function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args_).unwrap_or_else(|e| {
-                                println!("Error calling closure in filter: {}", e);
-                                Value::Null
-                            });
-                            if let Value::Boolean(true) = result {
-                                Some(item.clone())
-                            } else {
-                                None
-                            }
-                        }).collect();
+                        let filtered: Vec<Value> = list
+                            .iter()
+                            .filter_map(|item| {
+                                let args_ = [item.clone()];
+                                let result = function_struct
+                                    .call(
+                                        sprite, project, snapshots, camera, local_vars, script_id,
+                                        &args_,
+                                    )
+                                    .unwrap_or_else(|e| {
+                                        println!("Error calling closure in filter: {}", e);
+                                        Value::Null
+                                    });
+                                if let Value::Boolean(true) = result {
+                                    Some(item.clone())
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
                         Value::List(filtered)
                     } else {
                         Value::Null
@@ -434,13 +525,21 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "map" => {
                     if let [Value::List(list), Value::Closure(closure)] = args.as_slice() {
                         let function_struct = &**closure;
-                        let mapped: Vec<Value> = list.iter().map(|item| {
-                            let args_ = [item.clone()];
-                            function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args_).unwrap_or_else(|e| {
-                                println!("Error calling closure in map: {}", e);
-                                Value::Null
+                        let mapped: Vec<Value> = list
+                            .iter()
+                            .map(|item| {
+                                let args_ = [item.clone()];
+                                function_struct
+                                    .call(
+                                        sprite, project, snapshots, camera, local_vars, script_id,
+                                        &args_,
+                                    )
+                                    .unwrap_or_else(|e| {
+                                        println!("Error calling closure in map: {}", e);
+                                        Value::Null
+                                    })
                             })
-                        }).collect();
+                            .collect();
                         Value::List(mapped)
                     } else {
                         Value::Null
@@ -448,7 +547,10 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 }
                 "split" => {
                     if let [Value::String(s), Value::String(delimiter)] = args.as_slice() {
-                        let parts: Vec<Value> = s.split(delimiter).map(|part| Value::String(part.to_string())).collect();
+                        let parts: Vec<Value> = s
+                            .split(delimiter)
+                            .map(|part| Value::String(part.to_string()))
+                            .collect();
                         Value::List(parts)
                     } else {
                         Value::Null
@@ -456,7 +558,11 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 }
                 "join" => {
                     if let [Value::List(list), Value::String(delimiter)] = args.as_slice() {
-                        let joined: String = list.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(delimiter);
+                        let joined: String = list
+                            .iter()
+                            .map(|v| v.to_string())
+                            .collect::<Vec<_>>()
+                            .join(delimiter);
                         Value::String(joined)
                     } else {
                         Value::Null
@@ -483,38 +589,45 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         Value::Null
                     }
                 }
-                "range" => {
-                    match args.as_slice() {
-                        [Value::Number(end)] => {
-                            let end = *end as usize;
-                            if end == 0 {
-                                Value::List(vec![])
-                            } else {
-                                Value::List((0..end).map(|i| Value::Number(i as f32)).collect())
-                            }
+                "range" => match args.as_slice() {
+                    [Value::Number(end)] => {
+                        let end = *end as usize;
+                        if end == 0 {
+                            Value::List(vec![])
+                        } else {
+                            Value::List((0..end).map(|i| Value::Number(i as f32)).collect())
                         }
-                        [Value::Number(start), Value::Number(end)] => {
-                            let start = *start as usize;
-                            let end = *end as usize;
-                            if start >= end {
-                                Value::List(vec![])
-                            } else {
-                                Value::List((start..end).map(|i| Value::Number(i as f32)).collect())
-                            }
-                        }
-                        [Value::Number(start), Value::Number(end), Value::Number(step)] => {
-                            let start = *start as usize;
-                            let end = *end as usize;
-                            let step = *step as usize;
-                            if start >= end || step == 0 {
-                                Value::List(vec![])
-                            } else {
-                                Value::List((start..end).step_by(step).map(|i| Value::Number(i as f32)).collect())
-                            }
-                        }
-                        _ => Value::Null,
                     }
-                }
+                    [Value::Number(start), Value::Number(end)] => {
+                        let start = *start as usize;
+                        let end = *end as usize;
+                        if start >= end {
+                            Value::List(vec![])
+                        } else {
+                            Value::List((start..end).map(|i| Value::Number(i as f32)).collect())
+                        }
+                    }
+                    [
+                        Value::Number(start),
+                        Value::Number(end),
+                        Value::Number(step),
+                    ] => {
+                        let start = *start as usize;
+                        let end = *end as usize;
+                        let step = *step as usize;
+                        if start >= end || step == 0 {
+                            Value::List(vec![])
+                        } else {
+                            Value::List(
+                                (start..end)
+                                    .step_by(step)
+                                    .map(|i| Value::Number(i as f32))
+                                    .collect(),
+                            )
+                        }
+                    }
+                    _ => Value::Null,
+                },
                 "to_string" => {
                     if let [value] = args.as_slice() {
                         Value::String(value.to_string())
@@ -561,7 +674,10 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "y" => Value::Number(sprite.center.y),
                 "costume" => Value::Number(sprite.costume() as f32),
                 "backdrop" => Value::Number(project.stage.backdrop() as f32),
-                "size" => Value::List(vec![Value::Number(sprite.size.x), Value::Number(sprite.size.y)]),
+                "size" => Value::List(vec![
+                    Value::Number(sprite.size.x),
+                    Value::Number(sprite.size.y),
+                ]),
                 "scale" => Value::Number(sprite.scale * 100.0),
                 "bounds" => Value::List(vec![
                     Value::Number(sprite.center.x - sprite.size.x * sprite.scale),
@@ -586,21 +702,27 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 }
                 "key_down" => {
                     if let [Value::String(key)] = args.as_slice() {
-                        Value::Boolean(is_key_down(string_to_keycode(key).unwrap_or(KeyCode::Unknown)))
+                        Value::Boolean(is_key_down(
+                            string_to_keycode(key).unwrap_or(KeyCode::Unknown),
+                        ))
                     } else {
                         Value::Null
                     }
                 }
                 "key_pressed" => {
                     if let [Value::String(key)] = args.as_slice() {
-                        Value::Boolean(is_key_pressed(string_to_keycode(key).unwrap_or(KeyCode::Unknown)))
+                        Value::Boolean(is_key_pressed(
+                            string_to_keycode(key).unwrap_or(KeyCode::Unknown),
+                        ))
                     } else {
                         Value::Null
                     }
                 }
                 "key_released" => {
                     if let [Value::String(key)] = args.as_slice() {
-                        Value::Boolean(is_key_released(string_to_keycode(key).unwrap_or(KeyCode::Unknown)))
+                        Value::Boolean(is_key_released(
+                            string_to_keycode(key).unwrap_or(KeyCode::Unknown),
+                        ))
                     } else {
                         Value::Null
                     }
@@ -649,9 +771,16 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                         return Value::Boolean(false);
                     }
                     let xy = mouse_position();
-                    let top_left = sprite.center - vec2(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
-                    let bottom_right = sprite.center + vec2(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
-                    let rect = Rect::new(top_left.x, top_left.y, top_left.x - bottom_right.x, top_left.y - bottom_right.y);
+                    let top_left = sprite.center
+                        - vec2(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
+                    let bottom_right = sprite.center
+                        + vec2(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
+                    let rect = Rect::new(
+                        top_left.x,
+                        top_left.y,
+                        top_left.x - bottom_right.x,
+                        top_left.y - bottom_right.y,
+                    );
                     if rect.contains(xy.into()) {
                         Value::Boolean(true)
                     } else {
@@ -685,20 +814,28 @@ pub fn resolve_expression(expr: &Expression, project: &mut Project, sprite: &mut
                 "window_height" => Value::Number(screen_height()),
                 _ => {
                     if let Some(function_struct) = sprite.functions.clone().get(function) {
-                        function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args).unwrap_or_else(|e| {
-                            println!("Error calling function '{}': {}", function, e);
-                            Value::Null
-                        })
+                        function_struct
+                            .call(
+                                sprite, project, snapshots, camera, local_vars, script_id, &args,
+                            )
+                            .unwrap_or_else(|e| {
+                                println!("Error calling function '{}': {}", function, e);
+                                Value::Null
+                            })
                     } else if let Some(variable) = sprite.variables.get(function).cloned() {
                         let Value::Closure(closure) = variable else {
                             println!("Variable '{}' is not a function", function);
                             return Value::Null;
                         };
                         let function_struct = &*closure;
-                        function_struct.call(sprite, project, snapshots, camera, local_vars, script_id, &args).unwrap_or_else(|e| {
-                            println!("Error calling function '{}': {}", function, e);
-                            Value::Null
-                        })
+                        function_struct
+                            .call(
+                                sprite, project, snapshots, camera, local_vars, script_id, &args,
+                            )
+                            .unwrap_or_else(|e| {
+                                println!("Error calling function '{}': {}", function, e);
+                                Value::Null
+                            })
                     } else {
                         return Value::Null;
                     }
@@ -759,10 +896,7 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
 }
 
 pub fn lerp_vec2(a: Vec2, b: Vec2, t: f32) -> Vec2 {
-    Vec2::new(
-        lerp(a.x, b.x, t),
-        lerp(a.y, b.y, t),
-    )
+    Vec2::new(lerp(a.x, b.x, t), lerp(a.y, b.y, t))
 }
 
 pub fn sample_texture(texture: &Image, uv: Vec2) -> Color {
@@ -771,7 +905,7 @@ pub fn sample_texture(texture: &Image, uv: Vec2) -> Color {
 
     let x = (uv.x * tex_width as f32).clamp(0.0, tex_width as f32 - 1.0) as u32;
     let y = (uv.y * tex_height as f32).clamp(0.0, tex_height as f32 - 1.0) as u32;
-    
+
     texture.get_pixel(x, y)
 }
 
@@ -789,7 +923,7 @@ pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
 // Helper functions that help other helper functions!!
 fn cubic_bezier(t: f32, p0: f32, p1: f32, p2: f32, p3: f32) -> f32 {
     let u = 1.0 - t;
-    u*u*u*p0 + 3.0*u*u*t*p1 + 3.0*u*t*t*p2 + t*t*t*p3
+    u * u * u * p0 + 3.0 * u * u * t * p1 + 3.0 * u * t * t * p2 + t * t * t * p3
 }
 
 fn format_radix(mut x: u32, radix: u32) -> String {
@@ -847,7 +981,7 @@ fn string_to_keycode(s: &str) -> Option<KeyCode> {
         "7" => Some(Key7),
         "8" => Some(Key8),
         "9" => Some(Key9),
-        
+
         "`" => Some(GraveAccent),
         "-" => Some(Minus),
         "=" => Some(Equal),
@@ -883,4 +1017,3 @@ fn string_to_keycode(s: &str) -> Option<KeyCode> {
         _ => None,
     }
 }
-
