@@ -1,9 +1,11 @@
-name: ci 
 on:
   push:
     branches:
       - master 
       - main
+
+name: mkdocs
+
 permissions:
   contents: write
 jobs:
