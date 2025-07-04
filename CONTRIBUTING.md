@@ -33,13 +33,13 @@ Even tiny changes are welcome (Seriously)!
 
 ## Code style
 
-No strict linter rules here, as I myself don't like to follow any strict code style. However, I do follow some conventions:
+Before commiting, run:
 
-- `snake_case` for variable and function names.
-- `PascalCase` for struct and enum names.
-- Consistent indentation (Tabs! Not spaces!).
-- Spaces around operators and after commas.
-- Keep it readable for fellow contributors!
+```sh
+cargo fmt
+```
+
+This will format the codebase with `rustfmt`. Keeping things neat helps everyone.
 
 ## Commit messages
 
