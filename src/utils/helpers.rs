@@ -464,6 +464,15 @@ pub fn resolve_expression(
                         Value::Null
                     }
                 }
+                "contains" => {
+                    if let [Value::List(list), value] = args.as_slice() {
+                        Value::Boolean(list.contains(value))
+                    } else if let [Value::Object(object), Value::String(key)] = args.as_slice() {
+                        Value::Boolean(object.contains_key(key))
+                    } else {
+                        Value::Null
+                    }
+                }
                 "sort" => {
                     if let [Value::List(list), Value::Closure(closure)] = args.as_slice() {
                         let mut new_list = list.clone();

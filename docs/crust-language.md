@@ -93,6 +93,12 @@ fn add(a, b) result {
 !!! note 
     No `return` statement exists, and the return is embedded in the function header. The function can return a value by assigning it to the `result` variable.
 
+## Tag Code
+
+Tags are a way to group sprites together and share code between them. Tags can be used to define common behavior for a group of sprites, where the sprite inherits the tag's code placing the tag's code after its own code. Tags are defined in the `project.toml` file. For help defining tags, see the [project setup guide](project-setup.md).
+
+Tag code is just like normal Crust sprite code, but instead of being executed, it is appended to the tag's sprites' code. This allows you to define common behavior for a group of sprites without duplicating code. All root-level statements (`setup`, `update`, `clone_setup`, `clone_update`, `when`, and `fn`) work normally.
+
 ## Expressions
 
 Expressions evaluate to a value and can be used in inline statements or block statements. There are 6 types of expressions in Crust:

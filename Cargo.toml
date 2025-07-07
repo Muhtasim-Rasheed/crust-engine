@@ -1,6 +1,6 @@
 [package]
 name = "crust-engine"
-version = "0.3.6"
+version = "0.4.0"
 edition = "2024"
 authors = [
     "Muhtasim Noor Al Rasheed <mutasimos5101@gmail.com>",

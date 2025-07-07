@@ -34,11 +34,19 @@ struct SpriteConfig {
     direction: Option<f32>,
 }
 
+#[derive(Deserialize, Clone, Debug)]
+struct TagConfig {
+    name: String,
+    code: Option<String>,
+    sprites: Vec<String>,
+}
+
 #[derive(Deserialize, Debug)]
 struct ProjectConfig {
     debug_options: Option<Vec<String>>,
     stage: Option<StageConfig>,
     sprites: Vec<SpriteConfig>,
+    tags: Option<Vec<TagConfig>>,
 }
 
 pub struct Runtime {
@@ -51,6 +59,10 @@ impl Runtime {
         let dir = std::path::Path::new(file_path).parent().unwrap();
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
+        let tags = config.tags.clone().unwrap_or_default().into_iter().map(|tag| {
+            let code = tag.code;
+            (tag.name, (tag.sprites, code))
+        }).collect::<HashMap<_, _>>();
 
         println!("{:#?}", config);
 
@@ -108,13 +120,30 @@ impl Runtime {
             let mut tokenizer = Tokenizer::new(code);
             let tokens = tokenizer.tokenize_full();
             let mut parser = Parser::new(tokens);
-            let ast = parser.parse();
+            let mut ast = parser.parse();
+            let mut sprite_tags = vec![];
+
+            for (tag_name, (sprites, code)) in tags.iter() {
+                if sprites.contains(&sprite.name) || tag_name == "*" {
+                    if let Some(code) = code {
+                        let code = std::fs::read_to_string(dir.join(code))
+                            .expect("Failed to read tag code");
+                        let mut tokenizer = Tokenizer::new(code.clone());
+                        let tokens = tokenizer.tokenize_full();
+                        let mut parser = Parser::new(tokens);
+                        let tag_ast = parser.parse();
+                        ast.extend(tag_ast);
+                    }
+                    sprite_tags.push(tag_name.clone());
+                }
+            }
 
             let s = Sprite::new(
                 sprite.name.clone(),
                 textures,
                 sounds,
                 ast,
+                sprite_tags,
                 sprite.w,
                 sprite.h,
                 sprite.x,

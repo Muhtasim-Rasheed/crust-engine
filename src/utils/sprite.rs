@@ -31,6 +31,7 @@ pub struct SpriteSnapshot {
     pub scale: f32,
     pub direction: f32,
     pub completed_broadcasts: Vec<usize>,
+    pub tags: Vec<String>,
 }
 
 impl SpriteSnapshot {
@@ -51,6 +52,9 @@ impl SpriteSnapshot {
                     .map(|id| Value::Number(*id as f32))
                     .collect(),
             )),
+            "tags" => Some(Value::List(
+                self.tags.iter().map(|t| Value::String(t.clone())).collect(),
+            )),
             _ => None,
         }
     }
@@ -65,6 +69,7 @@ impl From<&Sprite> for SpriteSnapshot {
             scale: sprite.scale,
             direction: sprite.direction,
             completed_broadcasts: sprite.completed_broadcasts.clone(),
+            tags: sprite.tags.clone(),
         }
     }
 }
@@ -176,6 +181,7 @@ pub struct Sprite {
     pub functions: HashMap<String, Function>,
     pub clone_id: Option<usize>,
     pub stop_request: Option<StopRequest>,
+    pub tags: Vec<String>,
     visible: bool,
     clones: Vec<Sprite>,
     clone_setup: Vec<Statement>,
@@ -201,6 +207,7 @@ impl Sprite {
         costumes: Vec<Texture2D>,
         sounds: HashMap<String, Sound>,
         ast: Vec<Statement>,
+        tags: Vec<String>,
         w: f32,
         h: f32,
         x: f32,
@@ -220,7 +227,7 @@ impl Sprite {
         for statement in ast {
             match statement {
                 Statement::Setup { body } => {
-                    setup_ast = body;
+                    setup_ast.extend(body);
                 }
                 Statement::Update { body } => {
                     update_ast.push(body);
@@ -373,6 +380,7 @@ impl Sprite {
             clone_id: None,
             delete_pending: false,
             stop_request: None,
+            tags,
             broadcast_recievers,
             boolean_recievers,
             skip_further_execution_of_frame: false,
@@ -419,6 +427,7 @@ impl Sprite {
             clone_id: Some(self.clones.len() + 1),
             delete_pending: false,
             stop_request: None,
+            tags: self.tags.clone(),
             broadcast_recievers: self.broadcast_recievers.clone(),
             boolean_recievers: self.boolean_recievers.clone(),
             skip_further_execution_of_frame: false,

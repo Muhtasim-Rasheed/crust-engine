@@ -14,7 +14,15 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `acos(num)`: Returns the arccosine of the given number (in radians).
 - `atan(num)`: Returns the arctangent of the given number (in radians).
 - `lerp(a, b, t)`: Returns the linear interpolation between `a` and `b` at `t`, where `t` is a value between 0 and 1.
-- `property_of(sprite, property)`: Returns the value of the given property of the sprite. The property can be `name`, `x`, `y`, `size`, `scale`, `direction`, and `completed_broadcasts`.
+- `property_of(sprite, property)`: Returns the value of the given property of the sprite. The property can be the following:
+    - `name`: The name of the sprite. (Not sure why anyone would use this, but it's here.)
+    - `x`: The x-coordinate of the sprite.
+    - `y`: The y-coordinate of the sprite.
+    - `size`: The size of the sprite, which is a list [width, height].
+    - `scale`: The scale of the sprite, which is a number where 1.0 is 100% scale.
+    - `direction`: The direction of the sprite in degrees.
+    - `completed_broadcasts`: A list of broadcast IDs that have been completed by the sprite.
+    - `tags`: A list of tags that the sprite is in.
 - `to_rad(deg)`: Converts the given angle in degrees to radians.
 - `to_deg(rad)`: Converts the given angle in radians to degrees.
 - `clamp(value, min, max)`: Clamps the given value between the minimum and maximum values.
@@ -36,6 +44,8 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.
 - `remove(list, index)`: Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
 - `extend(list1, list2)`: Extends the first list with the second list and returns the new list.
+- `contains(list, value)`: Returns true if the list contains the given value, false otherwise.
+- `contains(object, key)`: Returns true if the object contains the given key, false otherwise.
 - `sort(list, closure)`: Sorts the list using the given closure as the comparison function. The closure should take two arguments and return a boolean.
 - `filter(list, closure)`: Filters the list using the given closure. The closure should take one argument and return a boolean.
 - `map(list, closure)`: Iterates over the list and applies the given closure to each element, returning a new list with the results. The closure should take one argument and return a value.

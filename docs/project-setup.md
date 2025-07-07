@@ -67,6 +67,11 @@ All paths mentioned are relative to the `project.toml` file.
         - `visible`: Whether the sprite is visible. Defaults to `true`. If set to `false`, the sprite will not be rendered on the stage.
         - `layer`: The layer of the sprite. Defaults to `0`. A higher value means the sprite will be rendered on top of sprites with a lower layer value. Also effects the order of the sprite in the sprite list after the first frame.
         - `direction`: The rotation of the sprite in degrees. Defaults to `0`. A positive value rotates the sprite clockwise, a negative value rotates it counter-clockwise.
+- `[tags]`: A list of tags for the project. Tags are used to categorize the sprites. Sprites in tags inherit the tag's code, placing the code after its own code.
+    - `[[tags]]`: A tag
+        - `name`: The name of the tag. Can have spaces and special characters. Case-sensitive. If the name is `*`, it is a special tag that applies to all sprites in the project, in which case the `sprites` list is ignored.
+        - `code`: The path to the tag's code file. This file will be executed for all sprites in the tag after their own code.
+        - `sprites`: A list of sprite names that are in the tag.
 
 ## Recommended Project Structure
 
