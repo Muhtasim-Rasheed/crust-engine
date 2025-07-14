@@ -15,6 +15,7 @@ use std::f32::consts::*;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use std::path::PathBuf;
 
 use macroquad::audio::*;
 use macroquad::prelude::*;
@@ -261,12 +262,29 @@ impl Sprite {
                 }
                 Statement::Import { path } => {
                     fn import_module(
-                        path: &str,
-                        base_dir: &str,
+                        path: PathBuf,
                         visited: &mut Vec<String>,
                         setup_ast: &mut Vec<Statement>,
                     ) -> HashMap<String, Function> {
-                        let path = Path::new(base_dir).join(path);
+                        let md = path.metadata().unwrap();
+                        if md.is_dir() {
+                            println!("Importing directory as module: {}", &path.display());
+                            let children = std::fs::read_dir(&path).unwrap_or_else(|_| {
+                                panic!("Failed to read directory: {}", &path.display());
+                            }).map(|entry| {
+                                entry.unwrap().path()
+                            }).collect::<Vec<_>>();
+                            let mut functions = HashMap::new();
+                            for child in children {
+                                let imported_functions = import_module(
+                                    child,
+                                    visited,
+                                    setup_ast,
+                                );
+                                functions.extend(imported_functions);
+                            }
+                            return functions;
+                        }
                         let code = std::fs::read_to_string(&path).unwrap_or_else(|_| {
                             println!("Failed to load module: {}", &path.display());
                             String::new()
@@ -322,9 +340,9 @@ impl Sprite {
                                         println!("Circular import detected: {}, skipping", path);
                                         return functions;
                                     }
+                                    visited.push(path.clone());
                                     let imported_functions =
-                                        import_module(&path, &base_dir, visited, setup_ast);
-                                    visited.push(path);
+                                        import_module(PathBuf::from(&path), visited, setup_ast);
                                     functions.extend(imported_functions);
                                 }
                                 _ => {}
@@ -334,7 +352,7 @@ impl Sprite {
                     }
                     let mut visited: Vec<String> = vec![];
                     let imported_functions =
-                        import_module(&path, &base_dir, &mut visited, &mut setup_ast);
+                        import_module(PathBuf::from(&base_dir).join(&path), &mut visited, &mut setup_ast);
                     for (name, function) in imported_functions {
                         functions.insert(name, function);
                     }
