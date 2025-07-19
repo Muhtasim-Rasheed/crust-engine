@@ -5,8 +5,10 @@ use macroquad::prelude::*;
 
 use serde::Deserialize;
 
-use super::StopRequest;
-use super::{Parser, Project, Sprite, SpriteSnapshot, Tokenizer};
+use crate::utils::draw_sprite;
+
+use super::sprite::StopRequest;
+use super::{Parser, Project, Tokenizer, sprite::Sprite, sprite::SpriteSnapshot};
 
 #[derive(Deserialize, Debug)]
 struct StageConfig {
@@ -59,10 +61,16 @@ impl Runtime {
         let dir = std::path::Path::new(file_path).parent().unwrap();
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
-        let tags = config.tags.clone().unwrap_or_default().into_iter().map(|tag| {
-            let code = tag.code;
-            (tag.name, (tag.sprites, code))
-        }).collect::<HashMap<_, _>>();
+        let tags = config
+            .tags
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|tag| {
+                let code = tag.code;
+                (tag.name, (tag.sprites, code))
+            })
+            .collect::<HashMap<_, _>>();
 
         println!("{:#?}", config);
 
@@ -226,7 +234,7 @@ impl Runtime {
             sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
 
             for sprite in &mut sprites {
-                sprite.draw();
+                draw_sprite(sprite);
             }
 
             self.project.sprites = sprites;

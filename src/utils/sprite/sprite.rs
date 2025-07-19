@@ -1,6 +1,6 @@
 // Hello fellow contributor, welcome to Crust's `sprite.rs` file!
 //
-// This file is BIG (1800+ lines) and contains the core logic for handling sprites, their
+// This file is BIG (1900+ lines) and contains the core logic for handling sprites, their
 // behaviors, and interactions in the Crust game engine.
 //
 // Don't worry: You don't need to understand everything at once. Take your time to read through the code.
@@ -17,12 +17,13 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
+use indexmap::IndexMap;
 use macroquad::audio::*;
 use macroquad::prelude::*;
 
-use super::Parser;
-use super::Tokenizer;
-use super::{Expression, Project, Statement, Value};
+use crate::utils::Parser;
+use crate::utils::Tokenizer;
+use crate::utils::{Expression, Project, Statement, Value};
 
 #[derive(Clone, Debug)]
 pub struct SpriteSnapshot {
@@ -104,10 +105,10 @@ struct Glide {
 }
 
 #[derive(Debug)]
-struct Dialogue {
-    text: String,
-    duration: f32,
-    think: bool,
+pub(super) struct Dialogue {
+    pub(super) text: String,
+    pub(super) duration: f32,
+    pub(super) think: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -152,7 +153,7 @@ impl Function {
             );
         }
 
-        Ok(super::resolve_expression(
+        Ok(crate::utils::resolve_expression(
             &self.returns,
             project,
             sprite,
@@ -176,18 +177,18 @@ pub struct Sprite {
     pub scale: f32,
     pub layer: isize,
     pub variables: HashMap<String, Value>,
-    pub effects: HashMap<String, f32>,
+    pub effects: IndexMap<String, f32>,
     pub sound_effects: HashMap<String, f32>,
     pub draw_color: Color,
     pub functions: HashMap<String, Function>,
     pub clone_id: Option<usize>,
     pub stop_request: Option<StopRequest>,
     pub tags: Vec<String>,
-    visible: bool,
-    clones: Vec<Sprite>,
+    pub(super) visible: bool,
+    pub(super) clones: Vec<Sprite>,
+    pub(super) dialogue: Option<Dialogue>,
     clone_setup: Vec<Statement>,
     clone_update: Vec<Vec<Statement>>,
-    dialogue: Option<Dialogue>,
     edge_bounce: bool,
     current_costume: usize,
     setup_ast: Vec<Statement>,
@@ -269,18 +270,15 @@ impl Sprite {
                         let md = path.metadata().unwrap();
                         if md.is_dir() {
                             println!("Importing directory as module: {}", &path.display());
-                            let children = std::fs::read_dir(&path).unwrap_or_else(|_| {
-                                panic!("Failed to read directory: {}", &path.display());
-                            }).map(|entry| {
-                                entry.unwrap().path()
-                            }).collect::<Vec<_>>();
+                            let children = std::fs::read_dir(&path)
+                                .unwrap_or_else(|_| {
+                                    panic!("Failed to read directory: {}", &path.display());
+                                })
+                                .map(|entry| entry.unwrap().path())
+                                .collect::<Vec<_>>();
                             let mut functions = HashMap::new();
                             for child in children {
-                                let imported_functions = import_module(
-                                    child,
-                                    visited,
-                                    setup_ast,
-                                );
+                                let imported_functions = import_module(child, visited, setup_ast);
                                 functions.extend(imported_functions);
                             }
                             return functions;
@@ -351,8 +349,11 @@ impl Sprite {
                         functions
                     }
                     let mut visited: Vec<String> = vec![];
-                    let imported_functions =
-                        import_module(PathBuf::from(&base_dir).join(&path), &mut visited, &mut setup_ast);
+                    let imported_functions = import_module(
+                        PathBuf::from(&base_dir).join(&path),
+                        &mut visited,
+                        &mut setup_ast,
+                    );
                     for (name, function) in imported_functions {
                         functions.insert(name, function);
                     }
@@ -385,7 +386,7 @@ impl Sprite {
             direction: direction,
             rotation_style: RotationStyle::AllAround,
             variables: HashMap::new(),
-            effects: HashMap::new(),
+            effects: IndexMap::new(),
             sound_effects: HashMap::new(),
             time_waiting: 0,
             dialogue: None,
@@ -544,10 +545,6 @@ impl Sprite {
         }
     }
 
-    fn clone(&mut self) {
-        self.clones.push(self.new_clone());
-    }
-
     pub fn execute_statement(
         &mut self,
         statement: &Statement,
@@ -563,7 +560,7 @@ impl Sprite {
                 identifier,
                 value,
             } => {
-                let value = super::resolve_expression(
+                let value = crate::utils::resolve_expression(
                     value, project, self, local_vars, snapshots, camera, script_id,
                 );
                 if *is_global {
@@ -582,10 +579,10 @@ impl Sprite {
                 index,
                 value,
             } => {
-                let value = super::resolve_expression(
+                let value = crate::utils::resolve_expression(
                     value, project, self, local_vars, snapshots, camera, script_id,
                 );
-                let index = super::resolve_expression(
+                let index = crate::utils::resolve_expression(
                     index, project, self, local_vars, snapshots, camera, script_id,
                 );
                 if let Value::Number(index) = index {
@@ -632,7 +629,7 @@ impl Sprite {
             }
             Statement::Nop => {}
             Statement::Assert { condition } => {
-                if !super::resolve_expression(
+                if !crate::utils::resolve_expression(
                     condition, project, self, local_vars, snapshots, camera, script_id,
                 )
                 .to_boolean()
@@ -647,12 +644,12 @@ impl Sprite {
                 cases,
                 default,
             } => {
-                let resolved_value = super::resolve_expression(
+                let resolved_value = crate::utils::resolve_expression(
                     value, project, self, local_vars, snapshots, camera, script_id,
                 );
                 for (case_value, body) in cases {
                     if resolved_value
-                        == super::resolve_expression(
+                        == crate::utils::resolve_expression(
                             case_value, project, self, local_vars, snapshots, camera, script_id,
                         )
                     {
@@ -678,7 +675,7 @@ impl Sprite {
                 else_if_bodies,
                 else_body,
             } => {
-                if super::resolve_expression(
+                if crate::utils::resolve_expression(
                     condition, project, self, local_vars, snapshots, camera, script_id,
                 )
                 .to_boolean()
@@ -690,7 +687,7 @@ impl Sprite {
                     }
                 } else {
                     for (else_if_condition, else_if_body) in else_if_bodies {
-                        if super::resolve_expression(
+                        if crate::utils::resolve_expression(
                             else_if_condition,
                             project,
                             self,
@@ -719,7 +716,7 @@ impl Sprite {
                 }
             }
             Statement::While { condition, body } => {
-                while super::resolve_expression(
+                while crate::utils::resolve_expression(
                     condition, project, self, local_vars, snapshots, camera, script_id,
                 )
                 .to_boolean()
@@ -736,7 +733,7 @@ impl Sprite {
                 iterable,
                 body,
             } => {
-                for value in super::resolve_expression(
+                for value in crate::utils::resolve_expression(
                     iterable, project, self, local_vars, snapshots, camera, script_id,
                 )
                 .to_list()
@@ -760,7 +757,7 @@ impl Sprite {
                     let args = args
                         .iter()
                         .map(|arg| {
-                            super::resolve_expression(
+                            crate::utils::resolve_expression(
                                 arg, project, self, local_vars, snapshots, camera, script_id,
                             )
                         })
@@ -785,6 +782,7 @@ impl Sprite {
                                     .collect::<Vec<_>>()
                                     .join(" ")
                             );
+                            std::io::stdout().flush().unwrap();
                         }
                         "write" => match args.as_slice() {
                             [Value::String(content)] => {
@@ -1097,7 +1095,7 @@ impl Sprite {
                         }
                         "clear_effect" => {
                             if let [Value::String(effect)] = args.as_slice() {
-                                self.effects.remove(effect);
+                                self.effects.shift_remove(effect);
                             } else {
                                 println!("Invalid arguments for clear_effect");
                             }
@@ -1242,7 +1240,7 @@ impl Sprite {
                                 println!("Invalid arguments for stop");
                             }
                         }
-                        "clone" => self.clone(),
+                        "clone" => self.clones.push(self.new_clone()),
                         "delete_clone" => {
                             if let [Value::Number(cloneid)] = args.as_slice() {
                                 if let Some(index) = self.clones.iter().position(|c| {
@@ -1438,7 +1436,7 @@ impl Sprite {
                             if xs.len() != ys.len() {
                                 println!("Inequal number of x's and y's")
                             } else {
-                                super::draw_convex_polygon(&xs, &ys, self.draw_color);
+                                crate::utils::draw_convex_polygon(&xs, &ys, self.draw_color);
                             }
                         }
                         "hpolygon" => {
@@ -1458,7 +1456,7 @@ impl Sprite {
                                 println!("Inequal number of x's and y's")
                             } else {
                                 let thickness = args[0].to_number();
-                                super::draw_convex_polygon_lines(
+                                crate::utils::draw_convex_polygon_lines(
                                     &xs,
                                     &ys,
                                     thickness,
@@ -1508,23 +1506,22 @@ impl Sprite {
                                     let p2 = vec2(*x2, *y2);
                                     let p3 = vec2(*x3, *y3);
                                     let p4 = vec2(*x4, *y4);
-                                    // let resolution = super::compute_resolution(p1, p2, p3, p4, &image); // throw ts away we dont need 8 fps
                                     let resolution = 128;
                                     for i in 0..=resolution {
                                         let t = i as f32 / resolution as f32;
 
-                                        let left = super::lerp_vec2(p1, p4, t);
-                                        let right = super::lerp_vec2(p2, p3, t);
+                                        let left = crate::utils::lerp_vec2(p1, p4, t);
+                                        let right = crate::utils::lerp_vec2(p2, p3, t);
                                         let uv_left = vec2(0.0, t);
                                         let uv_right = vec2(1.0, t);
 
                                         for j in 0..=resolution {
                                             let s = j as f32 / resolution as f32;
 
-                                            let pos = super::lerp_vec2(left, right, s);
-                                            let uv = super::lerp_vec2(uv_left, uv_right, s);
+                                            let pos = crate::utils::lerp_vec2(left, right, s);
+                                            let uv = crate::utils::lerp_vec2(uv_left, uv_right, s);
 
-                                            let color = super::sample_texture(&image, uv);
+                                            let color = crate::utils::sample_texture(&image, uv);
                                             // let color = Color::new(uv.x, uv.y, 1.0, 1.0);
                                             draw_rectangle(
                                                 pos.x - 4.0,
@@ -1544,7 +1541,7 @@ impl Sprite {
                         }
                         "stamp" => {
                             set_camera(&project.stage.stamp_layer);
-                            self.draw();
+                            super::draw_sprite(self);
                             set_camera(camera);
                         }
                         "clear_all_stamps" => {
@@ -1778,7 +1775,7 @@ impl Sprite {
         if let Some(glide) = &mut self.glide {
             let t = 1.0 - (glide.remaining as f32 / glide.duration as f32);
             if glide.remaining > 0 {
-                let eased = super::evaluate_bezier(t, glide.ctrl1.y, glide.ctrl2.y);
+                let eased = crate::utils::evaluate_bezier(t, glide.ctrl1.y, glide.ctrl2.y);
                 self.center.x = glide.start_x + (glide.end_x - glide.start_x) * eased;
                 self.center.y = glide.start_y + (glide.end_y - glide.start_y) * eased;
                 glide.remaining -= 1;
@@ -1873,7 +1870,7 @@ impl Sprite {
 
         let mut called_s = vec![];
         for (i, (expr, body, _)) in self.boolean_recievers.clone().iter().enumerate() {
-            let value = super::resolve_expression(
+            let value = crate::utils::resolve_expression(
                 &expr,
                 project,
                 self,
@@ -1960,382 +1957,6 @@ impl Sprite {
         // idk run step for all the clones too
         for clone in &mut self.clones {
             clone.step(project, snapshots, camera);
-        }
-    }
-
-    pub fn draw(&self) {
-        // draw all the clones first so they are behind
-        for clone in &self.clones {
-            clone.draw();
-        }
-
-        if !self.visible {
-            return;
-        }
-
-        let scaled_size = self.size * self.scale;
-        let top_left = self.center - scaled_size / 2.0;
-
-        // Apply effects on a new texture
-        let mut effect_image = self.costumes[self.current_costume].get_texture_data();
-        for (effect, value) in &self.effects {
-            match effect.as_str() {
-                "brightness" => {
-                    let brightness = (value / 100.0).clamp(-1.0, 1.0);
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(
-                                    pixel.r + brightness,
-                                    pixel.g + brightness,
-                                    pixel.b + brightness,
-                                    pixel.a,
-                                ),
-                            );
-                        }
-                    }
-                }
-                "ghost" => {
-                    let alpha = (value / 100.0).clamp(0.0, 1.0);
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(pixel.r, pixel.g, pixel.b, pixel.a * alpha),
-                            );
-                        }
-                    }
-                }
-                "hue" => {
-                    let hue = value;
-                    let cos_a = (hue * PI / 180.).cos();
-                    let sin_a = (hue * PI / 180.).sin();
-                    let onethird: f32 = 1. / 3.;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(
-                                    pixel.r * (cos_a + (1. - cos_a) / 3.)
-                                        + pixel.g
-                                            * (onethird * (1. - cos_a) - onethird.sqrt() * sin_a)
-                                        + pixel.b
-                                            * (onethird * (1. - cos_a) + onethird.sqrt() * sin_a),
-                                    pixel.r * (onethird * (1. - cos_a) + onethird.sqrt() * sin_a)
-                                        + pixel.g * (cos_a + onethird * (1. - cos_a))
-                                        + pixel.b
-                                            * (onethird * (1. - cos_a) - onethird.sqrt() * sin_a),
-                                    pixel.r * (onethird * (1. - cos_a) - onethird.sqrt() * sin_a)
-                                        + pixel.g
-                                            * (onethird * (1. - cos_a) + onethird.sqrt() * sin_a)
-                                        + pixel.b * (cos_a + onethird * (1. - cos_a)),
-                                    pixel.a,
-                                ),
-                            );
-                        }
-                    }
-                }
-                "saturation" => {
-                    let saturation = (value / 100.0).clamp(0.0, 100.0);
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(
-                                    super::lerp(
-                                        pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114,
-                                        pixel.r,
-                                        saturation,
-                                    ),
-                                    super::lerp(
-                                        pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114,
-                                        pixel.g,
-                                        saturation,
-                                    ),
-                                    super::lerp(
-                                        pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114,
-                                        pixel.b,
-                                        saturation,
-                                    ),
-                                    pixel.a,
-                                ),
-                            );
-                        }
-                    }
-                }
-                "sepia" => {
-                    let sepia = (value / 100.0).clamp(0.0, 1.0);
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(
-                                    super::lerp(
-                                        pixel.r,
-                                        pixel.r * 0.393 + pixel.g * 0.769 + pixel.b * 0.189,
-                                        sepia,
-                                    ),
-                                    super::lerp(
-                                        pixel.g,
-                                        pixel.g * 0.349 + pixel.b * 0.686 + pixel.r * 0.168,
-                                        sepia,
-                                    ),
-                                    super::lerp(
-                                        pixel.b,
-                                        pixel.b * 0.272 + pixel.r * 0.534 + pixel.g * 0.131,
-                                        sepia,
-                                    ),
-                                    pixel.a,
-                                ),
-                            );
-                        }
-                    }
-                }
-                "grayscale-averaged" => {
-                    let grayscale = (value / 100.0).clamp(0.0, 1.0);
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(
-                                    super::lerp(
-                                        pixel.r,
-                                        pixel.r / 3. + pixel.g / 3. + pixel.b / 3.,
-                                        grayscale,
-                                    ),
-                                    super::lerp(
-                                        pixel.g,
-                                        pixel.r / 3. + pixel.g / 3. + pixel.b / 3.,
-                                        grayscale,
-                                    ),
-                                    super::lerp(
-                                        pixel.b,
-                                        pixel.r / 3. + pixel.g / 3. + pixel.b / 3.,
-                                        grayscale,
-                                    ),
-                                    pixel.a,
-                                ),
-                            );
-                        }
-                    }
-                }
-                "grayscale-weighted" => {
-                    let grayscale = (value / 100.0).clamp(0.0, 1.0);
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(
-                                    super::lerp(
-                                        pixel.r,
-                                        pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114,
-                                        grayscale,
-                                    ),
-                                    super::lerp(
-                                        pixel.g,
-                                        pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114,
-                                        grayscale,
-                                    ),
-                                    super::lerp(
-                                        pixel.b,
-                                        pixel.r * 0.299 + pixel.g * 0.587 + pixel.b * 0.114,
-                                        grayscale,
-                                    ),
-                                    pixel.a,
-                                ),
-                            );
-                        }
-                    }
-                }
-                "invert" => {
-                    let invert = (value / 100.0).clamp(0.0, 1.0);
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(
-                                    super::lerp(pixel.r, 1.0 - pixel.r, invert),
-                                    super::lerp(pixel.g, 1.0 - pixel.g, invert),
-                                    super::lerp(pixel.b, 1.0 - pixel.b, invert),
-                                    pixel.a,
-                                ),
-                            );
-                        }
-                    }
-                }
-                "multiply" => {
-                    let multiply = value / 1.0;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(
-                                    pixel.r * multiply,
-                                    pixel.g * multiply,
-                                    pixel.b * multiply,
-                                    pixel.a,
-                                ),
-                            );
-                        }
-                    }
-                }
-                "multiply-r" => {
-                    let multiply = value / 1.0;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(pixel.r * multiply, pixel.g, pixel.b, pixel.a),
-                            );
-                        }
-                    }
-                }
-                "multiply-g" => {
-                    let multiply = value / 1.0;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(pixel.r, pixel.g * multiply, pixel.b, pixel.a),
-                            );
-                        }
-                    }
-                }
-                "multiply-b" => {
-                    let multiply = value / 1.0;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(pixel.r, pixel.g, pixel.b * multiply, pixel.a),
-                            );
-                        }
-                    }
-                }
-                "add" => {
-                    let add = value / 1.0;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(pixel.r + add, pixel.g + add, pixel.b + add, pixel.a),
-                            );
-                        }
-                    }
-                }
-                "add-r" => {
-                    let add = value / 1.0;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(pixel.r + add, pixel.g, pixel.b, pixel.a),
-                            );
-                        }
-                    }
-                }
-                "add-g" => {
-                    let add = value / 1.0;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(pixel.r, pixel.g + add, pixel.b, pixel.a),
-                            );
-                        }
-                    }
-                }
-                "add-b" => {
-                    let add = value / 1.0;
-                    for i in 0..effect_image.width() {
-                        for j in 0..effect_image.height() {
-                            let pixel = effect_image.get_pixel(i as u32, j as u32);
-                            effect_image.set_pixel(
-                                i as u32,
-                                j as u32,
-                                Color::new(pixel.r, pixel.g, pixel.b + add, pixel.a),
-                            );
-                        }
-                    }
-                }
-                _ => {} // Do absolutely nothing
-            }
-        }
-        let processed_texture = Texture2D::from_image(&effect_image);
-        processed_texture.set_filter(FilterMode::Nearest);
-
-        draw_texture_ex(
-            &processed_texture,
-            top_left.x,
-            top_left.y,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(scaled_size),
-                rotation: if self.rotation_style == RotationStyle::AllAround {
-                    self.direction.to_radians()
-                } else if self.rotation_style == RotationStyle::LeftRight
-                    || self.rotation_style == RotationStyle::DontRotate
-                {
-                    0.0
-                } else {
-                    0.0
-                },
-                flip_x: if self.rotation_style == RotationStyle::LeftRight {
-                    self.direction > 90.0 && self.direction < 270.0
-                } else {
-                    false
-                },
-                ..Default::default()
-            },
-        );
-
-        if let Some(dialogue) = &self.dialogue {
-            let dialogue_size = measure_text(&dialogue.text, None, 72, 1.0);
-            draw_text_ex(
-                &dialogue.text,
-                self.center.x - dialogue_size.width / 2.0,
-                self.center.y - scaled_size.y / 2.0 - dialogue_size.height,
-                TextParams {
-                    font_size: 72,
-                    color: if dialogue.think {
-                        Color::new(1.0, 1.0, 1.0, 0.7)
-                    } else {
-                        Color::new(1.0, 1.0, 1.0, 1.0)
-                    },
-                    ..Default::default()
-                },
-            );
         }
     }
 }
