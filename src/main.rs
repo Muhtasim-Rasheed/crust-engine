@@ -36,7 +36,7 @@ struct Args {
 fn window_config() -> Conf {
     let small = utils::flatten(
         Image::from_file_with_format(
-            include_bytes!("../icons/icon16.png"),
+            include_bytes!("../assets/icon16.png"),
             Some(ImageFormat::Png),
         )
         .unwrap()
@@ -45,7 +45,7 @@ fn window_config() -> Conf {
     );
     let medium = utils::flatten(
         Image::from_file_with_format(
-            include_bytes!("../icons/icon32.png"),
+            include_bytes!("../assets/icon32.png"),
             Some(ImageFormat::Png),
         )
         .unwrap()
@@ -54,7 +54,7 @@ fn window_config() -> Conf {
     );
     let big = utils::flatten(
         Image::from_file_with_format(
-            include_bytes!("../icons/icon64.png"),
+            include_bytes!("../assets/icon64.png"),
             Some(ImageFormat::Png),
         )
         .unwrap()
