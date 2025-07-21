@@ -27,6 +27,8 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `to_deg(rad)`: Converts the given angle in radians to degrees.
 - `clamp(value, min, max)`: Clamps the given value between the minimum and maximum values.
 - `len(list | string)`: Returns the length of the given list or string.
+- `keys(object)`: Returns a list of keys in the given object.
+- `values(object)`: Returns a list of values in the given object.
 - `random(min, max)`: Returns a random number between the given minimum and maximum values.
 - `distance(x1, y1, x2, y2)`: Returns the distance between the two points `(x1, y1)` and `(x2, y2)`.
 - `distance_to(x, y)`: Returns the distance from the sprite to the point `(x, y)`.
@@ -39,9 +41,11 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `costume_as_image()`: Returns the image data of the current costume in the same format as `parse_image()`.
 - `screenshot()`: Takes a screenshot of the current screen and saves it to the `exports` directory in the project root.
 - `screenshot(path)`: Takes a screenshot of the current screen and saves it to the specified path. The path is relative to the project root.
+- `typeof(value)`: Returns the type of the given value as a string.
 - `push(list, value)`: Pushes the given value to the end of the list and returns the new list.
 - `pop(list)`: Pops the last value from the list and returns a list containing the new list and the popped value.
 - `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.
+- `insert(object, key, value)`: Inserts the given key-value pair into the object and returns the new object.
 - `remove(list, index)`: Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
 - `extend(list1, list2)`: Extends the first list with the second list and returns the new list.
 - `contains(list, value)`: Returns true if the list contains the given value, false otherwise.

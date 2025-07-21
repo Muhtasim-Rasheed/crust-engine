@@ -61,6 +61,7 @@ impl Runtime {
         let dir = std::path::Path::new(file_path).parent().unwrap();
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
+        let builtins = crate::utils::sprite::builtins::builtins();
         let tags = config
             .tags
             .clone()
@@ -159,6 +160,7 @@ impl Runtime {
                 sprite.visible.unwrap_or(true),
                 sprite.layer.unwrap_or(0),
                 sprite.direction.unwrap_or(0.0),
+                builtins.clone(),
                 dir.to_string_lossy().to_string(),
             );
 

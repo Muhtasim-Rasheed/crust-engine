@@ -1,3 +1,8 @@
+pub mod builtins;
+
+pub mod function;
+pub use function::*;
+
 pub mod sprite;
 pub use sprite::*;
 
