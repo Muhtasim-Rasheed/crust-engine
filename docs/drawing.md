@@ -13,8 +13,8 @@ The drawing functions are used to draw shapes and lines on the screen unlike in 
 - `ellipse(x, y, width, height, rotation)`: Draws a filled ellipse with the center at `(x, y)`, the specified width and height, and the specified rotation in degrees. The ellipse is filled with the current drawing color.
 - `hellipse(x, y, width, height, thickness)`: Draws a hollow ellipse with the center at `(x, y)`, the specified width and height, and the specified thickness. The ellipse is outlined with the current drawing color.
 - `hellipse(x, y, width, height, rotation, thickness)`: Draws a hollow ellipse with the center at `(x, y)`, the specified width and height, the specified rotation in degrees, and the specified thickness. The ellipse is outlined with the current drawing color.
-- `polygon(x1, y1, ..., xN, yN)`: Draws a filled polygon with the specified vertices. The polygon is filled with the current drawing color.
-- `hpolygon(thickness, x1, y1, ..., xN, yN)`: Draws a hollow polygon with the specified vertices and thickness. The polygon is outlined with the current drawing color.
+- `polygon(xs, ys)`: Draws a filled polygon with the specified vertices. The polygon is filled with the current drawing color.
+- `hpolygon(thickness, xs, ys)`: Draws a hollow polygon with the specified vertices and thickness. The polygon is outlined with the current drawing color.
 - `textured_quad(parse_image_result, x1, y1, x2, y2, x3, y3, x4, y4)`: Draws a textured quadrilateral using the specified image result from `parse_image(binary)`. The quadrilateral is defined by the four points `(x1, y1)`, `(x2, y2)`, `(x3, y3)`, and `(x4, y4)`.
 - `stamp()`: Stamps the sprite onto the stage at its current position. The stamp is a copy of the sprite's current appearance, effects included.
 - `clear_all_stamps()`: Clears all the stamps on the stage.
