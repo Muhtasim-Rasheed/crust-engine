@@ -115,12 +115,12 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "effect", |sp, _, _, _, _, _, ar| looks::effect(sp, ar));
 
     // SOUNDS
-    builtin!(builtins, "play_sound", |sp, _, _, _, _, _, ar| sounds::play_sound(sp, ar));
-    builtin!(builtins, "stop_all_sounds", |sp, _, _, _, _, _, _| sounds::stop_all_sounds(sp));
-    builtin!(builtins, "stop_sound", |sp, _, _, _, _, _, ar| sounds::stop_sound(sp, ar));
-    builtin!(builtins, "change_sound_effect", |sp, _, _, _, _, _, ar| sounds::change_sound_effect(sp, ar));
-    builtin!(builtins, "set_sound_effect", |sp, _, _, _, _, _, ar| sounds::set_sound_effect(sp, ar));
-    builtin!(builtins, "sound_effect", |sp, _, _, _, _, _, ar| sounds::sound_effect(sp, ar));
+    // builtin!(builtins, "play_sound", |sp, _, _, _, _, _, ar| sounds::play_sound(sp, ar));
+    // builtin!(builtins, "stop_all_sounds", |sp, _, _, _, _, _, _| sounds::stop_all_sounds(sp));
+    // builtin!(builtins, "stop_sound", |sp, _, _, _, _, _, ar| sounds::stop_sound(sp, ar));
+    // builtin!(builtins, "change_sound_effect", |sp, _, _, _, _, _, ar| sounds::change_sound_effect(sp, ar));
+    // builtin!(builtins, "set_sound_effect", |sp, _, _, _, _, _, ar| sounds::set_sound_effect(sp, ar));
+    // builtin!(builtins, "sound_effect", |sp, _, _, _, _, _, ar| sounds::sound_effect(sp, ar));
 
     // EVENTS
     builtin!(builtins, "key_down", |_, _, _, _, _, _, ar| events::key_down(ar));
@@ -159,7 +159,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "polygon", |sp, _, _, _, _, _, ar| drawing::polygon(sp, ar));
     builtin!(builtins, "hpolygon", |sp, _, _, _, _, _, ar| drawing::hpolygon(sp, ar));
     builtin!(builtins, "textured_quad", |_, _, _, _, _, _, ar| drawing::textured_quad(ar));
-    builtin!(builtins, "stamp", |sp, pr, _, ca, _, _, _| drawing::stamp(sp, pr, ca));
+    // builtin!(builtins, "stamp", |sp, pr, _, ca, _, _, _| drawing::stamp(sp, pr, ca));
     builtin!(builtins, "clear_all_stamps", |_, pr, _, _, _, _, _| drawing::clear_all_stamps(pr));
     builtin!(builtins, "r", |sp, _, _, _, _, _, _| drawing::r(sp));
     builtin!(builtins, "g", |sp, _, _, _, _, _, _| drawing::g(sp));
@@ -167,16 +167,16 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "a", |sp, _, _, _, _, _, _| drawing::a(sp));
 
     // WINDOW
-    builtin!(builtins, "set_window_width", |_, _, _, _, _, _, ar| window::set_window_width(ar));
-    builtin!(builtins, "set_window_height", |_, _, _, _, _, _, ar| window::set_window_height(ar));
-    builtin!(builtins, "set_window_size", |_, _, _, _, _, _, ar| window::set_window_size(ar));
-    builtin!(builtins, "set_window_state", |_, _, _, _, _, _, ar| window::set_window_state(ar));
-    builtin!(builtins, "set_window_x", |_, _, _, _, _, _, ar| window::set_window_x(ar));
-    builtin!(builtins, "set_window_y", |_, _, _, _, _, _, ar| window::set_window_y(ar));
-    builtin!(builtins, "set_window_position", |_, _, _, _, _, _, ar| window::set_window_position(ar));
-    builtin!(builtins, "pointer_grab", |_, _, _, _, _, _, ar| window::pointer_grab(ar));
-    builtin!(builtins, "window_width", |_, _, _, _, _, _, _| window::window_width());
-    builtin!(builtins, "window_height", |_, _, _, _, _, _, _| window::window_height());
+    // builtin!(builtins, "set_window_width", |_, _, _, _, _, ar| window::set_window_width(ar));
+    // builtin!(builtins, "set_window_height", |_, _, _, _, _, ar| window::set_window_height(ar));
+    // builtin!(builtins, "set_window_size", |_, _, _, _, _, ar| window::set_window_size(ar));
+    // builtin!(builtins, "set_window_state", |_, _, _, _, _, ar| window::set_window_state(ar));
+    // builtin!(builtins, "set_window_x", |_, _, _, _, _, ar| window::set_window_x(ar));
+    // builtin!(builtins, "set_window_y", |_, _, _, _, _, ar| window::set_window_y(ar));
+    // builtin!(builtins, "set_window_position", |_, _, _, _, _, ar| window::set_window_position(ar));
+    // builtin!(builtins, "pointer_grab", |_, _, _, _, _, ar| window::pointer_grab(ar));
+    // builtin!(builtins, "window_width", |_, _, _, _, _, _| window::window_width());
+    // builtin!(builtins, "window_height", |_, _, _, _, _, _| window::window_height());
 
     builtins
 }

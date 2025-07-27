@@ -1,10 +1,9 @@
+use glam::*;
+use glfw::Window;
+use serde::Deserialize;
 use std::collections::HashMap;
 
-use macroquad::audio::*;
-use macroquad::prelude::*;
-
-use serde::Deserialize;
-
+use crate::utils::core::{CPUTexture, ShaderProgram};
 use crate::utils::draw_sprite;
 
 use super::sprite::StopRequest;
@@ -57,7 +56,7 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub async fn new(file_path: &str, args: Vec<String>) -> Self {
+    pub fn new(file_path: &str, args: Vec<String>, window: &Window) -> Self {
         let dir = std::path::Path::new(file_path).parent().unwrap();
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
@@ -73,12 +72,11 @@ impl Runtime {
             })
             .collect::<HashMap<_, _>>();
 
-        println!("{:#?}", config);
-
         let mut project = Project::new(
             dir.to_string_lossy().to_string(),
             dir.join("export").to_string_lossy().to_string(),
             args,
+            window,
         );
 
         for path in config
@@ -87,40 +85,65 @@ impl Runtime {
             .backdrops
         {
             let path = dir.join(path);
-            let tex = load_texture(&path.to_string_lossy()).await.unwrap();
+            let tex = CPUTexture::load_from_file(&path.to_string_lossy())
+                .or_else(|_| {
+                    CPUTexture::load_from_bytes(
+                        include_bytes!("../../assets/missing.png"),
+                        100,
+                        100,
+                    )
+                })
+                .unwrap_or_else(|e| {
+                    panic!(
+                        "Failed to load backdrop texture: {}. Error: {}",
+                        path.to_string_lossy(),
+                        e
+                    );
+                });
+            let tex = tex.upload_to_gpu();
             project.stage.backdrops.push(tex);
         }
 
         if project.stage.backdrops.is_empty() {
-            project.stage.backdrops.push(Texture2D::empty());
+            project
+                .stage
+                .backdrops
+                .push(CPUTexture::new(1, 1).upload_to_gpu());
         }
 
         for sprite in config.sprites {
             let mut textures = vec![];
             for path in sprite.costumes {
                 let path = dir.join(path);
-                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or(
-                    Texture2D::from_file_with_format(
+                let tex = CPUTexture::load_from_file(&path.to_string_lossy()).or_else(|_| {
+                    CPUTexture::load_from_bytes(
                         include_bytes!("../../assets/missing.png"),
-                        None,
-                    ),
-                );
-                textures.push(tex);
+                        100,
+                        100,
+                    )
+                }).unwrap_or_else(|e| {
+                    panic!(
+                        "Failed to load sprite texture: {}. Error: {}",
+                        path.to_string_lossy(),
+                        e
+                    );
+                });
+                textures.push(tex.upload_to_gpu());
             }
 
-            let mut sounds = vec![];
-            if sprite.sounds.is_some() {
-                let sounds_ = sprite.sounds.unwrap();
-                for sound in sounds_ {
-                    let path = dir.join(&sound.file);
-                    let sound_data = load_sound(&path.to_string_lossy()).await.unwrap_or_else(|_| {
-                        panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
-                    });
-                    sounds.push((sound.name, sound_data));
-                }
-            }
+            // let mut sounds = vec![];
+            // if sprite.sounds.is_some() {
+            //     let sounds_ = sprite.sounds.unwrap();
+            //     for sound in sounds_ {
+            //         let path = dir.join(&sound.file);
+            //         let sound_data = load_sound(&path.to_string_lossy()).await.unwrap_or_else(|_| {
+            //             panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
+            //         });
+            //         sounds.push((sound.name, sound_data));
+            //     }
+            // }
 
-            let sounds = sounds.into_iter().collect::<HashMap<_, _>>();
+            // let sounds = sounds.into_iter().collect::<HashMap<_, _>>();
 
             let sprite_code_file = dir.join(&sprite.code);
             let code =
@@ -150,7 +173,6 @@ impl Runtime {
             let s = Sprite::new(
                 sprite.name.clone(),
                 textures,
-                sounds,
                 ast,
                 sprite_tags,
                 sprite.w,
@@ -173,12 +195,15 @@ impl Runtime {
         }
     }
 
-    pub async fn run(&mut self) {
-        let camera = Camera2D {
-            target: vec2(0.0, 0.0),
-            zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()),
-            ..Default::default()
-        };
+    pub async fn run(&mut self, window: &Window, shader_program: &ShaderProgram) {
+        let projection = Mat4::orthographic_rh_gl(
+            -window.get_size().0 as f32,
+            window.get_size().0 as f32,
+            -window.get_size().1 as f32,
+            window.get_size().1 as f32,
+            -1.0,
+            1.0,
+        );
         loop {
             rand::srand(
                 std::time::SystemTime::now()
@@ -187,9 +212,7 @@ impl Runtime {
                     .as_millis() as u64,
             );
 
-            set_camera(&camera);
-            clear_background(WHITE);
-            self.project.stage.draw();
+            self.project.stage.draw(window, shader_program, &projection);
 
             let mut sprites = std::mem::take(&mut self.project.sprites);
 

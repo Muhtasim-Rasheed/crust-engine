@@ -1,7 +1,6 @@
 use std::f32::consts::PI;
 
 use crate::utils::{RotationStyle, Sprite};
-use macroquad::prelude::*;
 
 trait Effect {
     fn apply(&self, pixel: Color) -> Color;

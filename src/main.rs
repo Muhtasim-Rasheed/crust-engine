@@ -14,8 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+const VERT_SHADER: &str = include_str!("../assets/shaders/vertex.glsl");
+const FRAG_SHADER: &str = include_str!("../assets/shaders/fragment.glsl");
+
 use clap::Parser;
-use macroquad::{miniquad::conf::Icon, prelude::ImageFormat, texture::Image, window::Conf};
+use glfw::WindowHint;
+
+use crate::utils::core::ShaderProgram;
 
 mod utils;
 
@@ -33,51 +38,8 @@ struct Args {
     additional_args: Vec<String>,
 }
 
-fn window_config() -> Conf {
-    let small = utils::flatten(
-        Image::from_file_with_format(
-            include_bytes!("../assets/icon16.png"),
-            Some(ImageFormat::Png),
-        )
-        .unwrap()
-        .get_image_data()
-        .to_vec(),
-    );
-    let medium = utils::flatten(
-        Image::from_file_with_format(
-            include_bytes!("../assets/icon32.png"),
-            Some(ImageFormat::Png),
-        )
-        .unwrap()
-        .get_image_data()
-        .to_vec(),
-    );
-    let big = utils::flatten(
-        Image::from_file_with_format(
-            include_bytes!("../assets/icon64.png"),
-            Some(ImageFormat::Png),
-        )
-        .unwrap()
-        .get_image_data()
-        .to_vec(),
-    );
-    Conf {
-        window_title: "Crust".to_owned(),
-        window_width: 1024,
-        window_height: 576,
-        window_resizable: false,
-        icon: Some(Icon {
-            small: small.try_into().unwrap(),
-            medium: medium.try_into().unwrap(),
-            big: big.try_into().unwrap(),
-        }),
-        ..Default::default()
-    }
-}
-
-#[macroquad::main(window_config)]
+#[tokio::main]
 async fn main() {
-    // let mut args = std::env::args();
     let args = Args::parse();
 
     if let Some(new_project_name) = args.new {
@@ -99,7 +61,46 @@ async fn main() {
             .unwrap_or_else(|| panic!("No project file selected"))
     });
     let project_file = project_file.trim_matches('"');
-    let mut runtime = utils::Runtime::new(&project_file, args.additional_args).await;
+
+    use glfw::fail_on_errors;
+    let mut glfw = glfw::init(fail_on_errors!()).expect("Failed to initialize GLFW");
+    glfw.window_hint(WindowHint::ContextVersion(3, 3));
+    glfw.window_hint(WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+    glfw.window_hint(WindowHint::OpenGlForwardCompat(true));
+
+    let (mut window, events) = glfw
+        .create_window(1024, 576, "Crust", glfw::WindowMode::Windowed)
+        .expect("Failed to create GLFW window");
+
+    window.set_key_polling(true);
+    window.set_mouse_button_polling(true);
+    window.set_cursor_pos_polling(true);
+
+    {
+        let icon = image::load_from_memory(include_bytes!("../assets/logo_background.png"))
+            .expect("Failed to load icon image")
+            .to_rgba8();
+        let width = icon.width();
+        let height = icon.height();
+        let pixels = icon.into_raw();
+        window.set_icon_from_pixels(vec![glfw::PixelImage {
+            width,
+            height,
+            pixels: pixels
+                .chunks_exact(4)
+                .map(|p| {
+                    let r = p[0] as u32;
+                    let g = p[1] as u32;
+                    let b = p[2] as u32;
+                    let a = p[3] as u32;
+                    (a << 24) | (r << 16) | (g << 8) | b
+                })
+                .collect(),
+        }]);
+    }
+
+    let mut runtime = utils::Runtime::new(&project_file, args.additional_args, &window);
     println!("Loaded project: {}", project_file);
-    runtime.run().await;
+    let shader_program = ShaderProgram::new(VERT_SHADER, FRAG_SHADER);
+    runtime.run(&window, &shader_program).await;
 }

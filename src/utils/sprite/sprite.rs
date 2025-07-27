@@ -13,11 +13,12 @@
 use std::collections::HashMap;
 use std::f32::consts::*;
 use std::path::PathBuf;
+use glfw::*;
+use glam::*;
 
 use indexmap::IndexMap;
-use macroquad::audio::*;
-use macroquad::prelude::*;
 
+use crate::utils::core::{CPUTexture, GPUTexture};
 use crate::utils::*;
 
 #[derive(Clone, Debug)]
@@ -109,8 +110,8 @@ pub(super) struct Dialogue {
 #[derive(Debug)]
 pub struct Sprite {
     pub name: String,
-    pub costumes: Vec<Texture2D>,
-    pub sounds: HashMap<String, Sound>,
+    pub costumes: Vec<GPUTexture>,
+    // pub sounds: HashMap<String, Sound>,
     pub center: Vec2,
     pub size: Vec2,
     pub direction: f32,
@@ -120,7 +121,7 @@ pub struct Sprite {
     pub variables: HashMap<String, Value>,
     pub effects: IndexMap<String, f32>,
     pub sound_effects: HashMap<String, f32>,
-    pub draw_color: Color,
+    pub draw_color: Vec4,
     pub functions: HashMap<String, Callable>,
     pub clone_id: Option<usize>,
     pub stop_request: Option<StopRequest>,
@@ -147,8 +148,8 @@ pub struct Sprite {
 impl Sprite {
     pub fn new(
         name: String,
-        costumes: Vec<Texture2D>,
-        sounds: HashMap<String, Sound>,
+        costumes: Vec<GPUTexture>,
+        // sounds: HashMap<String, Sound>,
         ast: Vec<Statement>,
         tags: Vec<String>,
         w: f32,
@@ -305,11 +306,7 @@ impl Sprite {
         }
         let mut costumes = costumes;
         if costumes.is_empty() {
-            costumes.push(Texture2D::from_image(&Image::gen_image_color(
-                1,
-                1,
-                Color::new(0.0, 0.0, 0.0, 0.0),
-            )));
+            costumes.push(CPUTexture::new(100, 100).upload_to_gpu());
         }
         Self {
             name,
@@ -321,7 +318,7 @@ impl Sprite {
             center: vec2(x, y),
             size: vec2(w, h),
             current_costume: 0,
-            sounds,
+            // sounds,
             scale: 1.0,
             layer: layer,
             visible: visibility,
@@ -333,7 +330,7 @@ impl Sprite {
             time_waiting: 0,
             dialogue: None,
             glide: None,
-            draw_color: BLACK,
+            draw_color: Vec3::splat(0.0).extend(1.0),
             edge_bounce: false,
             clones: vec![],
             clone_setup,
@@ -355,7 +352,7 @@ impl Sprite {
         let update_ast = self.clone_update.clone();
         let functions = self.functions.clone();
         let costumes = self.costumes.clone();
-        let sounds = self.sounds.clone();
+        // let sounds = self.sounds.clone();
         let center = self.center;
         let size = self.size;
         Self {
@@ -368,7 +365,7 @@ impl Sprite {
             center,
             size,
             current_costume: self.current_costume,
-            sounds,
+            // sounds,
             scale: self.scale,
             layer: self.layer,
             visible: true,
@@ -406,29 +403,31 @@ impl Sprite {
         self.direction = dx.atan2(dy).to_degrees();
     }
 
-    pub fn goto_cursor(&mut self) {
-        let (x, y) = mouse_position();
-        self.goto(x * 2. - screen_width(), y * 2. - screen_height());
+    pub fn goto_cursor(&mut self, window: &Window) {
+        let (x, y) = window.get_cursor_pos();
+        self.goto(x as f32 * 2. - window.get_size().0 as f32,
+                  y as f32 * 2. - window.get_size().1 as f32);
     }
 
-    pub fn point_cursor(&mut self) {
-        let (x, y) = mouse_position();
-        let (x, y) = (x * 2. - screen_width(), y * 2. - screen_height());
+    pub fn point_cursor(&mut self, window: &Window) {
+        let (x, y) = window.get_cursor_pos();
+        let (x, y) = (x as f32 * 2. - window.get_size().0 as f32,
+                      y as f32 * 2. - window.get_size().1 as f32);
         let dx = y - self.center.y;
         let dy = x - self.center.x;
         self.direction = dx.atan2(dy).to_degrees();
     }
 
-    pub fn move_by(&mut self, step: f32) {
+    pub fn move_by(&mut self, step: f32, window: &Window) {
         self.center.x += step * self.direction.to_radians().cos();
         self.center.y += step * self.direction.to_radians().sin();
-        self.handle_edge_bounce();
+        self.handle_edge_bounce(window);
     }
 
-    pub fn handle_edge_bounce(&mut self) {
+    pub fn handle_edge_bounce(&mut self, window: &Window) {
         if self.edge_bounce {
-            let screen_width = screen_width();
-            let screen_height = screen_height();
+            let screen_width = window.get_size().0 as f32;
+            let screen_height = window.get_size().1 as f32;
             if self.center.x < -screen_width / 2. || self.center.x > screen_width / 2. {
                 self.direction = (180.0 - self.direction) % 360.0;
             }
@@ -514,7 +513,7 @@ impl Sprite {
         statement: &Statement,
         project: &mut Project,
         snapshots: &[SpriteSnapshot],
-        camera: &Camera2D,
+        window: &Window,
         local_vars: &[(String, Value)],
         script_id: usize,
     ) {
@@ -525,7 +524,7 @@ impl Sprite {
                 value,
             } => {
                 let value = crate::utils::resolve_expression(
-                    value, project, self, local_vars, snapshots, camera, script_id,
+                    value, project, self, local_vars, snapshots, window, script_id,
                 );
                 if *is_global {
                     project.global_variables.insert(identifier.clone(), value);
@@ -544,10 +543,10 @@ impl Sprite {
                 value,
             } => {
                 let value = crate::utils::resolve_expression(
-                    value, project, self, local_vars, snapshots, camera, script_id,
+                    value, project, self, local_vars, snapshots, window, script_id,
                 );
                 let index = crate::utils::resolve_expression(
-                    index, project, self, local_vars, snapshots, camera, script_id,
+                    index, project, self, local_vars, snapshots, window, script_id,
                 );
                 if let Value::Number(index) = index {
                     if *is_global {
@@ -594,7 +593,7 @@ impl Sprite {
             Statement::Nop => {}
             Statement::Assert { condition } => {
                 if !crate::utils::resolve_expression(
-                    condition, project, self, local_vars, snapshots, camera, script_id,
+                    condition, project, self, local_vars, snapshots, window, script_id,
                 )
                 .to_boolean()
                 {
@@ -609,17 +608,17 @@ impl Sprite {
                 default,
             } => {
                 let resolved_value = crate::utils::resolve_expression(
-                    value, project, self, local_vars, snapshots, camera, script_id,
+                    value, project, self, local_vars, snapshots, window, script_id,
                 );
                 for (case_value, body) in cases {
                     if resolved_value
                         == crate::utils::resolve_expression(
-                            case_value, project, self, local_vars, snapshots, camera, script_id,
+                            case_value, project, self, local_vars, snapshots, window, script_id,
                         )
                     {
                         for statement in body {
                             self.execute_statement(
-                                statement, project, snapshots, camera, local_vars, script_id,
+                                statement, project, snapshots, window, local_vars, script_id,
                             );
                         }
                         return;
@@ -628,7 +627,7 @@ impl Sprite {
                 if let Some(default_body) = default {
                     for statement in default_body {
                         self.execute_statement(
-                            statement, project, snapshots, camera, local_vars, script_id,
+                            statement, project, snapshots, window, local_vars, script_id,
                         );
                     }
                 }
@@ -640,13 +639,13 @@ impl Sprite {
                 else_body,
             } => {
                 if crate::utils::resolve_expression(
-                    condition, project, self, local_vars, snapshots, camera, script_id,
+                    condition, project, self, local_vars, snapshots, window, script_id,
                 )
                 .to_boolean()
                 {
                     for statement in body {
                         self.execute_statement(
-                            statement, project, snapshots, camera, local_vars, script_id,
+                            statement, project, snapshots, window, local_vars, script_id,
                         );
                     }
                 } else {
@@ -657,14 +656,14 @@ impl Sprite {
                             self,
                             local_vars,
                             snapshots,
-                            camera,
+                            window,
                             script_id,
                         )
                         .to_boolean()
                         {
                             for statement in else_if_body {
                                 self.execute_statement(
-                                    statement, project, snapshots, camera, local_vars, script_id,
+                                    statement, project, snapshots, window, local_vars, script_id,
                                 );
                             }
                             return;
@@ -673,7 +672,7 @@ impl Sprite {
                     if let Some(else_body) = else_body {
                         for statement in else_body {
                             self.execute_statement(
-                                statement, project, snapshots, camera, local_vars, script_id,
+                                statement, project, snapshots, window, local_vars, script_id,
                             );
                         }
                     }
@@ -681,13 +680,13 @@ impl Sprite {
             }
             Statement::While { condition, body } => {
                 while crate::utils::resolve_expression(
-                    condition, project, self, local_vars, snapshots, camera, script_id,
+                    condition, project, self, local_vars, snapshots, window, script_id,
                 )
                 .to_boolean()
                 {
                     for statement in body {
                         self.execute_statement(
-                            statement, project, snapshots, camera, local_vars, script_id,
+                            statement, project, snapshots, window, local_vars, script_id,
                         );
                     }
                 }
@@ -698,7 +697,7 @@ impl Sprite {
                 body,
             } => {
                 for value in crate::utils::resolve_expression(
-                    iterable, project, self, local_vars, snapshots, camera, script_id,
+                    iterable, project, self, local_vars, snapshots, window, script_id,
                 )
                 .to_list()
                 {
@@ -709,7 +708,7 @@ impl Sprite {
                             statement,
                             project,
                             snapshots,
-                            camera,
+                            window,
                             &new_local_vars,
                             script_id,
                         );
@@ -722,15 +721,14 @@ impl Sprite {
                         .iter()
                         .map(|arg| {
                             crate::utils::resolve_expression(
-                                arg, project, self, local_vars, snapshots, camera, script_id,
+                                arg, project, self, local_vars, snapshots, window, script_id,
                             )
                         })
                         .collect::<Vec<_>>();
                     if let Some(callable) = self.functions.clone().get(function) {
                         let _ = callable
                             .call(
-                                self, project, snapshots, camera, local_vars, script_id,
-                                &args,
+                                self, project, snapshots, window, local_vars, script_id, &args,
                             )
                             .unwrap_or_else(|e| {
                                 println!("Error calling {}(): {}", function, e);
@@ -744,8 +742,7 @@ impl Sprite {
                         let function_struct = *closure;
                         let _ = Callable::Function(function_struct)
                             .call(
-                                self, project, snapshots, camera, local_vars, script_id,
-                                &args,
+                                self, project, snapshots, window, local_vars, script_id, &args,
                             )
                             .unwrap_or_else(|e| {
                                 println!("Error calling closure '{}': {}", function, e);
@@ -879,7 +876,7 @@ impl Sprite {
         });
     }
 
-    pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
+    pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot], window: &Window) {
         if let Some(glide) = &mut self.glide {
             let t = 1.0 - (glide.remaining as f32 / glide.duration as f32);
             if glide.remaining > 0 {
@@ -908,7 +905,7 @@ impl Sprite {
                     }
                     break;
                 }
-                self.execute_statement(&statement, project, snapshots, camera, &vec![], 0);
+                self.execute_statement(&statement, project, snapshots, window, &vec![], 0);
                 if self.skip_further_execution_of_frame {
                     self.skip_further_execution_of_frame = false;
                     break;
@@ -930,7 +927,7 @@ impl Sprite {
                         }
                         break;
                     }
-                    self.execute_statement(&statement, project, snapshots, camera, &vec![], i + 1);
+                    self.execute_statement(&statement, project, snapshots, window, &vec![], i + 1);
                     if self.skip_further_execution_of_frame {
                         self.skip_further_execution_of_frame = false;
                         break;
@@ -961,7 +958,7 @@ impl Sprite {
                         &statement,
                         project,
                         snapshots,
-                        camera,
+                        window,
                         &vec![],
                         i + self.update_ast.len() + 1,
                     );
@@ -984,7 +981,7 @@ impl Sprite {
                 self,
                 &vec![],
                 snapshots,
-                camera,
+                window,
                 i + self.update_ast.len() + self.broadcast_recievers.len() + 1,
             );
             if value.to_boolean() {
@@ -1005,7 +1002,7 @@ impl Sprite {
                         &statement,
                         project,
                         snapshots,
-                        camera,
+                        window,
                         &vec![],
                         i + self.update_ast.len() + self.broadcast_recievers.len() + 1,
                     );
@@ -1064,7 +1061,7 @@ impl Sprite {
 
         // idk run step for all the clones too
         for clone in &mut self.clones {
-            clone.step(project, snapshots, camera);
+            clone.step(project, snapshots, window);
         }
     }
 }

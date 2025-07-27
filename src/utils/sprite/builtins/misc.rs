@@ -1,5 +1,6 @@
 use crate::utils::*;
-use macroquad::prelude::*;
+use glam::*;
+use glfw::Window;
 use std::{fs::File, io::Write, path::Path};
 
 pub fn args(project: &Project) -> Result {
@@ -160,19 +161,14 @@ pub fn random(args: &[Value]) -> Result {
         if *min >= *max {
             return Err("random() expects two numbers where min < max".to_string());
         }
-        let random_value = rand::gen_range(*min, *max);
+        let random_value = rand::random_range(*min..=*max);
         Ok(Value::Number(random_value))
     } else {
         Err("random() expects two number arguments".to_string())
     }
 }
 
-pub fn distance(
-    sprite: &Sprite,
-    snapshots: &[SpriteSnapshot],
-    args: &[Value],
-    to: bool,
-) -> Result {
+pub fn distance(sprite: &Sprite, snapshots: &[SpriteSnapshot], args: &[Value], to: bool) -> Result {
     match !to {
         true => {
             if let [
@@ -412,8 +408,8 @@ pub fn sort(
     sprite: &mut Sprite,
     project: &mut Project,
     snapshots: &[SpriteSnapshot],
-    camera: &Camera2D,
     local_vars: &[(String, Value)],
+    window: &Window,
     script_id: usize,
     args: &[Value],
 ) -> Result {
@@ -425,7 +421,7 @@ pub fn sort(
             let args_ = [a.clone(), b.clone()];
             let result = Callable::Function(function_struct.clone())
                 .call(
-                    sprite, project, snapshots, camera, local_vars, script_id, &args_,
+                    sprite, project, snapshots, local_vars, window, script_id, &args_,
                 )
                 .unwrap_or_else(|e| {
                     error = Some(format!("Error calling closure in sort(): {}", e,));
@@ -454,8 +450,8 @@ pub fn filter(
     sprite: &mut Sprite,
     project: &mut Project,
     snapshots: &[SpriteSnapshot],
-    camera: &Camera2D,
     local_vars: &[(String, Value)],
+    window: &Window,
     script_id: usize,
     args: &[Value],
 ) -> Result {
@@ -468,7 +464,7 @@ pub fn filter(
                 let args_ = [item.clone()];
                 let result = Callable::Function(function_struct.clone())
                     .call(
-                        sprite, project, snapshots, camera, local_vars, script_id, &args_,
+                        sprite, project, snapshots, local_vars, window, script_id, &args_,
                     )
                     .unwrap_or_else(|e| {
                         error = Some(format!("Error calling closure in filter(): {}", e));
@@ -494,8 +490,8 @@ pub fn map(
     sprite: &mut Sprite,
     project: &mut Project,
     snapshots: &[SpriteSnapshot],
-    camera: &Camera2D,
     local_vars: &[(String, Value)],
+    window: &Window,
     script_id: usize,
     args: &[Value],
 ) -> Result {
@@ -508,7 +504,7 @@ pub fn map(
                 let args_ = [item.clone()];
                 Callable::Function(function_struct.clone())
                     .call(
-                        sprite, project, snapshots, camera, local_vars, script_id, &args_,
+                        sprite, project, snapshots, local_vars, window, script_id, &args_,
                     )
                     .unwrap_or_else(|e| {
                         error = Some(format!("Error calling closure in map(): {}", e));

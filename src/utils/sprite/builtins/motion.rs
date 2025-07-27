@@ -1,5 +1,5 @@
 use crate::utils::{sprite::Glide, *};
-use macroquad::prelude::*;
+use glam::*;
 
 pub fn r#move(sprite: &mut Sprite, args: &[Value]) -> Result {
     if let [Value::Number(step)] = args {
@@ -28,11 +28,7 @@ pub fn turn_ccw(sprite: &mut Sprite, args: &[Value]) -> Result {
     }
 }
 
-pub fn goto(
-    sprite: &mut Sprite,
-    snapshots: &[SpriteSnapshot],
-    args: &[Value],
-) -> Result {
+pub fn goto(sprite: &mut Sprite, snapshots: &[SpriteSnapshot], args: &[Value]) -> Result {
     match args {
         [Value::Number(x), Value::Number(y)] => {
             sprite.goto(*x, *y);
@@ -44,8 +40,8 @@ pub fn goto(
                 Ok(Value::Null)
             } else if name == "random" {
                 sprite.goto(
-                    rand::gen_range(-screen_width(), screen_width()),
-                    rand::gen_range(-screen_height(), screen_height()),
+                    rand::random_range(-1024.0..=1024.0),
+                    rand::random_range(-576.0..=576.0),
                 );
                 Ok(Value::Null)
             } else if let Some(target) = snapshots.iter().find(|s| s.name == *name) {
@@ -110,11 +106,7 @@ pub fn glide(sprite: &mut Sprite, args: &[Value]) -> Result {
     }
 }
 
-pub fn point(
-    sprite: &mut Sprite,
-    snapshots: &[SpriteSnapshot],
-    args: &[Value],
-) -> Result {
+pub fn point(sprite: &mut Sprite, snapshots: &[SpriteSnapshot], args: &[Value]) -> Result {
     match args {
         [Value::Number(angle)] => {
             sprite.direction = *angle;
@@ -129,7 +121,7 @@ pub fn point(
                 sprite.point_cursor();
                 Ok(Value::Null)
             } else if name == "random" {
-                sprite.direction = rand::gen_range(0.0, 360.0);
+                sprite.direction = rand::random_range(0.0..=360.0);
                 Ok(Value::Null)
             } else if let Some(target) = snapshots.iter().find(|s| s.name == *name) {
                 sprite.point(target.center.x, target.center.y);
@@ -160,11 +152,7 @@ pub fn set_pos(sprite: &mut Sprite, args: &[Value], which: &str) -> Result {
     }
 }
 
-pub fn change_pos(
-    sprite: &mut Sprite,
-    args: &[Value],
-    which: &str,
-) -> Result {
+pub fn change_pos(sprite: &mut Sprite, args: &[Value], which: &str) -> Result {
     if let [Value::Number(value)] = args {
         match which {
             "x" => {

@@ -1,4 +1,5 @@
-use macroquad::prelude::*;
+use glam::*;
+use glfw::Window;
 
 use crate::utils::*;
 
@@ -10,7 +11,7 @@ pub fn resolve_expression(
     sprite: &mut Sprite,
     local_vars: &[(String, Value)],
     snapshots: &[SpriteSnapshot],
-    camera: &Camera2D,
+    window: &Window,
     script_id: usize,
 ) -> Value {
     match expr {
@@ -19,7 +20,7 @@ pub fn resolve_expression(
             let mut list = vec![];
             for element in l {
                 list.push(resolve_expression(
-                    element, project, sprite, local_vars, snapshots, camera, script_id,
+                    element, project, sprite, local_vars, snapshots, window, script_id,
                 ));
             }
             Value::List(list)
@@ -28,7 +29,7 @@ pub fn resolve_expression(
             let mut object = std::collections::HashMap::new();
             for (key, value) in o {
                 let resolved_value = resolve_expression(
-                    value, project, sprite, local_vars, snapshots, camera, script_id,
+                    value, project, sprite, local_vars, snapshots, window, script_id,
                 );
                 object.insert(key.clone(), resolved_value);
             }
@@ -36,10 +37,10 @@ pub fn resolve_expression(
         }
         Expression::ListMemberAccess { list, index } => {
             let index = resolve_expression(
-                index, project, sprite, local_vars, snapshots, camera, script_id,
+                index, project, sprite, local_vars, snapshots, window, script_id,
             );
             let list = resolve_expression(
-                list, project, sprite, local_vars, snapshots, camera, script_id,
+                list, project, sprite, local_vars, snapshots, window, script_id,
             );
             if let Value::List(list) = list {
                 if let Value::Number(index) = index {
@@ -108,10 +109,10 @@ pub fn resolve_expression(
             operator,
         } => {
             let left_value = resolve_expression(
-                left, project, sprite, local_vars, snapshots, camera, script_id,
+                left, project, sprite, local_vars, snapshots, window, script_id,
             );
             let right_value = resolve_expression(
-                right, project, sprite, local_vars, snapshots, camera, script_id,
+                right, project, sprite, local_vars, snapshots, window, script_id,
             );
             match operator.as_str() {
                 "+" => Value::Number(left_value.to_number() + right_value.to_number()),
@@ -154,7 +155,7 @@ pub fn resolve_expression(
         }
         Expression::Unary { operator, operand } => {
             let operand_value = resolve_expression(
-                operand, project, sprite, local_vars, snapshots, camera, script_id,
+                operand, project, sprite, local_vars, snapshots, window, script_id,
             );
             match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
@@ -167,14 +168,14 @@ pub fn resolve_expression(
                 .iter()
                 .map(|arg| {
                     resolve_expression(
-                        arg, project, sprite, local_vars, snapshots, camera, script_id,
+                        arg, project, sprite, local_vars, snapshots, window, script_id,
                     )
                 })
                 .collect::<Vec<_>>();
             if let Some(function_struct) = sprite.functions.clone().get(function) {
                 function_struct
                     .call(
-                        sprite, project, snapshots, camera, local_vars, script_id, &args,
+                        sprite, project, snapshots, window, local_vars, script_id, &args,
                     )
                     .unwrap_or_else(|e| {
                         println!("Error calling function {}(): {}", function, e);
@@ -188,7 +189,7 @@ pub fn resolve_expression(
                 let function_struct = &*closure;
                 Callable::Function(function_struct.clone())
                     .call(
-                        sprite, project, snapshots, camera, local_vars, script_id, &args,
+                        sprite, project, snapshots, window, local_vars, script_id, &args,
                     )
                     .unwrap_or_else(|e| {
                         println!("Error calling function '{}': {}", function, e);
@@ -201,7 +202,7 @@ pub fn resolve_expression(
     }
 }
 
-pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, color: Color) {
+pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, color: Vec4) {
     assert_eq!(xs.len(), ys.len());
     assert!(xs.len() >= 3, "Need at least 3 points to form a polygon!");
 
@@ -210,21 +211,21 @@ pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, color: Color) {
 
     for i in 0..xs.len() {
         let next_i = (i + 1) % xs.len();
-        draw_triangle(
-            Vec2::new(center_x, center_y),
-            Vec2::new(xs[i], ys[i]),
-            Vec2::new(xs[next_i], ys[next_i]),
-            color,
-        );
+        // draw_triangle(
+        //     Vec2::new(center_x, center_y),
+        //     Vec2::new(xs[i], ys[i]),
+        //     Vec2::new(xs[next_i], ys[next_i]),
+        //     color,
+        // );
     }
 }
 
-pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, color: Color) {
+pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, color: Vec4) {
     assert_eq!(xs.len(), ys.len());
 
     for i in 0..xs.len() {
         let next_i = (i + 1) % xs.len();
-        draw_line(xs[i], ys[i], xs[next_i], ys[next_i], thickness, color);
+        // draw_line(xs[i], ys[i], xs[next_i], ys[next_i], thickness, color);
     }
 }
 
@@ -301,7 +302,6 @@ pub fn string_to_mouse(s: &str) -> Option<MouseButton> {
 }
 
 pub fn string_to_keycode(s: &str) -> Option<KeyCode> {
-    use KeyCode::*;
     match s.to_lowercase().as_str() {
         "a" => Some(A),
         "b" => Some(B),

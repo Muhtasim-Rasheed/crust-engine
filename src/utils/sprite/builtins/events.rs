@@ -1,9 +1,4 @@
 use crate::utils::*;
-use macroquad::{
-    input::*,
-    math::{Rect, Vec2},
-    window::{screen_height, screen_width},
-};
 
 pub fn key_down(args: &[Value]) -> Result {
     if let [Value::String(key)] = args {

@@ -1,4 +1,4 @@
-use macroquad::prelude::Camera2D;
+use glfw::Window;
 
 use crate::utils::*;
 
@@ -17,7 +17,7 @@ impl Function {
         sprite: &mut Sprite,
         project: &mut Project,
         snapshots: &[SpriteSnapshot],
-        camera: &Camera2D,
+        window: &Window,
         local_vars: &[(String, Value)],
         script_id: usize,
         args: &[Value],
@@ -40,7 +40,7 @@ impl Function {
                 statement,
                 project,
                 snapshots,
-                camera,
+                window,
                 &new_local_vars,
                 script_id,
             );
@@ -52,7 +52,6 @@ impl Function {
             sprite,
             &new_local_vars,
             snapshots,
-            camera,
             script_id,
         ))
     }
@@ -64,7 +63,7 @@ pub struct BuiltinFunction {
         &mut Sprite,
         &mut Project,
         &[SpriteSnapshot],
-        &Camera2D,
+        &Window,
         &[(String, Value)],
         usize,
         &[Value],
@@ -83,17 +82,17 @@ impl Callable {
         sprite: &mut Sprite,
         project: &mut Project,
         snapshots: &[SpriteSnapshot],
-        camera: &Camera2D,
+        window: &Window,
         local_vars: &[(String, Value)],
         script_id: usize,
         args: &[Value],
     ) -> Result {
         match self {
             Callable::Function(func) => func.call(
-                sprite, project, snapshots, camera, local_vars, script_id, args,
+                sprite, project, snapshots, window, local_vars, script_id, args,
             ),
             Callable::Builtin(builtin) => (builtin.inner)(
-                sprite, project, snapshots, camera, local_vars, script_id, args,
+                sprite, project, snapshots, window, local_vars, script_id, args,
             ),
         }
     }
