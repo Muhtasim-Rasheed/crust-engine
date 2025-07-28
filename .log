@@ -1,0 +1,1038 @@
+   Compiling crust-engine v0.4.0 (/home/mutasimos/Desktop/Work/Rust/crust-engine)
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `macroquad`
+  --> src/utils/sprite/builtins/events.rs:16:27
+   |
+16 |         Ok(Value::Boolean(macroquad::input::is_key_pressed(key_code)))
+   |                           ^^^^^^^^^ use of unresolved module or unlinked crate `macroquad`
+   |
+   = help: if you wanted to use a crate named `macroquad`, use `cargo add macroquad` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `macroquad`
+  --> src/utils/sprite/builtins/events.rs:25:27
+   |
+25 |         Ok(Value::Boolean(macroquad::input::is_key_released(key_code)))
+   |                           ^^^^^^^^^ use of unresolved module or unlinked crate `macroquad`
+   |
+   = help: if you wanted to use a crate named `macroquad`, use `cargo add macroquad` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `macroquad`
+  --> src/utils/sprite/builtins/events.rs:35:27
+   |
+35 |         Ok(Value::Boolean(macroquad::input::is_mouse_button_down(
+   |                           ^^^^^^^^^ use of unresolved module or unlinked crate `macroquad`
+   |
+   = help: if you wanted to use a crate named `macroquad`, use `cargo add macroquad` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `macroquad`
+  --> src/utils/sprite/builtins/events.rs:47:27
+   |
+47 |         Ok(Value::Boolean(macroquad::input::is_mouse_button_pressed(
+   |                           ^^^^^^^^^ use of unresolved module or unlinked crate `macroquad`
+   |
+   = help: if you wanted to use a crate named `macroquad`, use `cargo add macroquad` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `macroquad`
+  --> src/utils/sprite/builtins/events.rs:59:27
+   |
+59 |         Ok(Value::Boolean(macroquad::input::is_mouse_button_released(
+   |                           ^^^^^^^^^ use of unresolved module or unlinked crate `macroquad`
+   |
+   = help: if you wanted to use a crate named `macroquad`, use `cargo add macroquad` to add it to your `Cargo.toml`
+
+error[E0433]: failed to resolve: use of undeclared type `MouseButton`
+  --> src/utils/sprite/builtins/events.rs:80:33
+   |
+80 |     if !is_mouse_button_pressed(MouseButton::Left) {
+   |                                 ^^^^^^^^^^^ use of undeclared type `MouseButton`
+   |
+help: consider importing this enum
+   |
+1  + use glfw::MouseButton;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `Rect`
+  --> src/utils/sprite/builtins/events.rs:94:16
+   |
+94 |     let rect = Rect::new(
+   |                ^^^^ use of undeclared type `Rect`
+   |
+help: consider importing this struct
+   |
+1  + use image::math::Rect;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+ --> src/utils/sprite/draw.rs:6:28
+  |
+6 |     fn apply(&self, pixel: Color) -> Color;
+  |                            ^^^^^ not found in this scope
+  |
+help: consider importing this enum
+  |
+1 + use clap::builder::styling::Color;
+  |
+
+error[E0412]: cannot find type `Color` in this scope
+ --> src/utils/sprite/draw.rs:6:38
+  |
+6 |     fn apply(&self, pixel: Color) -> Color;
+  |                                      ^^^^^ not found in this scope
+  |
+help: consider importing this enum
+  |
+1 + use clap::builder::styling::Color;
+  |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:30:28
+   |
+30 |     fn apply(&self, pixel: Color) -> Color {
+   |                            ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:30:38
+   |
+30 |     fn apply(&self, pixel: Color) -> Color {
+   |                                      ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+  --> src/utils/sprite/draw.rs:32:9
+   |
+32 |         Color::new(
+   |         ^^^^^ use of undeclared type `Color`
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:43:28
+   |
+43 |     fn apply(&self, pixel: Color) -> Color {
+   |                            ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:43:38
+   |
+43 |     fn apply(&self, pixel: Color) -> Color {
+   |                                      ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+  --> src/utils/sprite/draw.rs:45:9
+   |
+45 |         Color::new(pixel.r, pixel.g, pixel.b, pixel.a * alpha)
+   |         ^^^^^ use of undeclared type `Color`
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:51:28
+   |
+51 |     fn apply(&self, pixel: Color) -> Color {
+   |                            ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:51:38
+   |
+51 |     fn apply(&self, pixel: Color) -> Color {
+   |                                      ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+  --> src/utils/sprite/draw.rs:56:9
+   |
+56 |         Color::new(
+   |         ^^^^^ use of undeclared type `Color`
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:73:28
+   |
+73 |     fn apply(&self, pixel: Color) -> Color {
+   |                            ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:73:38
+   |
+73 |     fn apply(&self, pixel: Color) -> Color {
+   |                                      ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+  --> src/utils/sprite/draw.rs:75:9
+   |
+75 |         Color::new(
+   |         ^^^^^ use of undeclared type `Color`
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:98:28
+   |
+98 |     fn apply(&self, pixel: Color) -> Color {
+   |                            ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0412]: cannot find type `Color` in this scope
+  --> src/utils/sprite/draw.rs:98:38
+   |
+98 |     fn apply(&self, pixel: Color) -> Color {
+   |                                      ^^^^^ not found in this scope
+   |
+help: consider importing this enum
+   |
+1  + use clap::builder::styling::Color;
+   |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:100:9
+    |
+100 |         Color::new(
+    |         ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0412]: cannot find type `Color` in this scope
+   --> src/utils/sprite/draw.rs:123:28
+    |
+123 |     fn apply(&self, pixel: Color) -> Color {
+    |                            ^^^^^ not found in this scope
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0412]: cannot find type `Color` in this scope
+   --> src/utils/sprite/draw.rs:123:38
+    |
+123 |     fn apply(&self, pixel: Color) -> Color {
+    |                                      ^^^^^ not found in this scope
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:127:17
+    |
+127 |                 Color::new(
+    |                 ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:148:17
+    |
+148 |                 Color::new(
+    |                 ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0412]: cannot find type `Color` in this scope
+   --> src/utils/sprite/draw.rs:173:28
+    |
+173 |     fn apply(&self, pixel: Color) -> Color {
+    |                            ^^^^^ not found in this scope
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0412]: cannot find type `Color` in this scope
+   --> src/utils/sprite/draw.rs:173:38
+    |
+173 |     fn apply(&self, pixel: Color) -> Color {
+    |                                      ^^^^^ not found in this scope
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:175:9
+    |
+175 |         Color::new(
+    |         ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0412]: cannot find type `Color` in this scope
+   --> src/utils/sprite/draw.rs:186:28
+    |
+186 |     fn apply(&self, pixel: Color) -> Color {
+    |                            ^^^^^ not found in this scope
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0412]: cannot find type `Color` in this scope
+   --> src/utils/sprite/draw.rs:186:38
+    |
+186 |     fn apply(&self, pixel: Color) -> Color {
+    |                                      ^^^^^ not found in this scope
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:189:17
+    |
+189 |                 Color::new(pixel.r * value, pixel.g * value, pixel.b * value, pixel.a)
+    |                 ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:191:39
+    |
+191 |             MultiplyType::R(value) => Color::new(pixel.r * value, pixel.g, pixel.b, pixel.a),
+    |                                       ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:192:39
+    |
+192 |             MultiplyType::G(value) => Color::new(pixel.r, pixel.g * value, pixel.b, pixel.a),
+    |                                       ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:193:39
+    |
+193 |             MultiplyType::B(value) => Color::new(pixel.r, pixel.g, pixel.b * value, pixel.a),
+    |                                       ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0412]: cannot find type `Color` in this scope
+   --> src/utils/sprite/draw.rs:200:28
+    |
+200 |     fn apply(&self, pixel: Color) -> Color {
+    |                            ^^^^^ not found in this scope
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0412]: cannot find type `Color` in this scope
+   --> src/utils/sprite/draw.rs:200:38
+    |
+200 |     fn apply(&self, pixel: Color) -> Color {
+    |                                      ^^^^^ not found in this scope
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:203:17
+    |
+203 |                 Color::new(pixel.r + value, pixel.g + value, pixel.b + value, pixel.a)
+    |                 ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:205:34
+    |
+205 |             AddType::R(value) => Color::new(pixel.r + value, pixel.g, pixel.b, pixel.a),
+    |                                  ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:206:34
+    |
+206 |             AddType::G(value) => Color::new(pixel.r, pixel.g + value, pixel.b, pixel.a),
+    |                                  ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:207:34
+    |
+207 |             AddType::B(value) => Color::new(pixel.r, pixel.g, pixel.b + value, pixel.a),
+    |                                  ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0425]: cannot find value `WHITE` in this scope
+   --> src/utils/sprite/draw.rs:264:9
+    |
+264 |         WHITE,
+    |         ^^^^^ not found in this scope
+
+error[E0422]: cannot find struct, variant or union type `DrawTextureParams` in this scope
+   --> src/utils/sprite/draw.rs:265:9
+    |
+265 |         DrawTextureParams {
+    |         ^^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0422]: cannot find struct, variant or union type `TextParams` in this scope
+   --> src/utils/sprite/draw.rs:291:13
+    |
+291 |             TextParams {
+    |             ^^^^^^^^^^ not found in this scope
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:294:21
+    |
+294 |                     Color::new(1.0, 1.0, 1.0, 0.7)
+    |                     ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `Color`
+   --> src/utils/sprite/draw.rs:296:21
+    |
+296 |                     Color::new(1.0, 1.0, 1.0, 1.0)
+    |                     ^^^^^ use of undeclared type `Color`
+    |
+help: consider importing this enum
+    |
+1   + use clap::builder::styling::Color;
+    |
+
+error[E0425]: cannot find value `BLACK` in this scope
+   --> src/utils/runtime.rs:286:72
+    |
+286 |                 draw_text(debug, 10.0, 30.0 + (i as f32 * 30.0), 24.0, BLACK);
+    |                                                                        ^^^^^ not found in this scope
+
+warning: unused import: `ui::*`
+  --> src/utils/core/mod.rs:17:9
+   |
+17 | pub use ui::*;
+   |         ^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+error[E0425]: cannot find function `get_fps` in this scope
+   --> src/utils/runtime.rs:270:39
+    |
+270 |             debugs.insert("show_fps", get_fps().to_string());
+    |                                       ^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `mouse_position` in this scope
+   --> src/utils/runtime.rs:275:21
+    |
+275 |                     mouse_position().0 * 2.0 - screen_width(),
+    |                     ^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `screen_width` in this scope
+   --> src/utils/runtime.rs:275:48
+    |
+275 |                     mouse_position().0 * 2.0 - screen_width(),
+    |                                                ^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `mouse_position` in this scope
+   --> src/utils/runtime.rs:276:21
+    |
+276 |                     mouse_position().1 * 2.0 - screen_height()
+    |                     ^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `screen_height` in this scope
+   --> src/utils/runtime.rs:276:48
+    |
+276 |                     mouse_position().1 * 2.0 - screen_height()
+    |                                                ^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `draw_text` in this scope
+   --> src/utils/runtime.rs:286:17
+    |
+286 |                 draw_text(debug, 10.0, 30.0 + (i as f32 * 30.0), 24.0, BLACK);
+    |                 ^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `next_frame` in this scope
+   --> src/utils/runtime.rs:289:13
+    |
+289 |             next_frame().await;
+    |             ^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `is_key_down` in this scope
+ --> src/utils/sprite/builtins/events.rs:7:27
+  |
+7 |         Ok(Value::Boolean(is_key_down(key_code)))
+  |                           ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `mouse_position` in this scope
+  --> src/utils/sprite/builtins/events.rs:69:9
+   |
+69 |         mouse_position().0 as f32 * 2.0 - screen_width() as f32,
+   |         ^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `screen_width` in this scope
+  --> src/utils/sprite/builtins/events.rs:69:43
+   |
+69 |         mouse_position().0 as f32 * 2.0 - screen_width() as f32,
+   |                                           ^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `mouse_position` in this scope
+  --> src/utils/sprite/builtins/events.rs:75:9
+   |
+75 |         mouse_position().1 as f32 * 2.0 - screen_height() as f32,
+   |         ^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `screen_height` in this scope
+  --> src/utils/sprite/builtins/events.rs:75:43
+   |
+75 |         mouse_position().1 as f32 * 2.0 - screen_height() as f32,
+   |                                           ^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `is_mouse_button_pressed` in this scope
+  --> src/utils/sprite/builtins/events.rs:80:9
+   |
+43 | pub fn mouse_button_pressed(args: &[Value]) -> Result {
+   | ----------------------------------------------------- similarly named function `mouse_button_pressed` defined here
+...
+80 |     if !is_mouse_button_pressed(MouseButton::Left) {
+   |         ^^^^^^^^^^^^^^^^^^^^^^^ help: a function with a similar name exists: `mouse_button_pressed`
+
+error[E0425]: cannot find function `mouse_position` in this scope
+  --> src/utils/sprite/builtins/events.rs:83:14
+   |
+83 |     let xy = mouse_position();
+   |              ^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `get_time` in this scope
+  --> src/utils/sprite/builtins/misc.rs:52:22
+   |
+52 |     Ok(Value::Number(get_time() as f32))
+   |                      ^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `mouse_position` in this scope
+   --> src/utils/sprite/builtins/misc.rs:197:48
+    |
+197 |                     let mouse_pos = Vec2::from(mouse_position()) * 2.0
+    |                                                ^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `screen_width` in this scope
+   --> src/utils/sprite/builtins/misc.rs:198:37
+    |
+198 |                         - Vec2::new(screen_width(), screen_height());
+    |                                     ^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `screen_height` in this scope
+   --> src/utils/sprite/builtins/misc.rs:198:53
+    |
+198 |                         - Vec2::new(screen_width(), screen_height());
+    |                                                     ^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `get_screen_data` in this scope
+   --> src/utils/sprite/builtins/misc.rs:308:22
+    |
+308 |     let screenshot = get_screen_data();
+    |                      ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `get_time` in this scope
+   --> src/utils/sprite/builtins/misc.rs:620:22
+    |
+620 |     Ok(Value::Number(get_time() as f32 * 60.0))
+    |                      ^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `get_frame_time` in this scope
+   --> src/utils/sprite/builtins/misc.rs:624:22
+    |
+624 |     Ok(Value::Number(get_frame_time() as f32))
+    |                      ^^^^^^^^^^^^^^ not found in this scope
+
+error[E0063]: missing field `glfw` in initializer of `utils::sprite::sprite::State<'_>`
+  --> src/utils/sprite/function.rs:26:29
+   |
+26 |         let mut new_state = State {
+   |                             ^^^^^ missing `glfw`
+
+error[E0277]: `gpu_texture::GPUTexture` doesn't implement `Debug`
+   --> src/utils/sprite/sprite.rs:123:5
+    |
+120 | #[derive(Debug)]
+    |          ----- in this derive macro expansion
+...
+123 |     pub costumes: Vec<GPUTexture>,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `gpu_texture::GPUTexture` cannot be formatted using `{:?}`
+    |
+    = help: the trait `Debug` is not implemented for `gpu_texture::GPUTexture`
+    = note: add `#[derive(Debug)]` to `gpu_texture::GPUTexture` or manually `impl Debug for gpu_texture::GPUTexture`
+    = help: the trait `Debug` is implemented for `Vec<T, A>`
+help: consider annotating `gpu_texture::GPUTexture` with `#[derive(Debug)]`
+   --> src/utils/core/gpu_texture.rs:2:1
+    |
+2   + #[derive(Debug)]
+3   | pub struct GPUTexture(pub(super) u32, pub(super) u32, pub(super) u32);
+    |
+
+error[E0599]: no method named `get_texture_data` found for struct `gpu_texture::GPUTexture` in the current scope
+   --> src/utils/sprite/draw.rs:224:62
+    |
+224 |     let mut effect_image = sprite.costumes[sprite.costume()].get_texture_data();
+    |                                                              ^^^^^^^^^^^^^^^^ method not found in `GPUTexture`
+    |
+   ::: src/utils/core/gpu_texture.rs:2:1
+    |
+2   | pub struct GPUTexture(pub(super) u32, pub(super) u32, pub(super) u32);
+    | --------------------- method `get_texture_data` not found for this struct
+
+error[E0433]: failed to resolve: use of undeclared type `Texture2D`
+   --> src/utils/sprite/draw.rs:257:29
+    |
+257 |     let processed_texture = Texture2D::from_image(&effect_image);
+    |                             ^^^^^^^^^ use of undeclared type `Texture2D`
+
+error[E0433]: failed to resolve: use of undeclared type `FilterMode`
+   --> src/utils/sprite/draw.rs:258:34
+    |
+258 |     processed_texture.set_filter(FilterMode::Nearest);
+    |                                  ^^^^^^^^^^ use of undeclared type `FilterMode`
+
+error[E0425]: cannot find function `draw_texture_ex` in this scope
+   --> src/utils/sprite/draw.rs:260:5
+    |
+260 |     draw_texture_ex(
+    |     ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `measure_text` in this scope
+   --> src/utils/sprite/draw.rs:286:29
+    |
+286 |         let dialogue_size = measure_text(&dialogue.text, None, 72, 1.0);
+    |                             ^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `draw_text_ex` in this scope
+   --> src/utils/sprite/draw.rs:287:9
+    |
+287 |         draw_text_ex(
+    |         ^^^^^^^^^^^^ not found in this scope
+
+warning: unused variable: `center_x`
+   --> src/utils/helpers.rs:192:9
+    |
+192 |     let center_x = xs.iter().sum::<f32>() / xs.len() as f32;
+    |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_center_x`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `center_y`
+   --> src/utils/helpers.rs:193:9
+    |
+193 |     let center_y = ys.iter().sum::<f32>() / ys.len() as f32;
+    |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_center_y`
+
+warning: unused variable: `next_i`
+   --> src/utils/helpers.rs:196:13
+    |
+196 |         let next_i = (i + 1) % xs.len();
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_next_i`
+
+warning: unused variable: `color`
+   --> src/utils/helpers.rs:188:58
+    |
+188 | pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, color: Vec4) {
+    |                                                          ^^^^^ help: if this is intentional, prefix it with an underscore: `_color`
+
+warning: unused variable: `next_i`
+   --> src/utils/helpers.rs:210:13
+    |
+210 |         let next_i = (i + 1) % xs.len();
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_next_i`
+
+warning: unused variable: `thickness`
+   --> src/utils/helpers.rs:206:64
+    |
+206 | pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, color: Vec4) {
+    |                                                                ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_thickness`
+
+warning: unused variable: `color`
+   --> src/utils/helpers.rs:206:80
+    |
+206 | pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, color: Vec4) {
+    |                                                                                ^^^^^ help: if this is intentional, prefix it with an underscore: `_color`
+
+warning: unused variable: `thickness`
+  --> src/utils/sprite/builtins/drawing.rs:62:23
+   |
+62 |         Value::Number(thickness),
+   |                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_thickness`
+
+warning: unused variable: `start`
+  --> src/utils/sprite/builtins/drawing.rs:65:13
+   |
+65 |         let start = Vec2::new(*x1, *y1);
+   |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_start`
+
+warning: unused variable: `end`
+  --> src/utils/sprite/builtins/drawing.rs:66:13
+   |
+66 |         let end = Vec2::new(*x2, *y2);
+   |             ^^^ help: if this is intentional, prefix it with an underscore: `_end`
+
+warning: unused variable: `state`
+  --> src/utils/sprite/builtins/drawing.rs:56:13
+   |
+56 | pub fn line(state: &State, args: &[Value]) -> Result {
+   |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `x`
+  --> src/utils/sprite/builtins/drawing.rs:83:23
+   |
+83 |         Value::Number(x),
+   |                       ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `y`
+  --> src/utils/sprite/builtins/drawing.rs:84:23
+   |
+84 |         Value::Number(y),
+   |                       ^ help: if this is intentional, prefix it with an underscore: `_y`
+
+warning: unused variable: `width`
+  --> src/utils/sprite/builtins/drawing.rs:85:23
+   |
+85 |         Value::Number(width),
+   |                       ^^^^^ help: if this is intentional, prefix it with an underscore: `_width`
+
+warning: unused variable: `height`
+  --> src/utils/sprite/builtins/drawing.rs:86:23
+   |
+86 |         Value::Number(height),
+   |                       ^^^^^^ help: if this is intentional, prefix it with an underscore: `_height`
+
+warning: unused variable: `state`
+  --> src/utils/sprite/builtins/drawing.rs:81:13
+   |
+81 | pub fn rect(state: &State, args: &[Value]) -> Result {
+   |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `x`
+  --> src/utils/sprite/builtins/drawing.rs:98:23
+   |
+98 |         Value::Number(x),
+   |                       ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `y`
+  --> src/utils/sprite/builtins/drawing.rs:99:23
+   |
+99 |         Value::Number(y),
+   |                       ^ help: if this is intentional, prefix it with an underscore: `_y`
+
+warning: unused variable: `width`
+   --> src/utils/sprite/builtins/drawing.rs:100:23
+    |
+100 |         Value::Number(width),
+    |                       ^^^^^ help: if this is intentional, prefix it with an underscore: `_width`
+
+warning: unused variable: `height`
+   --> src/utils/sprite/builtins/drawing.rs:101:23
+    |
+101 |         Value::Number(height),
+    |                       ^^^^^^ help: if this is intentional, prefix it with an underscore: `_height`
+
+warning: unused variable: `thickness`
+   --> src/utils/sprite/builtins/drawing.rs:102:23
+    |
+102 |         Value::Number(thickness),
+    |                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_thickness`
+
+warning: unused variable: `state`
+  --> src/utils/sprite/builtins/drawing.rs:96:14
+   |
+96 | pub fn hrect(state: &State, args: &[Value]) -> Result {
+   |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `x`
+   --> src/utils/sprite/builtins/drawing.rs:113:27
+    |
+113 |     if let [Value::Number(x), Value::Number(y), Value::Number(radius)] = args {
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `y`
+   --> src/utils/sprite/builtins/drawing.rs:113:45
+    |
+113 |     if let [Value::Number(x), Value::Number(y), Value::Number(radius)] = args {
+    |                                             ^ help: if this is intentional, prefix it with an underscore: `_y`
+
+warning: unused variable: `radius`
+   --> src/utils/sprite/builtins/drawing.rs:113:63
+    |
+113 |     if let [Value::Number(x), Value::Number(y), Value::Number(radius)] = args {
+    |                                                               ^^^^^^ help: if this is intentional, prefix it with an underscore: `_radius`
+
+warning: unused variable: `state`
+   --> src/utils/sprite/builtins/drawing.rs:112:15
+    |
+112 | pub fn circle(state: &State, args: &[Value]) -> Result {
+    |               ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `x`
+   --> src/utils/sprite/builtins/drawing.rs:123:23
+    |
+123 |         Value::Number(x),
+    |                       ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `y`
+   --> src/utils/sprite/builtins/drawing.rs:124:23
+    |
+124 |         Value::Number(y),
+    |                       ^ help: if this is intentional, prefix it with an underscore: `_y`
+
+warning: unused variable: `radius`
+   --> src/utils/sprite/builtins/drawing.rs:125:23
+    |
+125 |         Value::Number(radius),
+    |                       ^^^^^^ help: if this is intentional, prefix it with an underscore: `_radius`
+
+warning: unused variable: `thickness`
+   --> src/utils/sprite/builtins/drawing.rs:126:23
+    |
+126 |         Value::Number(thickness),
+    |                       ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_thickness`
+
+warning: unused variable: `state`
+   --> src/utils/sprite/builtins/drawing.rs:121:16
+    |
+121 | pub fn hcircle(state: &State, args: &[Value]) -> Result {
+    |                ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `x`
+   --> src/utils/sprite/builtins/drawing.rs:139:27
+    |
+139 |             Value::Number(x),
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `y`
+   --> src/utils/sprite/builtins/drawing.rs:140:27
+    |
+140 |             Value::Number(y),
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_y`
+
+warning: unused variable: `rx`
+   --> src/utils/sprite/builtins/drawing.rs:141:27
+    |
+141 |             Value::Number(rx),
+    |                           ^^ help: if this is intentional, prefix it with an underscore: `_rx`
+
+warning: unused variable: `ry`
+   --> src/utils/sprite/builtins/drawing.rs:142:27
+    |
+142 |             Value::Number(ry),
+    |                           ^^ help: if this is intentional, prefix it with an underscore: `_ry`
+
+warning: unused variable: `x`
+   --> src/utils/sprite/builtins/drawing.rs:148:27
+    |
+148 |             Value::Number(x),
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `y`
+   --> src/utils/sprite/builtins/drawing.rs:149:27
+    |
+149 |             Value::Number(y),
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_y`
+
+warning: unused variable: `rx`
+   --> src/utils/sprite/builtins/drawing.rs:150:27
+    |
+150 |             Value::Number(rx),
+    |                           ^^ help: if this is intentional, prefix it with an underscore: `_rx`
+
+warning: unused variable: `ry`
+   --> src/utils/sprite/builtins/drawing.rs:151:27
+    |
+151 |             Value::Number(ry),
+    |                           ^^ help: if this is intentional, prefix it with an underscore: `_ry`
+
+warning: unused variable: `rotation`
+   --> src/utils/sprite/builtins/drawing.rs:152:27
+    |
+152 |             Value::Number(rotation),
+    |                           ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rotation`
+
+warning: unused variable: `state`
+   --> src/utils/sprite/builtins/drawing.rs:136:16
+    |
+136 | pub fn ellipse(state: &State, args: &[Value]) -> Result {
+    |                ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `x`
+   --> src/utils/sprite/builtins/drawing.rs:164:27
+    |
+164 |             Value::Number(x),
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `y`
+   --> src/utils/sprite/builtins/drawing.rs:165:27
+    |
+165 |             Value::Number(y),
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_y`
+
+warning: unused variable: `rx`
+   --> src/utils/sprite/builtins/drawing.rs:166:27
+    |
+166 |             Value::Number(rx),
+    |                           ^^ help: if this is intentional, prefix it with an underscore: `_rx`
+
+warning: unused variable: `ry`
+   --> src/utils/sprite/builtins/drawing.rs:167:27
+    |
+167 |             Value::Number(ry),
+    |                           ^^ help: if this is intentional, prefix it with an underscore: `_ry`
+
+warning: unused variable: `thickness`
+   --> src/utils/sprite/builtins/drawing.rs:168:27
+    |
+168 |             Value::Number(thickness),
+    |                           ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_thickness`
+
+warning: unused variable: `x`
+   --> src/utils/sprite/builtins/drawing.rs:174:27
+    |
+174 |             Value::Number(x),
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `y`
+   --> src/utils/sprite/builtins/drawing.rs:175:27
+    |
+175 |             Value::Number(y),
+    |                           ^ help: if this is intentional, prefix it with an underscore: `_y`
+
+warning: unused variable: `rx`
+   --> src/utils/sprite/builtins/drawing.rs:176:27
+    |
+176 |             Value::Number(rx),
+    |                           ^^ help: if this is intentional, prefix it with an underscore: `_rx`
+
+warning: unused variable: `ry`
+   --> src/utils/sprite/builtins/drawing.rs:177:27
+    |
+177 |             Value::Number(ry),
+    |                           ^^ help: if this is intentional, prefix it with an underscore: `_ry`
+
+warning: unused variable: `rotation`
+   --> src/utils/sprite/builtins/drawing.rs:178:27
+    |
+178 |             Value::Number(rotation),
+    |                           ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rotation`
+
+warning: unused variable: `thickness`
+   --> src/utils/sprite/builtins/drawing.rs:179:27
+    |
+179 |             Value::Number(thickness),
+    |                           ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_thickness`
+
+warning: unused variable: `state`
+   --> src/utils/sprite/builtins/drawing.rs:161:17
+    |
+161 | pub fn hellipse(state: &State, args: &[Value]) -> Result {
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `events`
+  --> src/main.rs:71:22
+   |
+71 |     let (mut window, events) = glfw
+   |                      ^^^^^^ help: if this is intentional, prefix it with an underscore: `_events`
+
+Some errors have detailed explanations: E0063, E0277, E0412, E0422, E0425, E0433, E0599.
+For more information about an error, try `rustc --explain E0063`.
+warning: `crust-engine` (bin "crust-engine") generated 55 warnings
+error: could not compile `crust-engine` (bin "crust-engine") due to 78 previous errors; 55 warnings emitted

@@ -102,5 +102,5 @@ async fn main() {
     let mut runtime = utils::Runtime::new(&project_file, args.additional_args, &window);
     println!("Loaded project: {}", project_file);
     let shader_program = ShaderProgram::new(VERT_SHADER, FRAG_SHADER);
-    runtime.run(&window, &shader_program).await;
+    runtime.run(&mut window, &shader_program, &mut glfw).await;
 }

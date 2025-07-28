@@ -1,47 +1,31 @@
 use glam::*;
-use glfw::Window;
+use glfw::{Key, MouseButton};
 
 use crate::utils::*;
 
 // Helper functions!
 
-pub fn resolve_expression(
-    expr: &Expression,
-    project: &mut Project,
-    sprite: &mut Sprite,
-    local_vars: &[(String, Value)],
-    snapshots: &[SpriteSnapshot],
-    window: &Window,
-    script_id: usize,
-) -> Value {
+pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
     match expr {
         Expression::Value(v) => v.clone(),
         Expression::List(l) => {
             let mut list = vec![];
             for element in l {
-                list.push(resolve_expression(
-                    element, project, sprite, local_vars, snapshots, window, script_id,
-                ));
+                list.push(resolve_expression(element, state));
             }
             Value::List(list)
         }
         Expression::Object(o) => {
             let mut object = std::collections::HashMap::new();
             for (key, value) in o {
-                let resolved_value = resolve_expression(
-                    value, project, sprite, local_vars, snapshots, window, script_id,
-                );
+                let resolved_value = resolve_expression(value, state);
                 object.insert(key.clone(), resolved_value);
             }
             Value::Object(object)
         }
         Expression::ListMemberAccess { list, index } => {
-            let index = resolve_expression(
-                index, project, sprite, local_vars, snapshots, window, script_id,
-            );
-            let list = resolve_expression(
-                list, project, sprite, local_vars, snapshots, window, script_id,
-            );
+            let index = resolve_expression(index, state);
+            let list = resolve_expression(list, state);
             if let Value::List(list) = list {
                 if let Value::Number(index) = index {
                     if index >= 0.0 && index < list.len() as f32 {
@@ -66,39 +50,54 @@ pub fn resolve_expression(
                 return Value::Null;
             }
         }
-        Expression::Identifier(id) => sprite.variable(id, project, local_vars).clone(),
+        Expression::Identifier(id) => state
+            .sprite
+            .variable(id, state.project, state.local_vars)
+            .clone(),
         Expression::PostIncrement(id) => {
-            let value = sprite.variable(id, project, local_vars).clone();
+            let value = state
+                .sprite
+                .variable(id, state.project, state.local_vars)
+                .clone();
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num + 1.0);
-                sprite.set_variable(id, new_value);
+                state.sprite.set_variable(id, new_value);
                 return value;
             }
             Value::Null
         }
         Expression::PreIncrement(id) => {
-            let value = sprite.variable(id, project, local_vars).clone();
+            let value = state
+                .sprite
+                .variable(id, state.project, state.local_vars)
+                .clone();
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num + 1.0);
-                sprite.set_variable(id, new_value.clone());
+                state.sprite.set_variable(id, new_value.clone());
                 return new_value;
             }
             Value::Null
         }
         Expression::PostDecrement(id) => {
-            let value = sprite.variable(id, project, local_vars).clone();
+            let value = state
+                .sprite
+                .variable(id, state.project, state.local_vars)
+                .clone();
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num - 1.0);
-                sprite.set_variable(id, new_value);
+                state.sprite.set_variable(id, new_value);
                 return value;
             }
             Value::Null
         }
         Expression::PreDecrement(id) => {
-            let value = sprite.variable(id, project, local_vars).clone();
+            let value = state
+                .sprite
+                .variable(id, state.project, state.local_vars)
+                .clone();
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num - 1.0);
-                sprite.set_variable(id, new_value.clone());
+                state.sprite.set_variable(id, new_value.clone());
                 return new_value;
             }
             Value::Null
@@ -108,12 +107,8 @@ pub fn resolve_expression(
             right,
             operator,
         } => {
-            let left_value = resolve_expression(
-                left, project, sprite, local_vars, snapshots, window, script_id,
-            );
-            let right_value = resolve_expression(
-                right, project, sprite, local_vars, snapshots, window, script_id,
-            );
+            let left_value = resolve_expression(left, state);
+            let right_value = resolve_expression(right, state);
             match operator.as_str() {
                 "+" => Value::Number(left_value.to_number() + right_value.to_number()),
                 "-" => Value::Number(left_value.to_number() - right_value.to_number()),
@@ -154,9 +149,7 @@ pub fn resolve_expression(
             }
         }
         Expression::Unary { operator, operand } => {
-            let operand_value = resolve_expression(
-                operand, project, sprite, local_vars, snapshots, window, script_id,
-            );
+            let operand_value = resolve_expression(operand, state);
             match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
                 "!" => Value::Boolean(!operand_value.to_boolean()),
@@ -166,31 +159,21 @@ pub fn resolve_expression(
         Expression::Call { function, args } => {
             let args = args
                 .iter()
-                .map(|arg| {
-                    resolve_expression(
-                        arg, project, sprite, local_vars, snapshots, window, script_id,
-                    )
-                })
+                .map(|arg| resolve_expression(arg, state))
                 .collect::<Vec<_>>();
-            if let Some(function_struct) = sprite.functions.clone().get(function) {
-                function_struct
-                    .call(
-                        sprite, project, snapshots, window, local_vars, script_id, &args,
-                    )
-                    .unwrap_or_else(|e| {
-                        println!("Error calling function {}(): {}", function, e);
-                        Value::Null
-                    })
-            } else if let Some(variable) = sprite.variables.get(function).cloned() {
+            if let Some(function_struct) = state.sprite.functions.clone().get(function) {
+                function_struct.call(state, &args).unwrap_or_else(|e| {
+                    println!("Error calling function {}(): {}", function, e);
+                    Value::Null
+                })
+            } else if let Some(variable) = state.sprite.variables.get(function).cloned() {
                 let Value::Closure(closure) = variable else {
                     println!("Variable '{}' is not a function", function);
                     return Value::Null;
                 };
                 let function_struct = &*closure;
                 Callable::Function(function_struct.clone())
-                    .call(
-                        sprite, project, snapshots, window, local_vars, script_id, &args,
-                    )
+                    .call(state, &args)
                     .unwrap_or_else(|e| {
                         println!("Error calling function '{}': {}", function, e);
                         Value::Null
@@ -256,16 +239,6 @@ pub fn lerp_vec2(a: Vec2, b: Vec2, t: f32) -> Vec2 {
     Vec2::new(lerp(a.x, b.x, t), lerp(a.y, b.y, t))
 }
 
-pub fn sample_texture(texture: &Image, uv: Vec2) -> Color {
-    let tex_width = texture.width() as usize;
-    let tex_height = texture.height() as usize;
-
-    let x = (uv.x * tex_width as f32).clamp(0.0, tex_width as f32 - 1.0) as u32;
-    let y = (uv.y * tex_height as f32).clamp(0.0, tex_height as f32 - 1.0) as u32;
-
-    texture.get_pixel(x, y)
-}
-
 pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
     let mut flat = vec![0; pixels.len() * 4];
     for (i, pixel) in pixels.iter().enumerate() {
@@ -301,7 +274,8 @@ pub fn string_to_mouse(s: &str) -> Option<MouseButton> {
     }
 }
 
-pub fn string_to_keycode(s: &str) -> Option<KeyCode> {
+pub fn string_to_keycode(s: &str) -> Option<Key> {
+    use Key::*;
     match s.to_lowercase().as_str() {
         "a" => Some(A),
         "b" => Some(B),
@@ -330,16 +304,16 @@ pub fn string_to_keycode(s: &str) -> Option<KeyCode> {
         "y" => Some(Y),
         "z" => Some(Z),
 
-        "0" => Some(Key0),
-        "1" => Some(Key1),
-        "2" => Some(Key2),
-        "3" => Some(Key3),
-        "4" => Some(Key4),
-        "5" => Some(Key5),
-        "6" => Some(Key6),
-        "7" => Some(Key7),
-        "8" => Some(Key8),
-        "9" => Some(Key9),
+        "0" => Some(Num0),
+        "1" => Some(Num1),
+        "2" => Some(Num2),
+        "3" => Some(Num3),
+        "4" => Some(Num4),
+        "5" => Some(Num5),
+        "6" => Some(Num6),
+        "7" => Some(Num7),
+        "8" => Some(Num8),
+        "9" => Some(Num9),
 
         "`" => Some(GraveAccent),
         "-" => Some(Minus),

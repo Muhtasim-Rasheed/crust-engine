@@ -45,3 +45,13 @@ impl Project {
             .find(|b| b.message == message)
     }
 }
+
+impl std::fmt::Debug for Project {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Project")
+            .field("args", &self.args)
+            .field("home_path", &self.home_path)
+            .field("export_path", &self.export_path)
+            .finish()
+    }
+}

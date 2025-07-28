@@ -1,5 +1,5 @@
 #[derive(Clone)]
-pub struct GPUTexture(u32, u32, u32);
+pub struct GPUTexture(pub(super) u32, pub(super) u32, pub(super) u32);
 
 impl GPUTexture {
     pub fn new(width: u32, height: u32, image: &[u8]) -> Self {

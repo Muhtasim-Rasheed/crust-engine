@@ -1,4 +1,5 @@
 use crate::utils::*;
+use glam::*;
 
 pub fn key_down(args: &[Value]) -> Result {
     if let [Value::String(key)] = args {
@@ -75,15 +76,21 @@ pub fn mouse_y() -> Result {
     ))
 }
 
-pub fn sprite_clicked(sprite: &Sprite) -> Result {
+pub fn sprite_clicked(state: &State) -> Result {
     if !is_mouse_button_pressed(MouseButton::Left) {
         return Ok(Value::Boolean(false));
     }
     let xy = mouse_position();
-    let top_left =
-        sprite.center - Vec2::new(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
-    let bottom_right =
-        sprite.center + Vec2::new(sprite.size.x * sprite.scale, sprite.size.y * sprite.scale);
+    let top_left = state.sprite.center
+        - Vec2::new(
+            state.sprite.size.x * state.sprite.scale,
+            state.sprite.size.y * state.sprite.scale,
+        );
+    let bottom_right = state.sprite.center
+        + Vec2::new(
+            state.sprite.size.x * state.sprite.scale,
+            state.sprite.size.y * state.sprite.scale,
+        );
     let rect = Rect::new(
         top_left.x,
         top_left.y,
@@ -97,9 +104,9 @@ pub fn sprite_clicked(sprite: &Sprite) -> Result {
     }
 }
 
-pub fn is_backdrop(project: &Project, args: &[Value]) -> Result {
+pub fn is_backdrop(state: &State, args: &[Value]) -> Result {
     if let [Value::Number(index)] = args {
-        let backdrop = project.stage.backdrop();
+        let backdrop = state.project.stage.backdrop();
         if backdrop == *index as usize {
             Ok(Value::Boolean(true))
         } else {
@@ -110,9 +117,9 @@ pub fn is_backdrop(project: &Project, args: &[Value]) -> Result {
     }
 }
 
-pub fn broadcast_id_of(project: &Project, args: &[Value]) -> Result {
+pub fn broadcast_id_of(state: &State, args: &[Value]) -> Result {
     if let [Value::String(message)] = args {
-        if let Some(broadcast) = project.get_broadcast(message) {
+        if let Some(broadcast) = state.project.get_broadcast(message) {
             Ok(Value::Number(broadcast.id as f32))
         } else {
             Err(format!("Broadcast message '{}' not found", message))
@@ -122,9 +129,9 @@ pub fn broadcast_id_of(project: &Project, args: &[Value]) -> Result {
     }
 }
 
-pub fn broadcast(project: &mut Project, args: &[Value]) -> Result {
+pub fn broadcast(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(message)] = args {
-        project.broadcast(message.clone());
+        state.project.broadcast(message.clone());
         Ok(Value::Null)
     } else {
         Err("broadcast() requires a single string argument".to_string())

@@ -1,11 +1,11 @@
 use crate::utils::*;
 use glam::*;
-use glfw::Window;
 use std::{fs::File, io::Write, path::Path};
 
-pub fn args(project: &Project) -> Result {
+pub fn args(state: &State) -> Result {
     Ok(Value::List(
-        project
+        state
+            .project
             .args
             .iter()
             .map(|s| Value::String(s.clone()))
@@ -13,11 +13,11 @@ pub fn args(project: &Project) -> Result {
     ))
 }
 
-pub fn print(sprite: &Sprite, args: &[Value], raw: bool) -> Result {
+pub fn print(state: &State, args: &[Value], raw: bool) -> Result {
     println!(
         "{}{}",
         if !raw {
-            format!("{} => ", sprite.name)
+            format!("{} => ", state.sprite.name)
         } else {
             "".to_string()
         },
@@ -29,11 +29,11 @@ pub fn print(sprite: &Sprite, args: &[Value], raw: bool) -> Result {
     Ok(Value::Null)
 }
 
-pub fn input(sprite: &Sprite, args: &[Value]) -> Result {
+pub fn input(state: &State, args: &[Value]) -> Result {
     if let Some(prompt) = args.get(0) {
         if let Value::String(prompt) = prompt {
             let mut input = String::new();
-            print!("{} => {} ", sprite.name, prompt);
+            print!("{} => {} ", state.sprite.name, prompt);
             std::io::stdout().flush().unwrap();
             std::io::stdin()
                 .read_line(&mut input)
@@ -79,7 +79,7 @@ pub fn lerp(args: &[Value]) -> Result {
     }
 }
 
-pub fn property_of(snapshots: &[SpriteSnapshot], args: &[Value]) -> Result {
+pub fn property_of(state: &mut State, args: &[Value]) -> Result {
     if args.len() != 2 {
         return Err("property_of() expects two arguments: sprite name and property".to_string());
     }
@@ -92,7 +92,7 @@ pub fn property_of(snapshots: &[SpriteSnapshot], args: &[Value]) -> Result {
         _ => return Err("Second argument must be a string (property name)".to_string()),
     };
 
-    if let Some(snapshot) = snapshots.iter().find(|s| s.name == name) {
+    if let Some(snapshot) = state.snapshots.iter().find(|s| s.name == name) {
         Ok(snapshot
             .get(&name)
             .ok_or(format!(
@@ -168,7 +168,7 @@ pub fn random(args: &[Value]) -> Result {
     }
 }
 
-pub fn distance(sprite: &Sprite, snapshots: &[SpriteSnapshot], args: &[Value], to: bool) -> Result {
+pub fn distance(state: &State, args: &[Value], to: bool) -> Result {
     match !to {
         true => {
             if let [
@@ -186,17 +186,17 @@ pub fn distance(sprite: &Sprite, snapshots: &[SpriteSnapshot], args: &[Value], t
         }
         false => match args {
             [Value::Number(x), Value::Number(y)] => {
-                let dist = sprite.center.distance(Vec2::new(*x, *y));
+                let dist = state.sprite.center.distance(Vec2::new(*x, *y));
                 Ok(Value::Number(dist))
             }
             [Value::String(name)] => {
-                if let Some(other_sprite) = snapshots.iter().find(|s| s.name == *name) {
-                    let dist = sprite.center.distance(other_sprite.center);
+                if let Some(other_sprite) = state.snapshots.iter().find(|s| s.name == *name) {
+                    let dist = state.sprite.center.distance(other_sprite.center);
                     Ok(Value::Number(dist))
                 } else if name == "mouse" {
                     let mouse_pos = Vec2::from(mouse_position()) * 2.0
                         - Vec2::new(screen_width(), screen_height());
-                    let dist = sprite.center.distance(mouse_pos);
+                    let dist = state.sprite.center.distance(mouse_pos);
                     Ok(Value::Number(dist))
                 } else {
                     Err(format!("Sprite '{}' not found", name))
@@ -207,12 +207,16 @@ pub fn distance(sprite: &Sprite, snapshots: &[SpriteSnapshot], args: &[Value], t
     }
 }
 
-pub fn write(sprite: &Sprite, project: &Project, args: &[Value]) -> Result {
+pub fn write(state: &State, args: &[Value]) -> Result {
     match args {
         [Value::String(content)] => {
             let time = chrono::Local::now();
-            let filename = format!("{}-{}.png", sprite.name, time.format("%Y-%m-%d_%H-%M-%S"));
-            let path = Path::new(&project.export_path).join(filename);
+            let filename = format!(
+                "{}-{}.png",
+                state.sprite.name,
+                time.format("%Y-%m-%d_%H-%M-%S")
+            );
+            let path = Path::new(&state.project.export_path).join(filename);
             let mut file = File::create(path).map_err(|e| e.to_string())?;
             file.write_all(content.as_bytes())
                 .map_err(|e| e.to_string())?;
@@ -231,7 +235,7 @@ pub fn write(sprite: &Sprite, project: &Project, args: &[Value]) -> Result {
     Ok(Value::Null)
 }
 
-pub fn read(project: &Project, args: &[Value], bin: bool) -> Result {
+pub fn read(state: &State, args: &[Value], bin: bool) -> Result {
     let which = if bin { "read_binary" } else { "read" };
 
     if args.len() != 1 {
@@ -243,7 +247,7 @@ pub fn read(project: &Project, args: &[Value], bin: bool) -> Result {
         _ => return Err(format!("{}() expects a string argument", which)),
     };
 
-    let full_path = Path::new(&project.home_path).join(file_name);
+    let full_path = Path::new(&state.project.home_path).join(file_name);
     if !full_path.exists() {
         return Err(format!(
             "File '{}' does not exist",
@@ -290,7 +294,7 @@ pub fn parse_image(args: &[Value]) -> Result {
     }
 }
 
-pub fn screenshot(project: &Project, args: &[Value]) -> Result {
+pub fn screenshot(state: &State, args: &[Value]) -> Result {
     if args.len() != 1 {
         return Err("screenshot() expects one string argument".to_string());
     }
@@ -300,7 +304,7 @@ pub fn screenshot(project: &Project, args: &[Value]) -> Result {
         _ => return Err("screenshot() expects a string argument".to_string()),
     };
 
-    let full_path = Path::new(&project.export_path).join(file_name);
+    let full_path = Path::new(&state.project.export_path).join(file_name);
     let screenshot = get_screen_data();
     screenshot.export_png(&full_path.to_string_lossy());
 
@@ -404,15 +408,7 @@ pub fn contains(args: &[Value]) -> Result {
     }
 }
 
-pub fn sort(
-    sprite: &mut Sprite,
-    project: &mut Project,
-    snapshots: &[SpriteSnapshot],
-    local_vars: &[(String, Value)],
-    window: &Window,
-    script_id: usize,
-    args: &[Value],
-) -> Result {
+pub fn sort(state: &mut State, args: &[Value]) -> Result {
     if let [Value::List(list), Value::Closure(closure)] = args {
         let mut new_list = list.clone();
         let function_struct = &**closure;
@@ -420,9 +416,7 @@ pub fn sort(
         new_list.sort_by(|a, b| {
             let args_ = [a.clone(), b.clone()];
             let result = Callable::Function(function_struct.clone())
-                .call(
-                    sprite, project, snapshots, local_vars, window, script_id, &args_,
-                )
+                .call(state, &args_)
                 .unwrap_or_else(|e| {
                     error = Some(format!("Error calling closure in sort(): {}", e,));
                     return Value::Null;
@@ -446,15 +440,7 @@ pub fn sort(
     }
 }
 
-pub fn filter(
-    sprite: &mut Sprite,
-    project: &mut Project,
-    snapshots: &[SpriteSnapshot],
-    local_vars: &[(String, Value)],
-    window: &Window,
-    script_id: usize,
-    args: &[Value],
-) -> Result {
+pub fn filter(state: &mut State, args: &[Value]) -> Result {
     if let [Value::List(list), Value::Closure(closure)] = args {
         let function_struct = &**closure;
         let mut error: Option<String> = None;
@@ -463,9 +449,7 @@ pub fn filter(
             .filter_map(|item| {
                 let args_ = [item.clone()];
                 let result = Callable::Function(function_struct.clone())
-                    .call(
-                        sprite, project, snapshots, local_vars, window, script_id, &args_,
-                    )
+                    .call(state, &args_)
                     .unwrap_or_else(|e| {
                         error = Some(format!("Error calling closure in filter(): {}", e));
                         Value::Null
@@ -486,15 +470,7 @@ pub fn filter(
     }
 }
 
-pub fn map(
-    sprite: &mut Sprite,
-    project: &mut Project,
-    snapshots: &[SpriteSnapshot],
-    local_vars: &[(String, Value)],
-    window: &Window,
-    script_id: usize,
-    args: &[Value],
-) -> Result {
+pub fn map(state: &mut State, args: &[Value]) -> Result {
     if let [Value::List(list), Value::Closure(closure)] = args {
         let function_struct = &**closure;
         let mut error: Option<String> = None;
@@ -503,9 +479,7 @@ pub fn map(
             .map(|item| {
                 let args_ = [item.clone()];
                 Callable::Function(function_struct.clone())
-                    .call(
-                        sprite, project, snapshots, local_vars, window, script_id, &args_,
-                    )
+                    .call(state, &args_)
                     .unwrap_or_else(|e| {
                         error = Some(format!("Error calling closure in map(): {}", e));
                         Value::Null
@@ -634,12 +608,12 @@ pub fn to(args: &[Value], to: &str) -> Result {
     }
 }
 
-pub fn whoami(sprite: &Sprite) -> Result {
-    Ok(Value::String(sprite.name.clone()))
+pub fn whoami(state: &State) -> Result {
+    Ok(Value::String(state.sprite.name.clone()))
 }
 
-pub fn cloneid(sprite: &Sprite) -> Result {
-    Ok(Value::Number(sprite.clone_id.unwrap_or(0) as f32))
+pub fn cloneid(state: &State) -> Result {
+    Ok(Value::Number(state.sprite.clone_id.unwrap_or(0) as f32))
 }
 
 pub fn frame() -> Result {

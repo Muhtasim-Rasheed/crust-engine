@@ -1,51 +1,51 @@
 use crate::utils::{sprite::Glide, *};
 use glam::*;
 
-pub fn r#move(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn r#move(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(step)] = args {
-        sprite.move_by(*step);
+        state.sprite.move_by(*step, state.window);
         Ok(Value::Null)
     } else {
         Err("move() requires a single numeric argument".to_string())
     }
 }
 
-pub fn turn_cw(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn turn_cw(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(angle)] = args {
-        sprite.direction += *angle;
+        state.sprite.direction += *angle;
         Ok(Value::Null)
     } else {
         Err("turn_cw() requires a single numeric argument".to_string())
     }
 }
 
-pub fn turn_ccw(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn turn_ccw(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(angle)] = args {
-        sprite.direction -= *angle;
+        state.sprite.direction -= *angle;
         Ok(Value::Null)
     } else {
         Err("turn_ccw() requires a single numeric argument".to_string())
     }
 }
 
-pub fn goto(sprite: &mut Sprite, snapshots: &[SpriteSnapshot], args: &[Value]) -> Result {
+pub fn goto(state: &mut State, args: &[Value]) -> Result {
     match args {
         [Value::Number(x), Value::Number(y)] => {
-            sprite.goto(*x, *y);
+            state.sprite.goto(*x, *y);
             Ok(Value::Null)
         }
         [Value::String(name)] => {
             if name == "mouse" {
-                sprite.goto_cursor();
+                state.sprite.goto_cursor(state.window);
                 Ok(Value::Null)
             } else if name == "random" {
-                sprite.goto(
+                state.sprite.goto(
                     rand::random_range(-1024.0..=1024.0),
                     rand::random_range(-576.0..=576.0),
                 );
                 Ok(Value::Null)
-            } else if let Some(target) = snapshots.iter().find(|s| s.name == *name) {
-                sprite.goto(target.center.x, target.center.y);
+            } else if let Some(target) = state.snapshots.iter().find(|s| s.name == *name) {
+                state.sprite.goto(target.center.x, target.center.y);
                 Ok(Value::Null)
             } else {
                 Err(format!("goto() target '{}' not found", name))
@@ -55,13 +55,13 @@ pub fn goto(sprite: &mut Sprite, snapshots: &[SpriteSnapshot], args: &[Value]) -
     }
 }
 
-pub fn glide(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn glide(state: &mut State, args: &[Value]) -> Result {
     match args {
         [Value::Number(x), Value::Number(y), Value::Number(duration)] => {
             let duration = *duration * 60.0;
-            sprite.glide = Some(Glide {
-                start_x: sprite.center.x,
-                start_y: sprite.center.y,
+            state.sprite.glide = Some(Glide {
+                start_x: state.sprite.center.x,
+                start_y: state.sprite.center.y,
                 end_x: *x,
                 end_y: *y,
                 duration: duration as usize,
@@ -87,9 +87,9 @@ pub fn glide(sprite: &mut Sprite, args: &[Value]) -> Result {
                 "ease-in-out" => (vec2(0.42, 0.0), vec2(0.58, 1.0)),
                 _ => (vec2(0.0, 0.0), vec2(1.0, 1.0)), // Default to linear
             };
-            sprite.glide = Some(Glide {
-                start_x: sprite.center.x,
-                start_y: sprite.center.y,
+            state.sprite.glide = Some(Glide {
+                start_x: state.sprite.center.x,
+                start_y: state.sprite.center.y,
                 end_x: *x,
                 end_y: *y,
                 duration: duration as usize,
@@ -106,25 +106,25 @@ pub fn glide(sprite: &mut Sprite, args: &[Value]) -> Result {
     }
 }
 
-pub fn point(sprite: &mut Sprite, snapshots: &[SpriteSnapshot], args: &[Value]) -> Result {
+pub fn point(state: &mut State, args: &[Value]) -> Result {
     match args {
         [Value::Number(angle)] => {
-            sprite.direction = *angle;
+            state.sprite.direction = *angle;
             Ok(Value::Null)
         }
         [Value::Number(x), Value::Number(y)] => {
-            sprite.point(*x, *y);
+            state.sprite.point(*x, *y);
             Ok(Value::Null)
         }
         [Value::String(name)] => {
             if name == "cursor" {
-                sprite.point_cursor();
+                state.sprite.point_cursor(state.window);
                 Ok(Value::Null)
             } else if name == "random" {
-                sprite.direction = rand::random_range(0.0..=360.0);
+                state.sprite.direction = rand::random_range(0.0..=360.0);
                 Ok(Value::Null)
-            } else if let Some(target) = snapshots.iter().find(|s| s.name == *name) {
-                sprite.point(target.center.x, target.center.y);
+            } else if let Some(target) = state.snapshots.iter().find(|s| s.name == *name) {
+                state.sprite.point(target.center.x, target.center.y);
                 Ok(Value::Null)
             } else {
                 Err(format!("point() target '{}' not found", name))
@@ -134,15 +134,15 @@ pub fn point(sprite: &mut Sprite, snapshots: &[SpriteSnapshot], args: &[Value]) 
     }
 }
 
-pub fn set_pos(sprite: &mut Sprite, args: &[Value], which: &str) -> Result {
+pub fn set_pos(state: &mut State, args: &[Value], which: &str) -> Result {
     if let [Value::Number(value)] = args {
         match which {
             "x" => {
-                sprite.center.x = *value;
+                state.sprite.center.x = *value;
                 Ok(Value::Null)
             }
             "y" => {
-                sprite.center.y = *value;
+                state.sprite.center.y = *value;
                 Ok(Value::Null)
             }
             _ => unreachable!(),
@@ -152,15 +152,15 @@ pub fn set_pos(sprite: &mut Sprite, args: &[Value], which: &str) -> Result {
     }
 }
 
-pub fn change_pos(sprite: &mut Sprite, args: &[Value], which: &str) -> Result {
+pub fn change_pos(state: &mut State, args: &[Value], which: &str) -> Result {
     if let [Value::Number(value)] = args {
         match which {
             "x" => {
-                sprite.center.x += *value;
+                state.sprite.center.x += *value;
                 Ok(Value::Null)
             }
             "y" => {
-                sprite.center.y += *value;
+                state.sprite.center.y += *value;
                 Ok(Value::Null)
             }
             _ => unreachable!(),
@@ -170,26 +170,26 @@ pub fn change_pos(sprite: &mut Sprite, args: &[Value], which: &str) -> Result {
     }
 }
 
-pub fn edge_bounce(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn edge_bounce(state: &mut State, args: &[Value]) -> Result {
     match args {
         [Value::Boolean(enabled)] => {
-            sprite.edge_bounce = *enabled;
+            state.sprite.edge_bounce = *enabled;
             Ok(Value::Null)
         }
         [] => {
-            sprite.edge_bounce = !sprite.edge_bounce;
+            state.sprite.edge_bounce = !state.sprite.edge_bounce;
             Ok(Value::Null)
         }
         _ => Err("edge_bounce() requires a single boolean argument or no arguments".to_string()),
     }
 }
 
-pub fn rotation_style(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn rotation_style(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(style)] = args {
         match style.to_lowercase().as_str() {
-            "all-around" => sprite.rotation_style = RotationStyle::AllAround,
-            "left-right" => sprite.rotation_style = RotationStyle::LeftRight,
-            "dont-rotate" => sprite.rotation_style = RotationStyle::DontRotate,
+            "all-around" => state.sprite.rotation_style = RotationStyle::AllAround,
+            "left-right" => state.sprite.rotation_style = RotationStyle::LeftRight,
+            "dont-rotate" => state.sprite.rotation_style = RotationStyle::DontRotate,
             _ => return Err(format!("Invalid rotation style: '{}'", style)),
         }
         Ok(Value::Null)
@@ -198,14 +198,14 @@ pub fn rotation_style(sprite: &mut Sprite, args: &[Value]) -> Result {
     }
 }
 
-pub fn direction(sprite: &Sprite) -> Result {
-    Ok(Value::Number(sprite.direction))
+pub fn direction(state: &State) -> Result {
+    Ok(Value::Number(state.sprite.direction))
 }
 
-pub fn position(sprite: &Sprite, which: &str) -> Result {
+pub fn position(state: &State, which: &str) -> Result {
     match which {
-        "x" => Ok(Value::Number(sprite.center.x)),
-        "y" => Ok(Value::Number(sprite.center.y)),
+        "x" => Ok(Value::Number(state.sprite.center.x)),
+        "y" => Ok(Value::Number(state.sprite.center.y)),
         _ => Err(format!("Invalid position argument: '{}'", which)),
     }
 }

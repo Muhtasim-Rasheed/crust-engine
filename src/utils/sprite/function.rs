@@ -1,5 +1,3 @@
-use glfw::Window;
-
 use crate::utils::*;
 
 pub type Result = std::result::Result<Value, String>;
@@ -12,16 +10,7 @@ pub struct Function {
 }
 
 impl Function {
-    fn call(
-        &self,
-        sprite: &mut Sprite,
-        project: &mut Project,
-        snapshots: &[SpriteSnapshot],
-        window: &Window,
-        local_vars: &[(String, Value)],
-        script_id: usize,
-        args: &[Value],
-    ) -> Result {
+    fn call(&self, state: &mut State, args: &[Value]) -> Result {
         if args.len() != self.args.len() {
             return Err(format!(
                 "Called with incorrect number of arguments: expected {}, got {}",
@@ -30,44 +19,33 @@ impl Function {
             ));
         }
 
-        let mut new_local_vars = local_vars.to_vec();
+        let mut new_local_vars = state.local_vars.to_vec();
         for (i, arg) in self.args.iter().enumerate() {
             new_local_vars.push((arg.clone(), args[i].clone()));
         }
+        let mut new_state = State {
+            sprite: state.sprite,
+            project: state.project,
+            snapshots: state.snapshots,
+            window: state.window,
+            local_vars: new_local_vars.as_slice(),
+            script_id: state.script_id,
+        };
 
         for statement in &self.body {
-            sprite.execute_statement(
-                statement,
-                project,
-                snapshots,
-                window,
-                &new_local_vars,
-                script_id,
-            );
+            Sprite::execute_statement(statement, &mut new_state);
         }
 
         Ok(crate::utils::resolve_expression(
             &self.returns,
-            project,
-            sprite,
-            &new_local_vars,
-            snapshots,
-            script_id,
+            &mut new_state,
         ))
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BuiltinFunction {
-    pub inner: fn(
-        &mut Sprite,
-        &mut Project,
-        &[SpriteSnapshot],
-        &Window,
-        &[(String, Value)],
-        usize,
-        &[Value],
-    ) -> Result,
+    pub inner: fn(&mut State, &[Value]) -> Result,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -77,23 +55,10 @@ pub enum Callable {
 }
 
 impl Callable {
-    pub fn call(
-        &self,
-        sprite: &mut Sprite,
-        project: &mut Project,
-        snapshots: &[SpriteSnapshot],
-        window: &Window,
-        local_vars: &[(String, Value)],
-        script_id: usize,
-        args: &[Value],
-    ) -> Result {
+    pub fn call(&self, state: &mut State, args: &[Value]) -> Result {
         match self {
-            Callable::Function(func) => func.call(
-                sprite, project, snapshots, window, local_vars, script_id, args,
-            ),
-            Callable::Builtin(builtin) => (builtin.inner)(
-                sprite, project, snapshots, window, local_vars, script_id, args,
-            ),
+            Callable::Function(func) => func.call(state, args),
+            Callable::Builtin(builtin) => (builtin.inner)(state, args),
         }
     }
 }

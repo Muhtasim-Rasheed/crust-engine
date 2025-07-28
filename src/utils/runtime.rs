@@ -115,19 +115,21 @@ impl Runtime {
             let mut textures = vec![];
             for path in sprite.costumes {
                 let path = dir.join(path);
-                let tex = CPUTexture::load_from_file(&path.to_string_lossy()).or_else(|_| {
-                    CPUTexture::load_from_bytes(
-                        include_bytes!("../../assets/missing.png"),
-                        100,
-                        100,
-                    )
-                }).unwrap_or_else(|e| {
-                    panic!(
-                        "Failed to load sprite texture: {}. Error: {}",
-                        path.to_string_lossy(),
-                        e
-                    );
-                });
+                let tex = CPUTexture::load_from_file(&path.to_string_lossy())
+                    .or_else(|_| {
+                        CPUTexture::load_from_bytes(
+                            include_bytes!("../../assets/missing.png"),
+                            100,
+                            100,
+                        )
+                    })
+                    .unwrap_or_else(|e| {
+                        panic!(
+                            "Failed to load sprite texture: {}. Error: {}",
+                            path.to_string_lossy(),
+                            e
+                        );
+                    });
                 textures.push(tex.upload_to_gpu());
             }
 
@@ -195,7 +197,7 @@ impl Runtime {
         }
     }
 
-    pub async fn run(&mut self, window: &Window, shader_program: &ShaderProgram) {
+    pub async fn run(&mut self, window: &mut Window, shader_program: &ShaderProgram, glfw: &mut glfw::Glfw) {
         let projection = Mat4::orthographic_rh_gl(
             -window.get_size().0 as f32,
             window.get_size().0 as f32,
@@ -205,12 +207,12 @@ impl Runtime {
             1.0,
         );
         loop {
-            rand::srand(
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis() as u64,
-            );
+            // rand::srand(
+            //     std::time::SystemTime::now()
+            //         .duration_since(std::time::UNIX_EPOCH)
+            //         .unwrap()
+            //         .as_millis() as u64,
+            // );
 
             self.project.stage.draw(window, shader_program, &projection);
 
@@ -253,7 +255,7 @@ impl Runtime {
             }
 
             for sprite in &mut sprites {
-                sprite.step(&mut self.project, &snapshots, &camera);
+                sprite.step(&mut self.project, &snapshots, window, glfw);
             }
 
             sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
@@ -263,8 +265,6 @@ impl Runtime {
             }
 
             self.project.sprites = sprites;
-
-            set_default_camera();
 
             let mut debugs = HashMap::new();
             debugs.insert("show_fps", get_fps().to_string());
