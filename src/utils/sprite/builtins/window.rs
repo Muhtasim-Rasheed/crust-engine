@@ -46,14 +46,16 @@ pub fn set_window_state(state: &mut State, args: &[Value]) -> Result {
                 height as u32,
                 None,
             ),
-            "fullscreen" => state.glfw.with_primary_monitor(|_, m| state.window.set_monitor(
-                m.map_or(WindowMode::Windowed, |m| WindowMode::FullScreen(m)),
-                xpos as i32,
-                ypos as i32,
-                width as u32,
-                height as u32,
-                None,
-            )),
+            "fullscreen" => state.glfw.with_primary_monitor(|_, m| {
+                state.window.set_monitor(
+                    m.map_or(WindowMode::Windowed, |m| WindowMode::FullScreen(m)),
+                    xpos as i32,
+                    ypos as i32,
+                    width as u32,
+                    height as u32,
+                    None,
+                )
+            }),
             _ => return Err(format!("Invalid window state: '{}'", mode)),
         }
         Ok(Value::Null)
@@ -64,10 +66,7 @@ pub fn set_window_state(state: &mut State, args: &[Value]) -> Result {
 
 pub fn set_window_x(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(x)] = args {
-        state.window.set_pos(
-            *x as i32,
-            state.window.get_pos().1,
-        );
+        state.window.set_pos(*x as i32, state.window.get_pos().1);
         Ok(Value::Null)
     } else {
         Err("set_window_x() requires a single numeric argument".to_string())
@@ -76,10 +75,7 @@ pub fn set_window_x(state: &mut State, args: &[Value]) -> Result {
 
 pub fn set_window_y(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(y)] = args {
-        state.window.set_pos(
-            state.window.get_pos().0,
-            *y as i32,
-        );
+        state.window.set_pos(state.window.get_pos().0, *y as i32);
         Ok(Value::Null)
     } else {
         Err("set_window_y() requires a single numeric argument".to_string())

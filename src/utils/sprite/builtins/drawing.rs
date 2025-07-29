@@ -325,7 +325,7 @@ pub fn textured_quad(args: &[Value]) -> Result {
 
 pub fn stamp(state: &mut State) -> Result {
     state.project.stage.stamp_buffer.bind();
-    draw_sprite(state.sprite);
+    draw_sprite(state.sprite, state.shader_program);
     Framebuffer::unbind();
     Ok(Value::Null)
 }

@@ -48,8 +48,8 @@ pub fn input(state: &State, args: &[Value]) -> Result {
     }
 }
 
-pub fn time() -> Result {
-    Ok(Value::Number(get_time() as f32))
+pub fn time(state: &State) -> Result {
+    Ok(Value::Number(state.start.elapsed().as_secs_f32()))
 }
 
 pub fn math(args: &[Value], operation: &str) -> Result {
@@ -194,8 +194,14 @@ pub fn distance(state: &State, args: &[Value], to: bool) -> Result {
                     let dist = state.sprite.center.distance(other_sprite.center);
                     Ok(Value::Number(dist))
                 } else if name == "mouse" {
-                    let mouse_pos = Vec2::from(mouse_position()) * 2.0
-                        - Vec2::new(screen_width(), screen_height());
+                    let mouse_pos = Vec2::new(
+                        state.window.get_cursor_pos().0 as f32,
+                        state.window.get_cursor_pos().1 as f32,
+                    ) * 2.0
+                        - Vec2::new(
+                            state.window.get_size().0 as f32,
+                            state.window.get_size().1 as f32,
+                        );
                     let dist = state.sprite.center.distance(mouse_pos);
                     Ok(Value::Number(dist))
                 } else {
@@ -295,20 +301,22 @@ pub fn parse_image(args: &[Value]) -> Result {
 }
 
 pub fn screenshot(state: &State, args: &[Value]) -> Result {
-    if args.len() != 1 {
-        return Err("screenshot() expects one string argument".to_string());
-    }
+    // if args.len() != 1 {
+    //     return Err("screenshot() expects one string argument".to_string());
+    // }
 
-    let file_name = match &args[0] {
-        Value::String(name) => name.clone(),
-        _ => return Err("screenshot() expects a string argument".to_string()),
-    };
+    // let file_name = match &args[0] {
+    //     Value::String(name) => name.clone(),
+    //     _ => return Err("screenshot() expects a string argument".to_string()),
+    // };
 
-    let full_path = Path::new(&state.project.export_path).join(file_name);
-    let screenshot = get_screen_data();
-    screenshot.export_png(&full_path.to_string_lossy());
+    // let full_path = Path::new(&state.project.export_path).join(file_name);
+    // let screenshot = get_screen_data();
+    // screenshot.export_png(&full_path.to_string_lossy());
 
-    Ok(Value::Null)
+    // Ok(Value::Null)
+
+    Err("TODO: screenshot() is not implemented yet".to_string())
 }
 
 pub fn r#typeof(args: &[Value]) -> Result {
@@ -616,10 +624,11 @@ pub fn cloneid(state: &State) -> Result {
     Ok(Value::Number(state.sprite.clone_id.unwrap_or(0) as f32))
 }
 
-pub fn frame() -> Result {
-    Ok(Value::Number(get_time() as f32 * 60.0))
+pub fn frame(state: &State) -> Result {
+    Ok(Value::Number(state.start.elapsed().as_secs_f32() * 60.0))
 }
 
 pub fn delta_time() -> Result {
-    Ok(Value::Number(get_frame_time() as f32))
+    // Ok(Value::Number(get_frame_time() as f32))
+    Err("TODO: delta_time() is not implemented yet".to_string())
 }

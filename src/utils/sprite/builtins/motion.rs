@@ -40,8 +40,8 @@ pub fn goto(state: &mut State, args: &[Value]) -> Result {
                 Ok(Value::Null)
             } else if name == "random" {
                 state.sprite.goto(
-                    rand::random_range(-1024.0..=1024.0),
-                    rand::random_range(-576.0..=576.0),
+                    rand::random_range(-(state.window.get_size().0 as f32)..=(state.window.get_size().0 as f32)),
+                    rand::random_range(-(state.window.get_size().1 as f32)..=(state.window.get_size().1 as f32)),
                 );
                 Ok(Value::Null)
             } else if let Some(target) = state.snapshots.iter().find(|s| s.name == *name) {

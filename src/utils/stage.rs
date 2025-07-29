@@ -83,19 +83,19 @@ impl Stage {
         let y = -size.y / 2.0;
         let backdrop_quad = [
             Vertex {
-                position: vec2(x, y + size.y),
+                position: vec2(x, y),
                 uv: vec2(0.0, 1.0),
             }, // Top-left
             Vertex {
-                position: vec2(x + size.x, y + size.y),
+                position: vec2(x + size.x, y),
                 uv: vec2(1.0, 1.0),
             }, // Top-right
             Vertex {
-                position: vec2(x + size.x, y),
+                position: vec2(x + size.x, y + size.y),
                 uv: vec2(1.0, 0.0),
             }, // Bottom-right
             Vertex {
-                position: vec2(x, y),
+                position: vec2(x, y + size.y),
                 uv: vec2(0.0, 0.0),
             }, // Bottom-left
         ];
@@ -129,10 +129,12 @@ impl Stage {
         shader_program.use_program();
         shader_program.set_uniform_vec4("u_color", &vec4(1.0, 1.0, 1.0, 1.0));
         shader_program.set_uniform_mat4("u_projection", projection);
+        shader_program.set_uniform_mat4("u_model", &Mat4::IDENTITY);
         texture.bind();
         backdrop_mesh.draw();
         shader_program.set_uniform_vec4("u_color", &vec4(1.0, 1.0, 1.0, 1.0));
         shader_program.set_uniform_mat4("u_projection", projection);
+        shader_program.set_uniform_mat4("u_model", &Mat4::IDENTITY);
         self.stamp_buffer.texture().bind();
         stamp_mesh.draw();
     }

@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use glfw::Context;
+
 const VERT_SHADER: &str = include_str!("../assets/shaders/vertex.glsl");
 const FRAG_SHADER: &str = include_str!("../assets/shaders/fragment.glsl");
 
@@ -75,6 +77,16 @@ async fn main() {
     window.set_key_polling(true);
     window.set_mouse_button_polling(true);
     window.set_cursor_pos_polling(true);
+    window.make_current();
+    gl::load_with(|symbol| window.get_proc_address(symbol) as *const std::os::raw::c_void);
+    glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
+    unsafe {
+        gl::Enable(gl::CULL_FACE);
+        gl::CullFace(gl::BACK);
+        gl::FrontFace(gl::CCW);
+        gl::Enable(gl::BLEND);
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+    }
 
     {
         let icon = image::load_from_memory(include_bytes!("../assets/logo_background.png"))
@@ -102,5 +114,7 @@ async fn main() {
     let mut runtime = utils::Runtime::new(&project_file, args.additional_args, &window);
     println!("Loaded project: {}", project_file);
     let shader_program = ShaderProgram::new(VERT_SHADER, FRAG_SHADER);
-    runtime.run(&mut window, &shader_program, &mut glfw).await;
+    runtime
+        .run(&mut window, &events, &shader_program, &mut glfw)
+        .await;
 }

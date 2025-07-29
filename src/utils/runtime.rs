@@ -1,7 +1,7 @@
 use glam::*;
-use glfw::Window;
+use glfw::{Context, Window};
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::utils::core::{CPUTexture, ShaderProgram};
 use crate::utils::draw_sprite;
@@ -197,7 +197,13 @@ impl Runtime {
         }
     }
 
-    pub async fn run(&mut self, window: &mut Window, shader_program: &ShaderProgram, glfw: &mut glfw::Glfw) {
+    pub async fn run(
+        &mut self,
+        window: &mut Window,
+        events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,
+        shader_program: &ShaderProgram,
+        glfw: &mut glfw::Glfw,
+    ) {
         let projection = Mat4::orthographic_rh_gl(
             -window.get_size().0 as f32,
             window.get_size().0 as f32,
@@ -206,13 +212,32 @@ impl Runtime {
             -1.0,
             1.0,
         );
-        loop {
+        let start = std::time::Instant::now();
+        let mut keys_down = HashSet::<glfw::Key>::new();
+        while !window.should_close() {
             // rand::srand(
             //     std::time::SystemTime::now()
             //         .duration_since(std::time::UNIX_EPOCH)
             //         .unwrap()
             //         .as_millis() as u64,
             // );
+            glfw.poll_events();
+
+            for (_, event) in glfw::flush_messages(events) {
+                match event {
+                    glfw::WindowEvent::Key(key, _, action, _) => {
+                        if action == glfw::Action::Press {
+                            keys_down.insert(key);
+                        } else if action == glfw::Action::Release {
+                            keys_down.remove(&key);
+                        }
+                    }
+                    glfw::WindowEvent::Close => {
+                        window.set_should_close(true);
+                    }
+                    _ => {}
+                }
+            }
 
             self.project.stage.draw(window, shader_program, &projection);
 
@@ -255,38 +280,26 @@ impl Runtime {
             }
 
             for sprite in &mut sprites {
-                sprite.step(&mut self.project, &snapshots, window, glfw);
+                sprite.step(
+                    start,
+                    &mut self.project,
+                    &snapshots,
+                    window,
+                    &keys_down,
+                    glfw,
+                    shader_program,
+                );
             }
 
             sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
 
             for sprite in &mut sprites {
-                draw_sprite(sprite);
+                draw_sprite(sprite, shader_program);
             }
 
             self.project.sprites = sprites;
 
-            let mut debugs = HashMap::new();
-            debugs.insert("show_fps", get_fps().to_string());
-            debugs.insert(
-                "show_mouse_pos",
-                format!(
-                    "({}, {})",
-                    mouse_position().0 * 2.0 - screen_width(),
-                    mouse_position().1 * 2.0 - screen_height()
-                ),
-            );
-            let debug_options: Vec<String> = self
-                .debug_options
-                .iter()
-                .filter(|option| debugs.contains_key(option.as_str()))
-                .map(|option| format!("{}: {}", option, debugs[option.as_str()]))
-                .collect();
-            for (i, debug) in debug_options.iter().enumerate() {
-                draw_text(debug, 10.0, 30.0 + (i as f32 * 30.0), 24.0, BLACK);
-            }
-
-            next_frame().await;
+            window.swap_buffers();
         }
     }
 }

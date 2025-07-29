@@ -19,7 +19,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "print", |st, ar| misc::print(st, ar, false));
     builtin!(builtins, "print_raw", |st, ar| misc::print(st, ar, true));
     builtin!(builtins, "input", |st, ar| misc::input(st, ar));
-    builtin!(builtins, "time", |_, _| misc::time());
+    builtin!(builtins, "time", |st, _| misc::time(st));
     builtin!(builtins, "abs", |_, ar| misc::math(ar, "abs"));
     builtin!(builtins, "sqrt", |_, ar| misc::math(ar, "sqrt"));
     builtin!(builtins, "sin", |_, ar| misc::math(ar, "sin"));
@@ -67,7 +67,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "to_object", |_, ar| misc::to(ar, "object"));
     builtin!(builtins, "whoami", |st, _| misc::whoami(st));
     builtin!(builtins, "cloneid", |st, _| misc::cloneid(st));
-    builtin!(builtins, "frame", |_, _| misc::frame());
+    builtin!(builtins, "frame", |st, _| misc::frame(st));
     builtin!(builtins, "delta_time", |_, _| misc::delta_time());
 
     // MOTION
@@ -123,14 +123,14 @@ pub fn builtins() -> HashMap<String, Callable> {
     // builtin!(builtins, "sound_effect", |st, ar| sounds::sound_effect(st, ar));
 
     // EVENTS
-    builtin!(builtins, "key_down", |_, ar| events::key_down(ar));
-    builtin!(builtins, "key_pressed", |_, ar| events::key_pressed(ar));
-    builtin!(builtins, "key_released", |_, ar| events::key_released(ar));
+    builtin!(builtins, "key_down", |st, ar| events::key_down(st, ar));
+    builtin!(builtins, "key_pressed", |st, ar| events::key_pressed(st, ar));
+    builtin!(builtins, "key_released", |st, ar| events::key_released(st, ar));
     builtin!(builtins, "mouse_button_down", |_, ar| events::mouse_button_down(ar));
     builtin!(builtins, "mouse_button_pressed", |_, ar| events::mouse_button_pressed(ar));
     builtin!(builtins, "mouse_button_released", |_, ar| events::mouse_button_released(ar));
-    builtin!(builtins, "mouse_x", |_, _| events::mouse_x());
-    builtin!(builtins, "mouse_y", |_, _| events::mouse_y());
+    builtin!(builtins, "mouse_x", |st, _| events::mouse_x(st));
+    builtin!(builtins, "mouse_y", |st, _| events::mouse_y(st));
     builtin!(builtins, "sprite_clicked", |st, _| events::sprite_clicked(st));
     builtin!(builtins, "is_backdrop", |st, ar| events::is_backdrop(st, ar));
     builtin!(builtins, "broadcast_id_of", |st, ar| events::broadcast_id_of(st, ar));
@@ -159,7 +159,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "polygon", |st, ar| drawing::polygon(st, ar));
     builtin!(builtins, "hpolygon", |st, ar| drawing::hpolygon(st, ar));
     builtin!(builtins, "textured_quad", |_, ar| drawing::textured_quad(ar));
-    // builtin!(builtins, "stamp", |sp, pr, _, ca, _, _, _| drawing::stamp(sp, pr, ca));
+    builtin!(builtins, "stamp", |st, _| drawing::stamp(st));
     builtin!(builtins, "clear_all_stamps", |st, _| drawing::clear_all_stamps(st));
     builtin!(builtins, "r", |st, _| drawing::r(st));
     builtin!(builtins, "g", |st, _| drawing::g(st));

@@ -11,22 +11,25 @@
 // Happy coding!
 
 use glam::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::f32::consts::*;
 use std::path::PathBuf;
 
 use indexmap::IndexMap;
 
-use crate::utils::core::{CPUTexture, GPUTexture};
+use crate::utils::core::{CPUTexture, GPUTexture, ShaderProgram};
 use crate::utils::*;
 
 #[derive(Debug)]
 pub struct State<'a> {
+    pub start: std::time::Instant,
     pub sprite: &'a mut Sprite,
     pub project: &'a mut Project,
     pub snapshots: &'a [SpriteSnapshot],
     pub window: &'a mut glfw::Window,
+    pub keys_down: &'a HashSet<glfw::Key>,
     pub glfw: &'a mut glfw::Glfw,
+    pub shader_program: &'a ShaderProgram,
     pub local_vars: &'a [(String, Value)],
     pub script_id: usize,
 }
@@ -433,8 +436,8 @@ impl Sprite {
     }
 
     pub fn move_by(&mut self, step: f32, window: &glfw::Window) {
-        self.center.x += step * self.direction.to_radians().cos();
-        self.center.y += step * self.direction.to_radians().sin();
+        self.center.x += -step * self.direction.to_radians().cos();
+        self.center.y += -step * self.direction.to_radians().sin();
         self.handle_edge_bounce(window);
     }
 
@@ -669,11 +672,14 @@ impl Sprite {
                     let mut new_local_vars = state.local_vars.to_vec();
                     new_local_vars.push((identifier.clone(), value));
                     let mut new_state = State {
+                        start: state.start,
                         sprite: state.sprite,
                         project: state.project,
                         snapshots: state.snapshots,
-                        glfw: state.glfw,
                         window: state.window,
+                        keys_down: state.keys_down,
+                        glfw: state.glfw,
+                        shader_program: state.shader_program,
                         local_vars: &new_local_vars,
                         script_id: state.script_id,
                     };
@@ -835,10 +841,13 @@ impl Sprite {
 
     pub fn step(
         &mut self,
+        start: std::time::Instant,
         project: &mut Project,
         snapshots: &[SpriteSnapshot],
         window: &mut glfw::Window,
+        keys_down: &HashSet<glfw::Key>,
         glfw: &mut glfw::Glfw,
+        shader_program: &ShaderProgram,
     ) {
         if let Some(glide) = &mut self.glide {
             let t = 1.0 - (glide.remaining as f32 / glide.duration as f32);
@@ -871,11 +880,14 @@ impl Sprite {
                 Sprite::execute_statement(
                     &statement,
                     &mut State {
+                        start,
                         sprite: self,
                         project,
                         snapshots,
-                        glfw,
                         window,
+                        keys_down,
+                        glfw,
+                        shader_program,
                         local_vars: &vec![],
                         script_id: 0,
                     },
@@ -904,11 +916,14 @@ impl Sprite {
                     Sprite::execute_statement(
                         &statement,
                         &mut State {
+                            start,
                             sprite: self,
                             project,
                             snapshots,
-                            glfw,
                             window,
+                            keys_down,
+                            glfw,
+                            shader_program,
                             local_vars: &vec![],
                             script_id: i + 1,
                         },
@@ -943,11 +958,14 @@ impl Sprite {
                     Sprite::execute_statement(
                         &statement,
                         &mut State {
+                            start,
                             sprite: self,
                             project,
                             snapshots,
-                            glfw,
                             window,
+                            keys_down,
+                            glfw,
+                            shader_program,
                             local_vars: &vec![],
                             script_id: i + update_ast_len + 1,
                         },
@@ -969,11 +987,14 @@ impl Sprite {
             let value = crate::utils::resolve_expression(
                 &expr,
                 &mut State {
+                    start,
                     sprite: self,
                     project,
                     snapshots,
-                    glfw,
                     window,
+                    keys_down,
+                    glfw,
+                    shader_program,
                     local_vars: &vec![],
                     script_id: i + update_broadcast_len + 1,
                 },
@@ -997,11 +1018,14 @@ impl Sprite {
                     Sprite::execute_statement(
                         &statement,
                         &mut State {
+                            start,
                             sprite: self,
                             project,
                             snapshots,
-                            glfw,
                             window,
+                            keys_down,
+                            glfw,
+                            shader_program,
                             local_vars: &vec![],
                             script_id: i + update_broadcast_len + 1,
                         },
@@ -1061,7 +1085,7 @@ impl Sprite {
 
         // idk run step for all the clones too
         for clone in &mut self.clones {
-            clone.step(project, snapshots, window, glfw);
+            clone.step(start, project, snapshots, window, keys_down, glfw, shader_program);
         }
     }
 }

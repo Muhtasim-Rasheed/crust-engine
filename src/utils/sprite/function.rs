@@ -24,10 +24,14 @@ impl Function {
             new_local_vars.push((arg.clone(), args[i].clone()));
         }
         let mut new_state = State {
+            start: state.start,
             sprite: state.sprite,
             project: state.project,
             snapshots: state.snapshots,
             window: state.window,
+            keys_down: state.keys_down,
+            glfw: state.glfw,
+            shader_program: state.shader_program,
             local_vars: new_local_vars.as_slice(),
             script_id: state.script_id,
         };

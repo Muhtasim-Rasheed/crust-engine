@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct GPUTexture(pub(super) u32, pub(super) u32, pub(super) u32);
 
 impl GPUTexture {
