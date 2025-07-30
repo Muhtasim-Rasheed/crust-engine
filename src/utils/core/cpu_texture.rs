@@ -19,6 +19,15 @@ impl CPUTexture {
         }
     }
 
+    pub fn new_filled<T: Into<U8Vec4>>(width: u32, height: u32, color: T) -> Self {
+        let data = vec![color.into(); (width * height) as usize];
+        CPUTexture {
+            width,
+            height,
+            data,
+        }
+    }
+
     pub fn load_from_file(path: &str) -> Result<Self, String> {
         let image = image::open(path).map_err(|e| format!("Failed to open image: {}", e))?;
         let (width, height) = image.dimensions();
@@ -65,7 +74,7 @@ impl CPUTexture {
         }
     }
 
-    pub fn upload_to_gpu(&self) -> GPUTexture {
+    pub fn upload_to_gpu(self) -> GPUTexture {
         let texture = GPUTexture::new(
             self.width,
             self.height,

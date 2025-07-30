@@ -64,14 +64,9 @@ pub fn line(state: &State, args: &[Value]) -> Result {
     {
         let start = Vec2::new(*x1, *y1);
         let end = Vec2::new(*x2, *y2);
-        // draw_line(
-        //     start.x,
-        //     start.y,
-        //     end.x,
-        //     end.y,
-        //     *thickness,
-        //     state.sprite.draw_color,
-        // );
+        let thickness = *thickness;
+        let color = state.sprite.draw_color;
+        draw_line(start, end, thickness, state.shader_program, color);
         Ok(Value::Null)
     } else {
         Err("line() requires five number arguments: x1, y1, x2, y2, thickness".to_string())
@@ -86,7 +81,9 @@ pub fn rect(state: &State, args: &[Value]) -> Result {
         Value::Number(height),
     ] = args
     {
-        // draw_rectangle(*x, *y, *width, *height, state.sprite.draw_color);
+        let start = Vec2::new(*x, *y);
+        let end = Vec2::new(*width, *height) + start;
+        draw_rectangle(start, end, state.shader_program, state.sprite.draw_color);
         Ok(Value::Null)
     } else {
         Err("rect() requires four number arguments: x, y, width, height".to_string())
@@ -102,7 +99,36 @@ pub fn hrect(state: &State, args: &[Value]) -> Result {
         Value::Number(thickness),
     ] = args
     {
-        // draw_rectangle_lines(*x, *y, *width, *height, *thickness, state.sprite.draw_color);
+        let start = Vec2::new(*x, *y);
+        let end = Vec2::new(*width, *height) + start;
+        draw_line(
+            start,
+            Vec2::new(end.x, start.y),
+            *thickness,
+            state.shader_program,
+            state.sprite.draw_color,
+        );
+        draw_line(
+            Vec2::new(end.x, start.y),
+            end,
+            *thickness,
+            state.shader_program,
+            state.sprite.draw_color,
+        );
+        draw_line(
+            end,
+            Vec2::new(start.x, end.y),
+            *thickness,
+            state.shader_program,
+            state.sprite.draw_color,
+        );
+        draw_line(
+            Vec2::new(start.x, end.y),
+            start,
+            *thickness,
+            state.shader_program,
+            state.sprite.draw_color,
+        );
         Ok(Value::Null)
     } else {
         Err("hrect() requires four number arguments: x, y, width, height".to_string())
@@ -111,7 +137,15 @@ pub fn hrect(state: &State, args: &[Value]) -> Result {
 
 pub fn circle(state: &State, args: &[Value]) -> Result {
     if let [Value::Number(x), Value::Number(y), Value::Number(radius)] = args {
-        // draw_circle(*x, *y, *radius, state.sprite.draw_color);
+        const NUM_SEGMENTS: usize = 64;
+        let mut xs = Vec::with_capacity(NUM_SEGMENTS);
+        let mut ys = Vec::with_capacity(NUM_SEGMENTS);
+        for i in 0..NUM_SEGMENTS {
+            let angle = (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0;
+            xs.push(*x + radius * angle.cos());
+            ys.push(*y + radius * angle.sin());
+        }
+        draw_convex_polygon(&xs, &ys, state.shader_program, state.sprite.draw_color);
         Ok(Value::Null)
     } else {
         Err("circle() requires three number arguments: x, y, radius".to_string())
@@ -126,7 +160,21 @@ pub fn hcircle(state: &State, args: &[Value]) -> Result {
         Value::Number(thickness),
     ] = args
     {
-        // draw_circle_lines(*x, *y, *radius, *thickness, state.sprite.draw_color);
+        const NUM_SEGMENTS: usize = 64;
+        let mut xs = Vec::with_capacity(NUM_SEGMENTS);
+        let mut ys = Vec::with_capacity(NUM_SEGMENTS);
+        for i in 0..NUM_SEGMENTS {
+            let angle = (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0;
+            xs.push(*x + radius * angle.cos());
+            ys.push(*y + radius * angle.sin());
+        }
+        draw_convex_polygon_lines(
+            &xs,
+            &ys,
+            *thickness,
+            state.shader_program,
+            state.sprite.draw_color,
+        );
         Ok(Value::Null)
     } else {
         Err("hcircle() requires four number arguments: x, y, radius, thickness".to_string())
@@ -134,6 +182,7 @@ pub fn hcircle(state: &State, args: &[Value]) -> Result {
 }
 
 pub fn ellipse(state: &State, args: &[Value]) -> Result {
+    const NUM_SEGMENTS: usize = 64;
     match args {
         [
             Value::Number(x),
@@ -141,7 +190,22 @@ pub fn ellipse(state: &State, args: &[Value]) -> Result {
             Value::Number(rx),
             Value::Number(ry),
         ] => {
-            // draw_ellipse(*x, -*y, *rx, *ry, 0.0, state.sprite.draw_color);
+            let x = *x;
+            let y = *y;
+            let rx = *rx;
+            let ry = *ry;
+
+            let mut xs = Vec::with_capacity(NUM_SEGMENTS);
+            let mut ys = Vec::with_capacity(NUM_SEGMENTS);
+
+            for i in 0..NUM_SEGMENTS {
+                let angle = (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0;
+                xs.push(x + rx * angle.cos());
+                ys.push(y + ry * angle.sin());
+            }
+
+            draw_convex_polygon(&xs, &ys, state.shader_program, state.sprite.draw_color);
+
             Ok(Value::Null)
         }
         [
@@ -151,7 +215,22 @@ pub fn ellipse(state: &State, args: &[Value]) -> Result {
             Value::Number(ry),
             Value::Number(rotation),
         ] => {
-            // draw_ellipse(*x, -*y, *rx, *ry, *rotation, state.sprite.draw_color);
+            let x = *x;
+            let y = *y;
+            let rx = *rx;
+            let ry = *ry;
+
+            let mut xs = Vec::with_capacity(NUM_SEGMENTS);
+            let mut ys = Vec::with_capacity(NUM_SEGMENTS);
+
+            for i in 0..NUM_SEGMENTS {
+                let angle = (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0 + rotation;
+                xs.push(x + rx * angle.cos());
+                ys.push(y + ry * angle.sin());
+            }
+
+            draw_convex_polygon(&xs, &ys, state.shader_program, state.sprite.draw_color);
+
             Ok(Value::Null)
         }
         _ => Err("ellipse() requires four number arguments: x, y, rx, ry, [rotation]".to_string()),
@@ -159,6 +238,7 @@ pub fn ellipse(state: &State, args: &[Value]) -> Result {
 }
 
 pub fn hellipse(state: &State, args: &[Value]) -> Result {
+    const NUM_SEGMENTS: usize = 64;
     match args {
         [
             Value::Number(x),
@@ -167,7 +247,22 @@ pub fn hellipse(state: &State, args: &[Value]) -> Result {
             Value::Number(ry),
             Value::Number(thickness),
         ] => {
-            // draw_ellipse_lines(*x, -*y, *rx, *ry, 0.0, *thickness, state.sprite.draw_color);
+            let x = *x;
+            let y = *y;
+            let rx = *rx;
+            let ry = *ry;
+
+            let mut xs = Vec::with_capacity(NUM_SEGMENTS);
+            let mut ys = Vec::with_capacity(NUM_SEGMENTS);
+
+            for i in 0..NUM_SEGMENTS {
+                let angle = (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0;
+                xs.push(x + rx * angle.cos());
+                ys.push(y + ry * angle.sin());
+            }
+
+            draw_convex_polygon_lines(&xs, &ys, *thickness, state.shader_program, state.sprite.draw_color);
+
             Ok(Value::Null)
         }
         [
@@ -178,13 +273,25 @@ pub fn hellipse(state: &State, args: &[Value]) -> Result {
             Value::Number(rotation),
             Value::Number(thickness),
         ] => {
-            // draw_ellipse_lines(*x, -*y, *rx, *ry, *rotation, *thickness, state.sprite.draw_color);
+            let x = *x;
+            let y = *y;
+            let rx = *rx;
+            let ry = *ry;
+
+            let mut xs = Vec::with_capacity(NUM_SEGMENTS);
+            let mut ys = Vec::with_capacity(NUM_SEGMENTS);
+
+            for i in 0..NUM_SEGMENTS {
+                let angle = (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0 + rotation;
+                xs.push(x + rx * angle.cos());
+                ys.push(y + ry * angle.sin());
+            }
+
+            draw_convex_polygon_lines(&xs, &ys, *thickness, state.shader_program, state.sprite.draw_color);
+
             Ok(Value::Null)
         }
-        _ => Err(
-            "hellipse() requires five number arguments: x, y, rx, ry, [rotation], thickness"
-                .to_string(),
-        ),
+        _ => Err("hellipse() requires four number arguments: x, y, rx, ry, thickness, [rotation]".to_string()),
     }
 }
 
@@ -197,7 +304,7 @@ pub fn polygon(state: &State, args: &[Value]) -> Result {
         }
         let xs = xs.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
         let ys = ys.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
-        draw_convex_polygon(&xs, &ys, state.sprite.draw_color);
+        draw_convex_polygon(&xs, &ys, state.shader_program, state.sprite.draw_color);
         Ok(Value::Null)
     } else {
         Err("polygon() requires two lists of numbers: x and y coordinates".to_string())
@@ -213,7 +320,7 @@ pub fn hpolygon(state: &State, args: &[Value]) -> Result {
         }
         let xs = xs.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
         let ys = ys.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
-        draw_convex_polygon_lines(&xs, &ys, *thickness, state.sprite.draw_color);
+        draw_convex_polygon_lines(&xs, &ys, *thickness, state.shader_program, state.sprite.draw_color);
         Ok(Value::Null)
     } else {
         Err(
@@ -242,44 +349,6 @@ pub fn textured_quad(args: &[Value]) -> Result {
             Value::List(pixels),
         ] = parse_image_result.as_slice()
         {
-            // let mut image = Image::gen_image_color(
-            //     *width as u16,
-            //     *height as u16,
-            //     Color::new(0.0, 0.0, 0.0, 0.0),
-            // );
-            // for i in 0..*width as usize {
-            //     for j in 0..*height as usize {
-            //         let index = (i + j * (*width as usize)) * 4;
-            //         let r = pixels[index].to_number() / 255.0;
-            //         let g = pixels[index + 1].to_number() / 255.0;
-            //         let b = pixels[index + 2].to_number() / 255.0;
-            //         let a = pixels[index + 3].to_number() / 255.0;
-            //         image.set_pixel(i as u32, j as u32, Color::new(r, g, b, a));
-            //     }
-            // }
-            // let p1 = vec2(*x1, *y1);
-            // let p2 = vec2(*x2, *y2);
-            // let p3 = vec2(*x3, *y3);
-            // let p4 = vec2(*x4, *y4);
-            // let resolution = 128;
-            // for i in 0..=resolution {
-            //     let t = i as f32 / resolution as f32;
-
-            //     let left = crate::utils::lerp_vec2(p1, p4, t);
-            //     let right = crate::utils::lerp_vec2(p2, p3, t);
-            //     let uv_left = vec2(0.0, t);
-            //     let uv_right = vec2(1.0, t);
-
-            //     for j in 0..=resolution {
-            //         let s = j as f32 / resolution as f32;
-
-            //         let pos = crate::utils::lerp_vec2(left, right, s);
-            //         let uv = crate::utils::lerp_vec2(uv_left, uv_right, s);
-
-            //         let color = crate::utils::sample_texture(&image, uv);
-            //         draw_rectangle(pos.x - 4.0, pos.y - 4.0, 8.0, 8.0, color);
-            //     }
-            // }
             let mut cpu_texture = CPUTexture::new(*width as u32, *height as u32);
             for i in 0..*width as usize {
                 for j in 0..*height as usize {
@@ -294,19 +363,19 @@ pub fn textured_quad(args: &[Value]) -> Result {
             let gpu_texture = cpu_texture.upload_to_gpu();
             let quad = [
                 Vertex {
-                    position: vec2(*x1, *y1),
+                    position: vec2(*x1, *y4),
                     uv: vec2(0.0, 1.0),
                 },
                 Vertex {
-                    position: vec2(*x2, *y2),
+                    position: vec2(*x2, *y3),
                     uv: vec2(1.0, 1.0),
                 },
                 Vertex {
-                    position: vec2(*x3, *y3),
+                    position: vec2(*x3, *y2),
                     uv: vec2(1.0, 0.0),
                 },
                 Vertex {
-                    position: vec2(*x4, *y4),
+                    position: vec2(*x4, *y1),
                     uv: vec2(0.0, 0.0),
                 },
             ];

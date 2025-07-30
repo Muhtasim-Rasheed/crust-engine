@@ -1,7 +1,7 @@
 use glam::*;
 use glfw::{Key, MouseButton};
 
-use crate::utils::*;
+use crate::utils::{core::*, *};
 
 // Helper functions!
 
@@ -185,33 +185,6 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
     }
 }
 
-pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, color: Vec4) {
-    assert_eq!(xs.len(), ys.len());
-    assert!(xs.len() >= 3, "Need at least 3 points to form a polygon!");
-
-    let center_x = xs.iter().sum::<f32>() / xs.len() as f32;
-    let center_y = ys.iter().sum::<f32>() / ys.len() as f32;
-
-    for i in 0..xs.len() {
-        let next_i = (i + 1) % xs.len();
-        // draw_triangle(
-        //     Vec2::new(center_x, center_y),
-        //     Vec2::new(xs[i], ys[i]),
-        //     Vec2::new(xs[next_i], ys[next_i]),
-        //     color,
-        // );
-    }
-}
-
-pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, color: Vec4) {
-    assert_eq!(xs.len(), ys.len());
-
-    for i in 0..xs.len() {
-        let next_i = (i + 1) % xs.len();
-        // draw_line(xs[i], ys[i], xs[next_i], ys[next_i], thickness, color);
-    }
-}
-
 pub fn evaluate_bezier(t: f32, ctrl1_y: f32, ctrl2_y: f32) -> f32 {
     let steps = 20;
     let mut closest_y = 0.0;
@@ -351,8 +324,123 @@ pub fn string_to_keycode(s: &str) -> Option<Key> {
     }
 }
 
+pub fn draw_line(start: Vec2, end: Vec2, thickness: f32, shader: &ShaderProgram, color: Vec4) {
+    let direction = (end - start).normalize();
+    let length = (end - start).length();
+    let angle = direction.y.atan2(direction.x);
+    let half_thickness = thickness / 2.0;
+    let vertices = [
+        Vertex {
+            position: Vec2::new(0.0, -half_thickness),
+            uv: Vec2::new(0.0, 1.0),
+        },
+        Vertex {
+            position: Vec2::new(length, -half_thickness),
+            uv: Vec2::new(1.0, 1.0),
+        },
+        Vertex {
+            position: Vec2::new(length, half_thickness),
+            uv: Vec2::new(1.0, 0.0),
+        },
+        Vertex {
+            position: Vec2::new(0.0, half_thickness),
+            uv: Vec2::new(0.0, 0.0),
+        },
+    ];
+    let indices = [0, 1, 2, 0, 2, 3];
+    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let mut m = Mat4::from_translation(start.extend(0.0));
+    m = m * Mat4::from_rotation_z(angle);
+    let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
+    shader.use_program();
+    shader.set_uniform_vec4("u_color", &color);
+    shader.set_uniform_mat4("u_model", &m);
+    texture.bind();
+    mesh.draw();
+}
+
+pub fn draw_rectangle(
+    start: Vec2,
+    end: Vec2,
+    shader: &ShaderProgram,
+    color: Vec4,
+) {
+    let vertices = [
+        Vertex {
+            position: Vec2::new(start.x, start.y),
+            uv: Vec2::new(0.0, 1.0),
+        },
+        Vertex {
+            position: Vec2::new(end.x, start.y),
+            uv: Vec2::new(1.0, 1.0),
+        },
+        Vertex {
+            position: Vec2::new(end.x, end.y),
+            uv: Vec2::new(1.0, 0.0),
+        },
+        Vertex {
+            position: Vec2::new(start.x, end.y),
+            uv: Vec2::new(0.0, 0.0),
+        },
+    ];
+    let indices = [0, 1, 2, 0, 2, 3];
+    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
+    shader.use_program();
+    shader.set_uniform_vec4("u_color", &color);
+    shader.set_uniform_mat4(
+        "u_model",
+        &Mat4::IDENTITY,
+    );
+    texture.bind();
+    mesh.draw();
+}
+
+pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, shader: &ShaderProgram, color: Vec4) {
+    assert_eq!(xs.len(), ys.len());
+    assert!(xs.len() >= 3, "Need at least 3 points to form a polygon!");
+
+    let vertices: Vec<Vertex> = xs.iter().zip(ys.iter()).map(|(&x, &y)| {
+        Vertex {
+            position: Vec2::new(x, y),
+            uv: Vec2::new(0.0, 0.0),
+        }
+    }).collect();
+    let indices = trianglulate_polygon(&vertices.iter().map(|v| v.position).collect());
+    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
+    shader.use_program();
+    shader.set_uniform_vec4("u_color", &color);
+    shader.set_uniform_mat4("u_model", &Mat4::IDENTITY);
+    texture.bind();
+    mesh.draw();
+}
+
+pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, shader: &ShaderProgram, color: Vec4) {
+    assert_eq!(xs.len(), ys.len());
+
+    for i in 0..xs.len() {
+        let next_i = (i + 1) % xs.len();
+        let start = Vec2::new(xs[i], ys[i]);
+        let end = Vec2::new(xs[next_i], ys[next_i]);
+        draw_line(start, end, thickness, shader, color);
+    }
+}
+
 // Helper functions that help other helper functions!!
 fn cubic_bezier(t: f32, p0: f32, p1: f32, p2: f32, p3: f32) -> f32 {
     let u = 1.0 - t;
     u * u * u * p0 + 3.0 * u * u * t * p1 + 3.0 * u * t * t * p2 + t * t * t * p3
+}
+
+fn trianglulate_polygon(
+    vertices: &Vec<Vec2>,
+) -> Vec<u32> {
+    let mut indices = Vec::new();
+    for i in 1..vertices.len() - 1 {
+        indices.push(0);
+        indices.push(i as u32);
+        indices.push((i + 1) as u32);
+    }
+    indices
 }

@@ -91,32 +91,3 @@ impl BitmapFont {
         Mesh::new(&vertices, &indices, DrawMode::Triangles)
     }
 }
-
-pub struct UITextureBuilder(pub [Vec2; 4]);
-
-impl UITextureBuilder {
-    pub fn build(&self, uv: [Vec2; 4]) -> Mesh<Vertex> {
-        let vertices = [
-            Vertex {
-                position: self.0[0],
-                uv: uv[2],
-            },
-            Vertex {
-                position: self.0[1],
-                uv: uv[3],
-            },
-            Vertex {
-                position: self.0[2],
-                uv: uv[0],
-            },
-            Vertex {
-                position: self.0[3],
-                uv: uv[1],
-            },
-        ];
-
-        let indices = [0, 1, 2, 0, 2, 3];
-
-        Mesh::new(&vertices, &indices, DrawMode::Triangles)
-    }
-}

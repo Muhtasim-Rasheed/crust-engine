@@ -42,3 +42,11 @@ impl GPUTexture {
         }
     }
 }
+
+impl Drop for GPUTexture {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteTextures(1, &self.2);
+        }
+    }
+}
