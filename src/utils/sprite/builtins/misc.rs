@@ -300,6 +300,15 @@ pub fn parse_image(args: &[Value]) -> Result {
     }
 }
 
+pub fn set_uv(state: &mut State, args: &[Value]) -> Result {
+    if let [Value::Number(u), Value::Number(v), Value::Number(w), Value::Number(x)] = args {
+        state.sprite.uv = [Vec2::new(*u, *v), Vec2::new(*w, *x)];
+        Ok(Value::Null)
+    } else {
+        Err("set_uv() expects four number arguments".to_string())
+    }
+}
+
 pub fn screenshot(state: &State, args: &[Value]) -> Result {
     // if args.len() != 1 {
     //     return Err("screenshot() expects one string argument".to_string());

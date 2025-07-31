@@ -43,6 +43,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "read", |st, ar| misc::read(st, ar, false));
     builtin!(builtins, "read_binary", |st, ar| misc::read(st, ar, true));
     builtin!(builtins, "parse_image", |_, ar| misc::parse_image(ar));
+    builtin!(builtins, "set_uv", |st, ar| misc::set_uv(st, ar));
     builtin!(builtins, "screenshot", |st, ar| misc::screenshot(st, ar));
     builtin!(builtins, "typeof", |_, ar| misc::r#typeof(ar));
     builtin!(builtins, "push", |_, ar| misc::push(ar));

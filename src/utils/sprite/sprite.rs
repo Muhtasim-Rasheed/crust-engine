@@ -148,6 +148,7 @@ pub struct Sprite {
     pub(super) glide: Option<Glide>,
     pub(super) delete_pending: bool,
     pub(super) skip_further_execution_of_frame: bool,
+    pub(super) uv: [Vec2; 2],
     clone_setup: Vec<Statement>,
     clone_update: Vec<Vec<Statement>>,
     setup_ast: Vec<Statement>,
@@ -355,6 +356,7 @@ impl Sprite {
             broadcast_recievers,
             boolean_recievers,
             skip_further_execution_of_frame: false,
+            uv: [vec2(0.0, 1.0), vec2(1.0, 0.0)],
             completed_broadcasts: vec![],
         }
     }
@@ -402,6 +404,7 @@ impl Sprite {
             broadcast_recievers: self.broadcast_recievers.clone(),
             boolean_recievers: self.boolean_recievers.clone(),
             skip_further_execution_of_frame: false,
+            uv: self.uv,
             completed_broadcasts: vec![],
         }
     }
