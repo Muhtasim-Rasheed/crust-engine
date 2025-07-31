@@ -2,10 +2,8 @@ use crate::utils::core::GPUTexture;
 
 pub struct Framebuffer {
     id: u32,
-    texture: u32,
+    texture: GPUTexture,
     depth: Option<u32>,
-    width: u32,
-    height: u32,
 }
 
 impl Framebuffer {
@@ -69,15 +67,13 @@ impl Framebuffer {
 
         Framebuffer {
             id: fbo,
-            texture: tex,
+            texture: GPUTexture(width, height, tex),
             depth: depth_buffer,
-            width,
-            height,
         }
     }
 
-    pub fn texture(&self) -> GPUTexture {
-        GPUTexture(self.width, self.height, self.texture)
+    pub fn texture(&self) -> &GPUTexture {
+        &self.texture
     }
 
     pub fn bind(&self) {
@@ -97,7 +93,7 @@ impl Drop for Framebuffer {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteFramebuffers(1, &self.id);
-            gl::DeleteTextures(1, &self.texture);
+            gl::DeleteTextures(1, &self.texture.2);
             if let Some(depth_id) = self.depth {
                 gl::DeleteRenderbuffers(1, &depth_id);
             }
