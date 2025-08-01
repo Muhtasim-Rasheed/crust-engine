@@ -9,7 +9,7 @@
 ✨ **Crust** ✨ is a Scratch-like game development tool with its own programming language, also named Crust.
 
 <p align="center">
-  <img src="./assets/logo_background.svg" alt="Crust Logo" width="150"/>
+  <img src="./assets/logo_background.png" alt="Crust Logo" width="150"/>
 </p>
 
 ## What is Crust?
