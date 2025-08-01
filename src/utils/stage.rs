@@ -130,11 +130,17 @@ impl Stage {
         shader_program.set_uniform("u_color", vec4(1.0, 1.0, 1.0, 1.0));
         shader_program.set_uniform("u_projection", *projection);
         shader_program.set_uniform("u_model", Mat4::IDENTITY);
+        shader_program.set_uniform_ref("u_effects", &[] as &[i32]);
+        shader_program.set_uniform_ref("u_effect_values", &[] as &[f32]);
+        shader_program.set_uniform("u_effects_count", 0);
         texture.bind();
         backdrop_mesh.draw();
         shader_program.set_uniform("u_color", vec4(1.0, 1.0, 1.0, 1.0));
         shader_program.set_uniform("u_projection", *projection);
         shader_program.set_uniform("u_model", Mat4::IDENTITY);
+        shader_program.set_uniform_ref("u_effects", &[] as &[i32]);
+        shader_program.set_uniform_ref("u_effect_values", &[] as &[f32]);
+        shader_program.set_uniform("u_effects_count", 0);
         self.stamp_buffer.texture().bind();
         stamp_mesh.draw();
     }

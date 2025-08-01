@@ -82,7 +82,7 @@ pub fn mouse_x(state: &State) -> Result {
 
 pub fn mouse_y(state: &State) -> Result {
     Ok(Value::Number(
-        state.window.get_cursor_pos().1 as f32 * 2.0 - state.window.get_size().1 as f32,
+        -(state.window.get_cursor_pos().1 as f32 * 2.0 - state.window.get_size().1 as f32),
     ))
 }
 

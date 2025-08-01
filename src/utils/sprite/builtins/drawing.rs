@@ -353,7 +353,7 @@ pub fn hpolygon(state: &State, args: &[Value]) -> Result {
     }
 }
 
-pub fn textured_quad(args: &[Value]) -> Result {
+pub fn textured_quad(state: &State, args: &[Value]) -> Result {
     if let [
         Value::List(parse_image_result),
         Value::Number(x1),
@@ -386,24 +386,39 @@ pub fn textured_quad(args: &[Value]) -> Result {
             let gpu_texture = cpu_texture.upload_to_gpu();
             let quad = [
                 Vertex {
-                    position: vec2(*x1, *y4),
+                    position: vec2(*x4, *y4),
                     uv: vec2(0.0, 1.0),
                 },
                 Vertex {
-                    position: vec2(*x2, *y3),
+                    position: vec2(*x3, *y3),
                     uv: vec2(1.0, 1.0),
                 },
                 Vertex {
-                    position: vec2(*x3, *y2),
+                    position: vec2(*x2, *y2),
                     uv: vec2(1.0, 0.0),
                 },
                 Vertex {
-                    position: vec2(*x4, *y1),
+                    position: vec2(*x1, *y1),
                     uv: vec2(0.0, 0.0),
                 },
             ];
             let indices = [0, 1, 2, 0, 2, 3];
             let mesh = Mesh::new(&quad, &indices, core::DrawMode::Triangles);
+            state.shader_program.use_program();
+            state
+                .shader_program
+                .set_uniform("u_color", Vec4::splat(1.0));
+            state
+                .shader_program
+                .set_uniform("u_projection", state.projection);
+            state.shader_program.set_uniform("u_model", Mat4::IDENTITY);
+            state
+                .shader_program
+                .set_uniform_ref("u_effects", &[] as &[i32]);
+            state
+                .shader_program
+                .set_uniform_ref("u_effect_values", &[] as &[f32]);
+            state.shader_program.set_uniform("u_effects_count", 0);
             gpu_texture.bind();
             mesh.draw();
             Ok(Value::Null)

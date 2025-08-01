@@ -80,12 +80,12 @@ impl UniformValue for Vec4 {
     }
 }
 
-impl UniformValue for [Vec4] {
+impl UniformValue for [f32] {
     fn set(&self, program: u32, name: &str) {
         let c_str = std::ffi::CString::new(name).unwrap();
         unsafe {
             let location = gl::GetUniformLocation(program, c_str.as_ptr());
-            gl::Uniform4fv(location, self.len() as i32, self.as_ptr().cast());
+            gl::Uniform1fv(location, self.len() as i32, self.as_ptr());
         }
     }
 }
@@ -112,6 +112,10 @@ impl ShaderProgram {
     }
 
     pub fn set_uniform<T: UniformValue>(&self, name: &str, value: T) {
+        value.set(self.0, name);
+    }
+
+    pub fn set_uniform_ref<T: UniformValue + ?Sized>(&self, name: &str, value: &T) {
         value.set(self.0, name);
     }
 

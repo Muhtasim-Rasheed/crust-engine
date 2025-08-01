@@ -2,6 +2,33 @@ use glam::*;
 
 use crate::utils::{Sprite, core::*};
 
+fn effects_to_ints(effects: Vec<String>) -> Vec<i32> {
+    effects
+        .into_iter()
+        .map(|effect| match effect.as_str() {
+            "brightness" => 0,
+            "ghost" => 1,
+            "hue" => 2,
+            "saturation" => 3,
+            "sepia" => 4,
+            "grayscale-averaged" => 5,
+            "grayscale-weighted" => 6,
+            "invert" => 7,
+            "multiply" => 8,
+            "multiply-r" => 9,
+            "multiply-g" => 10,
+            "multiply-b" => 11,
+            "mutliply-a" => 12,
+            "add" => 13,
+            "add-r" => 14,
+            "add-g" => 15,
+            "add-b" => 16,
+            "add-a" => 17,
+            _ => -1, // Unknown effect
+        })
+        .collect()
+}
+
 pub fn draw_sprite(sprite: &Sprite, shader: &ShaderProgram, projection: Mat4, font: &BitmapFont) {
     if !sprite.visible {
         return;
@@ -49,6 +76,20 @@ pub fn draw_sprite(sprite: &Sprite, shader: &ShaderProgram, projection: Mat4, fo
                 1.0,
             )),
     );
+    shader.set_uniform_ref(
+        "u_effects",
+        effects_to_ints(sprite.effects.keys().map(String::clone).collect()).as_slice(),
+    );
+    shader.set_uniform_ref(
+        "u_effect_values",
+        sprite
+            .effects
+            .values()
+            .map(|v| *v)
+            .collect::<Vec<f32>>()
+            .as_slice(),
+    );
+    shader.set_uniform("u_effects_count", sprite.effects.len() as i32);
     tex.bind();
     quad.draw();
 
