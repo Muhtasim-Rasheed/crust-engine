@@ -36,6 +36,60 @@ impl Shader {
     }
 }
 
+pub trait UniformValue {
+    fn set(&self, program: u32, name: &str);
+}
+
+impl UniformValue for i32 {
+    fn set(&self, program: u32, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe {
+            let location = gl::GetUniformLocation(program, c_str.as_ptr());
+            gl::Uniform1i(location, *self);
+        }
+    }
+}
+
+impl UniformValue for [i32] {
+    fn set(&self, program: u32, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe {
+            let location = gl::GetUniformLocation(program, c_str.as_ptr());
+            gl::Uniform1iv(location, self.len() as i32, self.as_ptr());
+        }
+    }
+}
+
+impl UniformValue for Mat4 {
+    fn set(&self, program: u32, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe {
+            let location = gl::GetUniformLocation(program, c_str.as_ptr());
+            gl::UniformMatrix4fv(location, 1, gl::FALSE, self.to_cols_array().as_ptr());
+        }
+    }
+}
+
+impl UniformValue for Vec4 {
+    fn set(&self, program: u32, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe {
+            let location = gl::GetUniformLocation(program, c_str.as_ptr());
+            gl::Uniform4f(location, self.x, self.y, self.z, self.w);
+        }
+    }
+}
+
+impl UniformValue for [Vec4] {
+    fn set(&self, program: u32, name: &str) {
+        let c_str = std::ffi::CString::new(name).unwrap();
+        unsafe {
+            let location = gl::GetUniformLocation(program, c_str.as_ptr());
+            gl::Uniform4fv(location, self.len() as i32, self.as_ptr().cast());
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ShaderProgram(u32);
 
@@ -57,36 +111,8 @@ impl ShaderProgram {
         ShaderProgram(id)
     }
 
-    pub fn set_uniform_u32(&self, name: &str, value: u32) {
-        let c_str = std::ffi::CString::new(name).unwrap();
-        unsafe {
-            let location = gl::GetUniformLocation(self.0, c_str.as_ptr());
-            gl::Uniform1ui(location, value);
-        }
-    }
-
-    pub fn set_uniform_mat4(&self, name: &str, value: &Mat4) {
-        let c_str = std::ffi::CString::new(name).unwrap();
-        unsafe {
-            let location = gl::GetUniformLocation(self.0, c_str.as_ptr());
-            gl::UniformMatrix4fv(location, 1, gl::FALSE, value.to_cols_array().as_ptr());
-        }
-    }
-
-    pub fn set_uniform_vec3(&self, name: &str, value: &Vec3) {
-        let c_str = std::ffi::CString::new(name).unwrap();
-        unsafe {
-            let location = gl::GetUniformLocation(self.0, c_str.as_ptr());
-            gl::Uniform3f(location, value.x, value.y, value.z);
-        }
-    }
-
-    pub fn set_uniform_vec4(&self, name: &str, value: &Vec4) {
-        let c_str = std::ffi::CString::new(name).unwrap();
-        unsafe {
-            let location = gl::GetUniformLocation(self.0, c_str.as_ptr());
-            gl::Uniform4f(location, value.x, value.y, value.z, value.w);
-        }
+    pub fn set_uniform<T: UniformValue>(&self, name: &str, value: T) {
+        value.set(self.0, name);
     }
 
     pub fn use_program(&self) {

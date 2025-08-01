@@ -25,7 +25,7 @@ impl Stage {
         }
     }
 
-    pub fn clear_stamps(&mut self) {
+    pub fn clear_stamps(&self) {
         self.stamp_buffer.bind();
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 0.0);
@@ -122,19 +122,19 @@ impl Stage {
         let stamp_mesh = Mesh::new(&stamp_quad, &indices, DrawMode::Triangles);
 
         unsafe {
-            gl::ClearColor(1.0, 1.0, 1.0, 1.0);
+            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
         shader_program.use_program();
-        shader_program.set_uniform_vec4("u_color", &vec4(1.0, 1.0, 1.0, 1.0));
-        shader_program.set_uniform_mat4("u_projection", projection);
-        shader_program.set_uniform_mat4("u_model", &Mat4::IDENTITY);
+        shader_program.set_uniform("u_color", vec4(1.0, 1.0, 1.0, 1.0));
+        shader_program.set_uniform("u_projection", *projection);
+        shader_program.set_uniform("u_model", Mat4::IDENTITY);
         texture.bind();
         backdrop_mesh.draw();
-        shader_program.set_uniform_vec4("u_color", &vec4(1.0, 1.0, 1.0, 1.0));
-        shader_program.set_uniform_mat4("u_projection", projection);
-        shader_program.set_uniform_mat4("u_model", &Mat4::IDENTITY);
+        shader_program.set_uniform("u_color", vec4(1.0, 1.0, 1.0, 1.0));
+        shader_program.set_uniform("u_projection", *projection);
+        shader_program.set_uniform("u_model", Mat4::IDENTITY);
         self.stamp_buffer.texture().bind();
         stamp_mesh.draw();
     }

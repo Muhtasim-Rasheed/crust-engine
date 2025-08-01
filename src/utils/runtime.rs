@@ -3,7 +3,7 @@ use glfw::{Context, Window};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 
-use crate::utils::core::{CPUTexture, ShaderProgram};
+use crate::utils::core::*;
 use crate::utils::draw_sprite;
 
 use super::sprite::StopRequest;
@@ -201,6 +201,7 @@ impl Runtime {
         &mut self,
         window: &mut Window,
         events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,
+        font: &BitmapFont,
         shader_program: &ShaderProgram,
         glfw: &mut glfw::Glfw,
     ) {
@@ -212,15 +213,28 @@ impl Runtime {
             -1.0,
             1.0,
         );
+        let top_left_projection = Mat4::orthographic_rh_gl(
+            0.0,
+            window.get_size().0 as f32,
+            window.get_size().1 as f32,
+            0.0,
+            -1.0,
+            1.0,
+        );
         let start = std::time::Instant::now();
+        let mut last_time = start;
+        let mut duration = std::time::Instant::now();
+        let mut fps = 0.0;
         let mut keys_down = HashSet::<glfw::Key>::new();
         while !window.should_close() {
-            // rand::srand(
-            //     std::time::SystemTime::now()
-            //         .duration_since(std::time::UNIX_EPOCH)
-            //         .unwrap()
-            //         .as_millis() as u64,
-            // );
+            let now = std::time::Instant::now();
+            let dt = now.duration_since(last_time).as_secs_f32();
+            if duration.elapsed().as_secs_f32() >= 1.0 {
+                fps = 1.0 / dt;
+                duration = std::time::Instant::now();
+            }
+            last_time = now;
+
             glfw.poll_events();
 
             for (_, event) in glfw::flush_messages(events) {
@@ -288,16 +302,43 @@ impl Runtime {
                     &keys_down,
                     glfw,
                     shader_program,
+                    projection,
+                    font,
                 );
             }
 
             sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
 
             for sprite in &mut sprites {
-                draw_sprite(sprite, shader_program);
+                draw_sprite(sprite, shader_program, projection, font);
             }
 
             self.project.sprites = sprites;
+
+            let mut debug_texts = Vec::new();
+            if self.debug_options.contains(&"show_fps".to_string()) {
+                debug_texts.push(format!("FPS: {:.2}", fps));
+            }
+            if self.debug_options.contains(&"show_mouse_pos".to_string()) {
+                let pos = vec2(
+                    window.get_cursor_pos().0 as f32,
+                    window.get_cursor_pos().1 as f32,
+                ) * 2.0
+                    - vec2(window.get_size().0 as f32, window.get_size().1 as f32);
+                let pos = pos * Vec2::new(1.0, -1.0);
+                debug_texts.push(format!("Mouse: {:?}", pos));
+            }
+
+            for (i, text) in debug_texts.iter().enumerate() {
+                draw_text(TextParams {
+                    text,
+                    projection: top_left_projection,
+                    pos: Vec2::new(10.0, 10.0 + i as f32 * 30.0),
+                    font_size: 24.0,
+                    down_positive: true,
+                    ..TextParams::default_params(font, shader_program)
+                });
+            }
 
             window.swap_buffers();
         }

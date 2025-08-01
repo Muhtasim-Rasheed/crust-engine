@@ -224,7 +224,8 @@ pub fn ellipse(state: &State, args: &[Value]) -> Result {
             let mut ys = Vec::with_capacity(NUM_SEGMENTS);
 
             for i in 0..NUM_SEGMENTS {
-                let angle = (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0 + rotation;
+                let angle =
+                    (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0 + rotation;
                 xs.push(x + rx * angle.cos());
                 ys.push(y + ry * angle.sin());
             }
@@ -261,7 +262,13 @@ pub fn hellipse(state: &State, args: &[Value]) -> Result {
                 ys.push(y + ry * angle.sin());
             }
 
-            draw_convex_polygon_lines(&xs, &ys, *thickness, state.shader_program, state.sprite.draw_color);
+            draw_convex_polygon_lines(
+                &xs,
+                &ys,
+                *thickness,
+                state.shader_program,
+                state.sprite.draw_color,
+            );
 
             Ok(Value::Null)
         }
@@ -282,16 +289,26 @@ pub fn hellipse(state: &State, args: &[Value]) -> Result {
             let mut ys = Vec::with_capacity(NUM_SEGMENTS);
 
             for i in 0..NUM_SEGMENTS {
-                let angle = (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0 + rotation;
+                let angle =
+                    (i as f32 / NUM_SEGMENTS as f32) * std::f32::consts::PI * 2.0 + rotation;
                 xs.push(x + rx * angle.cos());
                 ys.push(y + ry * angle.sin());
             }
 
-            draw_convex_polygon_lines(&xs, &ys, *thickness, state.shader_program, state.sprite.draw_color);
+            draw_convex_polygon_lines(
+                &xs,
+                &ys,
+                *thickness,
+                state.shader_program,
+                state.sprite.draw_color,
+            );
 
             Ok(Value::Null)
         }
-        _ => Err("hellipse() requires four number arguments: x, y, rx, ry, thickness, [rotation]".to_string()),
+        _ => Err(
+            "hellipse() requires four number arguments: x, y, rx, ry, thickness, [rotation]"
+                .to_string(),
+        ),
     }
 }
 
@@ -320,7 +337,13 @@ pub fn hpolygon(state: &State, args: &[Value]) -> Result {
         }
         let xs = xs.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
         let ys = ys.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
-        draw_convex_polygon_lines(&xs, &ys, *thickness, state.shader_program, state.sprite.draw_color);
+        draw_convex_polygon_lines(
+            &xs,
+            &ys,
+            *thickness,
+            state.shader_program,
+            state.sprite.draw_color,
+        );
         Ok(Value::Null)
     } else {
         Err(
@@ -392,14 +415,19 @@ pub fn textured_quad(args: &[Value]) -> Result {
     }
 }
 
-pub fn stamp(state: &mut State) -> Result {
+pub fn stamp(state: &State) -> Result {
     state.project.stage.stamp_buffer.bind();
-    draw_sprite(state.sprite, state.shader_program);
+    draw_sprite(
+        state.sprite,
+        state.shader_program,
+        state.projection,
+        state.font,
+    );
     Framebuffer::unbind();
     Ok(Value::Null)
 }
 
-pub fn clear_all_stamps(state: &mut State) -> Result {
+pub fn clear_all_stamps(state: &State) -> Result {
     state.project.stage.clear_stamps();
     Ok(Value::Null)
 }

@@ -353,18 +353,13 @@ pub fn draw_line(start: Vec2, end: Vec2, thickness: f32, shader: &ShaderProgram,
     m = m * Mat4::from_rotation_z(angle);
     let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
     shader.use_program();
-    shader.set_uniform_vec4("u_color", &color);
-    shader.set_uniform_mat4("u_model", &m);
+    shader.set_uniform("u_color", color);
+    shader.set_uniform("u_model", m);
     texture.bind();
     mesh.draw();
 }
 
-pub fn draw_rectangle(
-    start: Vec2,
-    end: Vec2,
-    shader: &ShaderProgram,
-    color: Vec4,
-) {
+pub fn draw_rectangle(start: Vec2, end: Vec2, shader: &ShaderProgram, color: Vec4) {
     let vertices = [
         Vertex {
             position: Vec2::new(start.x, start.y),
@@ -387,11 +382,8 @@ pub fn draw_rectangle(
     let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
     let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
     shader.use_program();
-    shader.set_uniform_vec4("u_color", &color);
-    shader.set_uniform_mat4(
-        "u_model",
-        &Mat4::IDENTITY,
-    );
+    shader.set_uniform("u_color", color);
+    shader.set_uniform("u_model", Mat4::IDENTITY);
     texture.bind();
     mesh.draw();
 }
@@ -400,23 +392,31 @@ pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, shader: &ShaderProgram,
     assert_eq!(xs.len(), ys.len());
     assert!(xs.len() >= 3, "Need at least 3 points to form a polygon!");
 
-    let vertices: Vec<Vertex> = xs.iter().zip(ys.iter()).map(|(&x, &y)| {
-        Vertex {
+    let vertices: Vec<Vertex> = xs
+        .iter()
+        .zip(ys.iter())
+        .map(|(&x, &y)| Vertex {
             position: Vec2::new(x, y),
             uv: Vec2::new(0.0, 0.0),
-        }
-    }).collect();
+        })
+        .collect();
     let indices = trianglulate_polygon(&vertices.iter().map(|v| v.position).collect());
     let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
     let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
     shader.use_program();
-    shader.set_uniform_vec4("u_color", &color);
-    shader.set_uniform_mat4("u_model", &Mat4::IDENTITY);
+    shader.set_uniform("u_color", color);
+    shader.set_uniform("u_model", Mat4::IDENTITY);
     texture.bind();
     mesh.draw();
 }
 
-pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, shader: &ShaderProgram, color: Vec4) {
+pub fn draw_convex_polygon_lines(
+    xs: &Vec<f32>,
+    ys: &Vec<f32>,
+    thickness: f32,
+    shader: &ShaderProgram,
+    color: Vec4,
+) {
     assert_eq!(xs.len(), ys.len());
 
     for i in 0..xs.len() {
@@ -433,9 +433,7 @@ fn cubic_bezier(t: f32, p0: f32, p1: f32, p2: f32, p3: f32) -> f32 {
     u * u * u * p0 + 3.0 * u * u * t * p1 + 3.0 * u * t * t * p2 + t * t * t * p3
 }
 
-fn trianglulate_polygon(
-    vertices: &Vec<Vec2>,
-) -> Vec<u32> {
+fn trianglulate_polygon(vertices: &Vec<Vec2>) -> Vec<u32> {
     let mut indices = Vec::new();
     for i in 1..vertices.len() - 1 {
         indices.push(0);

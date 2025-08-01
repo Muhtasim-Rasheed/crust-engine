@@ -32,6 +32,8 @@ impl Function {
             keys_down: state.keys_down,
             glfw: state.glfw,
             shader_program: state.shader_program,
+            projection: state.projection,
+            font: state.font,
             local_vars: new_local_vars.as_slice(),
             script_id: state.script_id,
         };

@@ -301,7 +301,13 @@ pub fn parse_image(args: &[Value]) -> Result {
 }
 
 pub fn set_uv(state: &mut State, args: &[Value]) -> Result {
-    if let [Value::Number(u), Value::Number(v), Value::Number(w), Value::Number(x)] = args {
+    if let [
+        Value::Number(u),
+        Value::Number(v),
+        Value::Number(w),
+        Value::Number(x),
+    ] = args
+    {
         state.sprite.uv = [Vec2::new(*u, *v), Vec2::new(*w, *x)];
         Ok(Value::Null)
     } else {

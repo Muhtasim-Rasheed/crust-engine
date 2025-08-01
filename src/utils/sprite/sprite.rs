@@ -1,6 +1,6 @@
 // Hello fellow contributor, welcome to Crust's `sprite.rs` file!
 //
-// This file is still *pretty big* (~1000 lines) and contains the core logic for handling
+// This file is still *pretty big* (~1100 lines) and contains the core logic for handling
 // sprites, their behaviors, and interactions in the Crust game engine.
 //
 // Don't worry: You don't need to understand everything at once. Take your time to read through the code.
@@ -17,7 +17,7 @@ use std::path::PathBuf;
 
 use indexmap::IndexMap;
 
-use crate::utils::core::{CPUTexture, GPUTexture, ShaderProgram};
+use crate::utils::core::*;
 use crate::utils::*;
 
 #[derive(Debug)]
@@ -30,6 +30,8 @@ pub struct State<'a> {
     pub keys_down: &'a HashSet<glfw::Key>,
     pub glfw: &'a mut glfw::Glfw,
     pub shader_program: &'a ShaderProgram,
+    pub projection: Mat4,
+    pub font: &'a BitmapFont,
     pub local_vars: &'a [(String, Value)],
     pub script_id: usize,
 }
@@ -683,6 +685,8 @@ impl Sprite {
                         keys_down: state.keys_down,
                         glfw: state.glfw,
                         shader_program: state.shader_program,
+                        projection: state.projection,
+                        font: state.font,
                         local_vars: &new_local_vars,
                         script_id: state.script_id,
                     };
@@ -851,6 +855,8 @@ impl Sprite {
         keys_down: &HashSet<glfw::Key>,
         glfw: &mut glfw::Glfw,
         shader_program: &ShaderProgram,
+        projection: Mat4,
+        font: &BitmapFont,
     ) {
         if let Some(glide) = &mut self.glide {
             let t = 1.0 - (glide.remaining as f32 / glide.duration as f32);
@@ -891,6 +897,8 @@ impl Sprite {
                         keys_down,
                         glfw,
                         shader_program,
+                        projection,
+                        font,
                         local_vars: &vec![],
                         script_id: 0,
                     },
@@ -927,6 +935,8 @@ impl Sprite {
                             keys_down,
                             glfw,
                             shader_program,
+                            projection,
+                            font,
                             local_vars: &vec![],
                             script_id: i + 1,
                         },
@@ -969,6 +979,8 @@ impl Sprite {
                             keys_down,
                             glfw,
                             shader_program,
+                            projection,
+                            font,
                             local_vars: &vec![],
                             script_id: i + update_ast_len + 1,
                         },
@@ -998,6 +1010,8 @@ impl Sprite {
                     keys_down,
                     glfw,
                     shader_program,
+                    projection,
+                    font,
                     local_vars: &vec![],
                     script_id: i + update_broadcast_len + 1,
                 },
@@ -1029,6 +1043,8 @@ impl Sprite {
                             keys_down,
                             glfw,
                             shader_program,
+                            projection,
+                            font,
                             local_vars: &vec![],
                             script_id: i + update_broadcast_len + 1,
                         },
@@ -1088,7 +1104,17 @@ impl Sprite {
 
         // idk run step for all the clones too
         for clone in &mut self.clones {
-            clone.step(start, project, snapshots, window, keys_down, glfw, shader_program);
+            clone.step(
+                start,
+                project,
+                snapshots,
+                window,
+                keys_down,
+                glfw,
+                shader_program,
+                projection,
+                font,
+            );
         }
     }
 }
