@@ -29,7 +29,7 @@ impl Function {
             project: state.project,
             snapshots: state.snapshots,
             window: state.window,
-            keys_down: state.keys_down,
+            input_manager: state.input_manager,
             glfw: state.glfw,
             shader_program: state.shader_program,
             projection: state.projection,

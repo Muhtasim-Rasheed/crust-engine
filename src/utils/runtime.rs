@@ -50,6 +50,64 @@ struct ProjectConfig {
     tags: Option<Vec<TagConfig>>,
 }
 
+#[derive(Debug)]
+pub struct InputManager {
+    keys_down: HashSet<glfw::Key>,
+    keys_pressed: HashSet<glfw::Key>,
+    keys_released: HashSet<glfw::Key>,
+}
+
+impl InputManager {
+    pub fn new() -> Self {
+        Self {
+            keys_down: HashSet::new(),
+            keys_pressed: HashSet::new(),
+            keys_released: HashSet::new(),
+        }
+    }
+
+    pub fn update(&mut self, window: &mut glfw::Window, events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>) {
+        self.keys_pressed.clear();
+        self.keys_released.clear();
+
+        for (_, event) in glfw::flush_messages(events) {
+            match event {
+                glfw::WindowEvent::Key(key, _, action, _) => {
+                    match action {
+                        glfw::Action::Press => {
+                            if !self.keys_down.contains(&key) {
+                                self.keys_pressed.insert(key);
+                            }
+                            self.keys_down.insert(key);
+                        }
+                        glfw::Action::Release => {
+                            self.keys_released.insert(key);
+                            self.keys_down.remove(&key);
+                        }
+                        _ => {}
+                    }
+                }
+                glfw::WindowEvent::Close => {
+                    window.set_should_close(true);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    pub fn is_key_down(&self, key: glfw::Key) -> bool {
+        self.keys_down.contains(&key)
+    }
+
+    pub fn is_key_pressed(&self, key: glfw::Key) -> bool {
+        self.keys_pressed.contains(&key)
+    }
+
+    pub fn is_key_released(&self, key: glfw::Key) -> bool {
+        self.keys_released.contains(&key)
+    }
+}
+
 pub struct Runtime {
     pub project: Project,
     debug_options: Vec<String>,
@@ -205,6 +263,7 @@ impl Runtime {
         shader_program: &ShaderProgram,
         glfw: &mut glfw::Glfw,
     ) {
+        let mut input_manager = InputManager::new();
         let projection = Mat4::orthographic_rh_gl(
             -window.get_size().0 as f32,
             window.get_size().0 as f32,
@@ -225,7 +284,6 @@ impl Runtime {
         let mut last_time = start;
         let mut duration = std::time::Instant::now();
         let mut fps = 0.0;
-        let mut keys_down = HashSet::<glfw::Key>::new();
         while !window.should_close() {
             let now = std::time::Instant::now();
             let dt = now.duration_since(last_time).as_secs_f32();
@@ -237,21 +295,7 @@ impl Runtime {
 
             glfw.poll_events();
 
-            for (_, event) in glfw::flush_messages(events) {
-                match event {
-                    glfw::WindowEvent::Key(key, _, action, _) => {
-                        if action == glfw::Action::Press {
-                            keys_down.insert(key);
-                        } else if action == glfw::Action::Release {
-                            keys_down.remove(&key);
-                        }
-                    }
-                    glfw::WindowEvent::Close => {
-                        window.set_should_close(true);
-                    }
-                    _ => {}
-                }
-            }
+            input_manager.update(window, events);
 
             self.project.stage.draw(window, shader_program, &projection);
 
@@ -299,7 +343,7 @@ impl Runtime {
                     &mut self.project,
                     &snapshots,
                     window,
-                    &keys_down,
+                    &mut input_manager,
                     glfw,
                     shader_program,
                     projection,

@@ -4,8 +4,7 @@ use glam::*;
 pub fn key_down(state: &State, args: &[Value]) -> Result {
     if let [Value::String(key)] = args {
         let key_code = string_to_keycode(key).ok_or(format!("Invalid key code: '{}'", key))?;
-        // Ok(Value::Boolean(is_key_down(key_code)))
-        Ok(Value::Boolean(state.keys_down.contains(&key_code)))
+        Ok(Value::Boolean(state.input_manager.is_key_down(key_code)))
     } else {
         Err("key_down() requires a single string argument".to_string())
     }
@@ -14,10 +13,7 @@ pub fn key_down(state: &State, args: &[Value]) -> Result {
 pub fn key_pressed(state: &State, args: &[Value]) -> Result {
     if let [Value::String(key)] = args {
         let key_code = string_to_keycode(key).ok_or(format!("Invalid key code: '{}'", key))?;
-        // Ok(Value::Boolean(macroquad::input::is_key_pressed(key_code)))
-        Ok(Value::Boolean(
-            state.window.get_key(key_code) == glfw::Action::Press,
-        ))
+        Ok(Value::Boolean(state.input_manager.is_key_pressed(key_code)))
     } else {
         Err("key_pressed() requires a single string argument".to_string())
     }
@@ -26,10 +22,7 @@ pub fn key_pressed(state: &State, args: &[Value]) -> Result {
 pub fn key_released(state: &State, args: &[Value]) -> Result {
     if let [Value::String(key)] = args {
         let key_code = string_to_keycode(key).ok_or(format!("Invalid key code: '{}'", key))?;
-        // Ok(Value::Boolean(macroquad::input::is_key_released(key_code)))
-        Ok(Value::Boolean(
-            state.window.get_key(key_code) == glfw::Action::Release,
-        ))
+        Ok(Value::Boolean(state.input_manager.is_key_released(key_code)))
     } else {
         Err("key_released() requires a single string argument".to_string())
     }
