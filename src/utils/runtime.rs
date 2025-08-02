@@ -1,7 +1,9 @@
 use glam::*;
 use glfw::{Context, Window};
+use kira::sound::static_sound::StaticSoundData;
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
+use kira::{AudioManager, AudioManagerSettings, DefaultBackend};
 
 use crate::utils::core::*;
 use crate::utils::draw_sprite;
@@ -52,11 +54,14 @@ struct ProjectConfig {
 
 pub struct Runtime {
     pub project: Project,
+    pub audio_manager: AudioManager<DefaultBackend>,
     debug_options: Vec<String>,
 }
 
 impl Runtime {
     pub fn new(file_path: &str, args: Vec<String>, window: &Window) -> Self {
+        let audio_manager = AudioManager::new(AudioManagerSettings::default())
+            .expect("Failed to create audio manager");
         let dir = std::path::Path::new(file_path).parent().unwrap();
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
@@ -133,19 +138,24 @@ impl Runtime {
                 textures.push(tex.upload_to_gpu());
             }
 
-            // let mut sounds = vec![];
-            // if sprite.sounds.is_some() {
-            //     let sounds_ = sprite.sounds.unwrap();
-            //     for sound in sounds_ {
-            //         let path = dir.join(&sound.file);
-            //         let sound_data = load_sound(&path.to_string_lossy()).await.unwrap_or_else(|_| {
-            //             panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
-            //         });
-            //         sounds.push((sound.name, sound_data));
-            //     }
-            // }
+            let mut sounds = vec![];
+            if sprite.sounds.is_some() {
+                let sounds_ = sprite.sounds.unwrap();
+                for sound in sounds_ {
+                    let path = dir.join(&sound.file);
+                    let sound_data = StaticSoundData::from_file(&*path.to_string_lossy())
+                        .unwrap_or_else(|e| {
+                            panic!(
+                                "Failed to load sound: {}. Error: {}",
+                                path.to_string_lossy(),
+                                e
+                            );
+                        });
+                    sounds.push((sound.name, sound_data));
+                }
+            }
 
-            // let sounds = sounds.into_iter().collect::<HashMap<_, _>>();
+            let sounds = sounds.into_iter().collect::<HashMap<_, _>>();
 
             let sprite_code_file = dir.join(&sprite.code);
             let code =
@@ -175,6 +185,7 @@ impl Runtime {
             let s = Sprite::new(
                 sprite.name.clone(),
                 textures,
+                sounds,
                 ast,
                 sprite_tags,
                 sprite.w,
@@ -193,6 +204,7 @@ impl Runtime {
 
         Self {
             project,
+            audio_manager,
             debug_options: config.debug_options.unwrap_or(vec![]),
         }
     }
@@ -301,6 +313,7 @@ impl Runtime {
                     window,
                     &keys_down,
                     glfw,
+                    &mut self.audio_manager,
                     shader_program,
                     projection,
                     font,

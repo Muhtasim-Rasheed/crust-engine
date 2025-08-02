@@ -11,16 +11,16 @@
 // Happy coding!
 
 use glam::*;
+use indexmap::IndexMap;
+use kira::sound::static_sound::StaticSoundData;
+use kira::{AudioManager, DefaultBackend};
 use std::collections::{HashMap, HashSet};
 use std::f32::consts::*;
 use std::path::PathBuf;
 
-use indexmap::IndexMap;
-
 use crate::utils::core::*;
 use crate::utils::*;
 
-#[derive(Debug)]
 pub struct State<'a> {
     pub start: std::time::Instant,
     pub sprite: &'a mut Sprite,
@@ -29,6 +29,7 @@ pub struct State<'a> {
     pub window: &'a mut glfw::Window,
     pub keys_down: &'a HashSet<glfw::Key>,
     pub glfw: &'a mut glfw::Glfw,
+    pub audio_manager: &'a mut AudioManager<DefaultBackend>,
     pub shader_program: &'a ShaderProgram,
     pub projection: Mat4,
     pub font: &'a BitmapFont,
@@ -126,7 +127,7 @@ pub(super) struct Dialogue {
 pub struct Sprite {
     pub name: String,
     pub costumes: Vec<GPUTexture>,
-    // pub sounds: HashMap<String, Sound>,
+    pub sounds: HashMap<String, StaticSoundData>,
     pub center: Vec2,
     pub size: Vec2,
     pub direction: f32,
@@ -165,7 +166,7 @@ impl Sprite {
     pub fn new(
         name: String,
         costumes: Vec<GPUTexture>,
-        // sounds: HashMap<String, Sound>,
+        sounds: HashMap<String, StaticSoundData>,
         ast: Vec<Statement>,
         tags: Vec<String>,
         w: f32,
@@ -334,7 +335,7 @@ impl Sprite {
             center: vec2(x, y),
             size: vec2(w, h),
             current_costume: 0,
-            // sounds,
+            sounds,
             scale: 1.0,
             layer: layer,
             visible: visibility,
@@ -369,7 +370,7 @@ impl Sprite {
         let update_ast = self.clone_update.clone();
         let functions = self.functions.clone();
         let costumes = self.costumes.clone();
-        // let sounds = self.sounds.clone();
+        let sounds = self.sounds.clone();
         let center = self.center;
         let size = self.size;
         Self {
@@ -382,7 +383,7 @@ impl Sprite {
             center,
             size,
             current_costume: self.current_costume,
-            // sounds,
+            sounds,
             scale: self.scale,
             layer: self.layer,
             visible: true,
@@ -684,6 +685,7 @@ impl Sprite {
                         window: state.window,
                         keys_down: state.keys_down,
                         glfw: state.glfw,
+                        audio_manager: state.audio_manager,
                         shader_program: state.shader_program,
                         projection: state.projection,
                         font: state.font,
@@ -854,6 +856,7 @@ impl Sprite {
         window: &mut glfw::Window,
         keys_down: &HashSet<glfw::Key>,
         glfw: &mut glfw::Glfw,
+        audio_manager: &mut AudioManager<DefaultBackend>,
         shader_program: &ShaderProgram,
         projection: Mat4,
         font: &BitmapFont,
@@ -896,6 +899,7 @@ impl Sprite {
                         window,
                         keys_down,
                         glfw,
+                        audio_manager,
                         shader_program,
                         projection,
                         font,
@@ -934,6 +938,7 @@ impl Sprite {
                             window,
                             keys_down,
                             glfw,
+                            audio_manager,
                             shader_program,
                             projection,
                             font,
@@ -978,6 +983,7 @@ impl Sprite {
                             window,
                             keys_down,
                             glfw,
+                            audio_manager,
                             shader_program,
                             projection,
                             font,
@@ -1009,6 +1015,7 @@ impl Sprite {
                     window,
                     keys_down,
                     glfw,
+                    audio_manager,
                     shader_program,
                     projection,
                     font,
@@ -1042,6 +1049,7 @@ impl Sprite {
                             window,
                             keys_down,
                             glfw,
+                            audio_manager,
                             shader_program,
                             projection,
                             font,
@@ -1111,6 +1119,7 @@ impl Sprite {
                 window,
                 keys_down,
                 glfw,
+                audio_manager,
                 shader_program,
                 projection,
                 font,

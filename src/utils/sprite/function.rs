@@ -31,6 +31,7 @@ impl Function {
             window: state.window,
             keys_down: state.keys_down,
             glfw: state.glfw,
+            audio_manager: state.audio_manager,
             shader_program: state.shader_program,
             projection: state.projection,
             font: state.font,
