@@ -1,19 +1,19 @@
 use crate::utils::{sprite::Dialogue, *};
 
-pub fn hide(sprite: &mut Sprite) -> Result {
-    sprite.visible = false;
+pub fn hide(state: &mut State) -> Result {
+    state.sprite.visible = false;
     Ok(Value::Null)
 }
 
-pub fn show(sprite: &mut Sprite) -> Result {
-    sprite.visible = true;
+pub fn show(state: &mut State) -> Result {
+    state.sprite.visible = true;
     Ok(Value::Null)
 }
 
-pub fn say(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn say(state: &mut State, args: &[Value]) -> Result {
     match args {
         [text] => {
-            sprite.dialogue = Some(Dialogue {
+            state.sprite.dialogue = Some(Dialogue {
                 text: text.to_string(),
                 duration: f32::INFINITY,
                 think: false,
@@ -21,7 +21,7 @@ pub fn say(sprite: &mut Sprite, args: &[Value]) -> Result {
             Ok(Value::Null)
         }
         [text, Value::Number(duration)] => {
-            sprite.dialogue = Some(Dialogue {
+            state.sprite.dialogue = Some(Dialogue {
                 text: text.to_string(),
                 duration: *duration * 60.0,
                 think: false,
@@ -32,10 +32,10 @@ pub fn say(sprite: &mut Sprite, args: &[Value]) -> Result {
     }
 }
 
-pub fn think(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn think(state: &mut State, args: &[Value]) -> Result {
     match args {
         [text] => {
-            sprite.dialogue = Some(Dialogue {
+            state.sprite.dialogue = Some(Dialogue {
                 text: text.to_string(),
                 duration: f32::INFINITY,
                 think: true,
@@ -43,7 +43,7 @@ pub fn think(sprite: &mut Sprite, args: &[Value]) -> Result {
             Ok(Value::Null)
         }
         [text, Value::Number(duration)] => {
-            sprite.dialogue = Some(Dialogue {
+            state.sprite.dialogue = Some(Dialogue {
                 text: text.to_string(),
                 duration: *duration * 60.0,
                 think: true,
@@ -54,74 +54,75 @@ pub fn think(sprite: &mut Sprite, args: &[Value]) -> Result {
     }
 }
 
-pub fn switch_costume(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn switch_costume(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(index)] = args {
-        sprite.set_costume(*index as usize);
+        state.sprite.set_costume(*index as usize);
         Ok(Value::Null)
     } else {
         Err("switch_costume() requires a single string argument".to_string())
     }
 }
 
-pub fn next_costume(sprite: &mut Sprite) -> Result {
-    sprite.next_costume();
+pub fn next_costume(state: &mut State) -> Result {
+    state.sprite.next_costume();
     Ok(Value::Null)
 }
 
-pub fn previous_costume(sprite: &mut Sprite) -> Result {
-    sprite.prev_costume();
+pub fn previous_costume(state: &mut State) -> Result {
+    state.sprite.prev_costume();
     Ok(Value::Null)
 }
 
-pub fn switch_backdrop(project: &mut Project, args: &[Value]) -> Result {
+pub fn switch_backdrop(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(index)] = args {
-        project.stage.set_backdrop(*index as usize);
+        state.project.stage.set_backdrop(*index as usize);
         Ok(Value::Null)
     } else {
         Err("switch_backdrop() requires a single string argument".to_string())
     }
 }
 
-pub fn next_backdrop(project: &mut Project) -> Result {
-    project.stage.next_backdrop();
+pub fn next_backdrop(state: &mut State) -> Result {
+    state.project.stage.next_backdrop();
     Ok(Value::Null)
 }
 
-pub fn previous_backdrop(project: &mut Project) -> Result {
-    project.stage.prev_backdrop();
+pub fn previous_backdrop(state: &mut State) -> Result {
+    state.project.stage.prev_backdrop();
     Ok(Value::Null)
 }
 
-pub fn set_scale(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn set_scale(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(scale)] = args {
-        sprite.scale = *scale / 100.0;
+        state.sprite.scale = *scale / 100.0;
         Ok(Value::Null)
     } else {
         Err("set_scale() requires a single numeric argument".to_string())
     }
 }
 
-pub fn change_scale(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn change_scale(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(scale)] = args {
-        sprite.scale += *scale / 100.0;
+        state.sprite.scale += *scale / 100.0;
         Ok(Value::Null)
     } else {
         Err("change_scale() requires a single numeric argument".to_string())
     }
 }
 
-pub fn set_effect(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn set_effect(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(effect), Value::Number(value)] = args {
-        sprite.effects.insert(effect.to_string(), *value);
+        state.sprite.effects.insert(effect.to_string(), *value);
         Ok(Value::Null)
     } else {
         Err("set_effect() requires a string and a numeric argument".to_string())
     }
 }
 
-pub fn change_effect(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn change_effect(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(effect), Value::Number(value)] = args {
-        sprite
+        state
+            .sprite
             .effects
             .entry(effect.to_string())
             .and_modify(|v| *v += *value)
@@ -132,36 +133,36 @@ pub fn change_effect(sprite: &mut Sprite, args: &[Value]) -> Result {
     }
 }
 
-pub fn clear_effects(sprite: &mut Sprite) -> Result {
-    sprite.effects.clear();
+pub fn clear_effects(state: &mut State) -> Result {
+    state.sprite.effects.clear();
     Ok(Value::Null)
 }
 
-pub fn clear_effect(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn clear_effect(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(effect)] = args {
-        sprite.effects.shift_remove(effect);
+        state.sprite.effects.shift_remove(effect);
         Ok(Value::Null)
     } else {
         Err("clear_effect() requires a single string argument".to_string())
     }
 }
 
-pub fn go_to_layer(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn go_to_layer(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(layer)] = args {
-        sprite.layer = *layer as isize;
+        state.sprite.layer = *layer as isize;
         Ok(Value::Null)
     } else {
         Err("go_to_layer() requires a single numeric argument".to_string())
     }
 }
 
-pub fn go_by_layers(sprite: &mut Sprite, args: &[Value]) -> Result {
+pub fn go_by_layers(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(direction), Value::Number(steps)] = args {
         if direction == "forwards" {
-            sprite.layer += *steps as isize;
+            state.sprite.layer += *steps as isize;
             Ok(Value::Null)
         } else if direction == "backwards" {
-            sprite.layer -= *steps as isize;
+            state.sprite.layer -= *steps as isize;
             Ok(Value::Null)
         } else {
             Err(
@@ -174,42 +175,42 @@ pub fn go_by_layers(sprite: &mut Sprite, args: &[Value]) -> Result {
     }
 }
 
-pub fn costume(sprite: &Sprite) -> Result {
-    Ok(Value::Number(sprite.costume() as f32))
+pub fn costume(state: &State) -> Result {
+    Ok(Value::Number(state.sprite.costume() as f32))
 }
 
-pub fn backdrop(project: &Project) -> Result {
-    Ok(Value::Number(project.stage.backdrop() as f32))
+pub fn backdrop(state: &State) -> Result {
+    Ok(Value::Number(state.project.stage.backdrop() as f32))
 }
 
-pub fn size(sprite: &Sprite) -> Result {
+pub fn size(state: &State) -> Result {
     Ok(Value::List(vec![
-        Value::Number(sprite.size.x),
-        Value::Number(sprite.size.y),
+        Value::Number(state.sprite.size.x),
+        Value::Number(state.sprite.size.y),
     ]))
 }
 
-pub fn scale(sprite: &Sprite) -> Result {
-    Ok(Value::Number(sprite.scale * 100.0))
+pub fn scale(state: &State) -> Result {
+    Ok(Value::Number(state.sprite.scale * 100.0))
 }
 
-pub fn bounds(sprite: &Sprite) -> Result {
+pub fn bounds(state: &State) -> Result {
     Ok(Value::List(vec![
-        Value::Number(sprite.center.x - sprite.size.x * sprite.scale),
-        Value::Number(sprite.center.y - sprite.size.y * sprite.scale),
-        Value::Number(sprite.center.x + sprite.size.x * sprite.scale),
-        Value::Number(sprite.center.y + sprite.size.y * sprite.scale),
+        Value::Number(state.sprite.center.x - state.sprite.size.x * state.sprite.scale),
+        Value::Number(state.sprite.center.y - state.sprite.size.y * state.sprite.scale),
+        Value::Number(state.sprite.center.x + state.sprite.size.x * state.sprite.scale),
+        Value::Number(state.sprite.center.y + state.sprite.size.y * state.sprite.scale),
     ]))
 }
 
-pub fn layer(sprite: &Sprite) -> Result {
-    Ok(Value::Number(sprite.layer as f32))
+pub fn layer(state: &State) -> Result {
+    Ok(Value::Number(state.sprite.layer as f32))
 }
 
-pub fn effect(sprite: &Sprite, args: &[Value]) -> Result {
+pub fn effect(state: &State, args: &[Value]) -> Result {
     if let [Value::String(effect)] = args {
         Ok(Value::Number(
-            *sprite.effects.get(effect).unwrap_or(&0.0) as f32
+            *state.sprite.effects.get(effect).unwrap_or(&0.0) as f32,
         ))
     } else {
         Err("effect() requires a single string argument".to_string())

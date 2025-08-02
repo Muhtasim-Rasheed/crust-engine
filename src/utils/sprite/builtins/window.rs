@@ -1,40 +1,62 @@
-use macroquad::{input::{set_cursor_grab, show_mouse}, window::*};
+use glfw::WindowMode;
 
 use crate::utils::*;
 
-pub fn set_window_width(args: &[Value]) -> Result {
+pub fn set_window_width(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(width)] = args {
-        request_new_screen_size(*width, screen_height());
+        state
+            .window
+            .set_size(*width as i32, state.window.get_size().1);
         Ok(Value::Null)
     } else {
         Err("set_window_width() requires a single numeric argument".to_string())
     }
 }
 
-pub fn set_window_height(args: &[Value]) -> Result {
+pub fn set_window_height(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(height)] = args {
-        request_new_screen_size(screen_width(), *height);
+        state
+            .window
+            .set_size(state.window.get_size().0, *height as i32);
         Ok(Value::Null)
     } else {
         Err("set_window_height() requires a single numeric argument".to_string())
     }
 }
 
-pub fn set_window_size(args: &[Value]) -> Result {
+pub fn set_window_size(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(width), Value::Number(height)] = args {
-        request_new_screen_size(*width, *height);
+        state.window.set_size(*width as i32, *height as i32);
         Ok(Value::Null)
     } else {
         Err("set_window_size() requires two numeric arguments".to_string())
     }
 }
 
-pub fn set_window_state(args: &[Value]) -> Result {
-    if let [Value::String(state)] = args {
-        match state.as_str() {
-            "normal" => set_fullscreen(false),
-            "fullscreen" => set_fullscreen(true),
-            _ => return Err(format!("Invalid window state: '{}'", state)),
+pub fn set_window_state(state: &mut State, args: &[Value]) -> Result {
+    if let [Value::String(mode)] = args {
+        let (xpos, ypos) = state.window.get_pos();
+        let (width, height) = state.window.get_size();
+        match mode.as_str() {
+            "normal" => state.window.set_monitor(
+                WindowMode::Windowed,
+                xpos as i32,
+                ypos as i32,
+                width as u32,
+                height as u32,
+                None,
+            ),
+            "fullscreen" => state.glfw.with_primary_monitor(|_, m| {
+                state.window.set_monitor(
+                    m.map_or(WindowMode::Windowed, |m| WindowMode::FullScreen(m)),
+                    xpos as i32,
+                    ypos as i32,
+                    width as u32,
+                    height as u32,
+                    None,
+                )
+            }),
+            _ => return Err(format!("Invalid window state: '{}'", mode)),
         }
         Ok(Value::Null)
     } else {
@@ -42,53 +64,50 @@ pub fn set_window_state(args: &[Value]) -> Result {
     }
 }
 
-pub fn set_window_x(args: &[Value]) -> Result {
+pub fn set_window_x(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(x)] = args {
-        macroquad::miniquad::window::set_window_position(
-            *x as u32,
-            macroquad::miniquad::window::get_window_position().1,
-        );
+        state.window.set_pos(*x as i32, state.window.get_pos().1);
         Ok(Value::Null)
     } else {
         Err("set_window_x() requires a single numeric argument".to_string())
     }
 }
 
-pub fn set_window_y(args: &[Value]) -> Result {
+pub fn set_window_y(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(y)] = args {
-        macroquad::miniquad::window::set_window_position(
-            macroquad::miniquad::window::get_window_position().0,
-            *y as u32,
-        );
+        state.window.set_pos(state.window.get_pos().0, *y as i32);
         Ok(Value::Null)
     } else {
         Err("set_window_y() requires a single numeric argument".to_string())
     }
 }
 
-pub fn set_window_position(args: &[Value]) -> Result {
+pub fn set_window_position(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(x), Value::Number(y)] = args {
-        macroquad::miniquad::window::set_window_position(*x as u32, *y as u32);
+        state.window.set_pos(*x as i32, *y as i32);
         Ok(Value::Null)
     } else {
         Err("set_window_position() requires two numeric arguments".to_string())
     }
 }
 
-pub fn pointer_grab(args: &[Value]) -> Result {
+pub fn pointer_grab(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Boolean(grab)] = args {
-        set_cursor_grab(*grab);
-        show_mouse(!grab);
+        if *grab {
+            state.window.set_cursor_mode(glfw::CursorMode::Disabled);
+        } else {
+            state.window.set_cursor_mode(glfw::CursorMode::Normal);
+        }
         Ok(Value::Null)
     } else {
         Err("pointer_grab() requires a single boolean argument".to_string())
     }
 }
 
-pub fn window_width() -> Result {
-    Ok(Value::Number(screen_width()))
+pub fn window_width(state: &mut State) -> Result {
+    Ok(Value::Number(state.window.get_size().0 as f32))
 }
 
-pub fn window_height() -> Result {
-    Ok(Value::Number(screen_height()))
+pub fn window_height(state: &mut State) -> Result {
+    Ok(Value::Number(state.window.get_size().1 as f32))
 }

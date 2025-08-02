@@ -38,7 +38,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `read(path)`: Imports a Crust file at the specified path. The path is relative to the project root.
 - `read_binary(path)`: Imports a binary file at the specified path. The path is relative to the project root.
 - `parse_image(binary)`: Parses the given binary data as an image and returns a list [width, height, pixels]. The pixels are a list of RGBA values in the format [r, g, b, a].
-- `costume_as_image()`: Returns the image data of the current costume in the same format as `parse_image()`.
+- `set_uv(u, v, w, x)`: Sets the UV coordinates for the sprite, where uv is bottom-left and wx is top-right. Can be used for atlases where theres no need for extra costumes.
 - `screenshot()`: Takes a screenshot of the current screen and saves it to the `exports` directory in the project root.
 - `screenshot(path)`: Takes a screenshot of the current screen and saves it to the specified path. The path is relative to the project root.
 - `typeof(value)`: Returns the type of the given value as a string.
