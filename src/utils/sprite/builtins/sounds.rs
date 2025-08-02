@@ -1,3 +1,5 @@
+use kira::Tween;
+
 use crate::utils::{sprite::function::Result, *};
 
 pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
@@ -6,8 +8,9 @@ pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
         name: &str,
     ) -> Result {
         if let Some(sound) = state.sprite.sounds.get(name) {
-            state.audio_manager.play(sound.clone())
+            let handle = state.audio_manager.play(sound.clone())
                 .map_err(|e| e.to_string())?;
+            state.sprite.sound_handles.insert(name.to_string(), handle);
             Ok(Value::Null)
         } else {
             Err(format!("Sound '{}' not found", name))
@@ -28,25 +31,23 @@ pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
 }
 
 pub fn stop_all_sounds(state: &mut State) -> Result {
-    // for sound in sprite.sounds.values() {
-    //     macroquad::audio::stop_sound(sound);
-    // }
-    // Ok(Value::Null)
-    Err("TODO: stop_all_sounds() is not implemented yet".to_string())
+    for sound_handle in state.sprite.sound_handles.values_mut() {
+        sound_handle.stop(Tween::default());
+    }
+    Ok(Value::Null)
 }
 
 pub fn stop_sound(state: &mut State, args: &[Value]) -> Result {
-    // if let [Value::String(name)] = args {
-    //     if let Some(sound) = sprite.sounds.get(name) {
-    //         macroquad::audio::stop_sound(sound);
-    //         Ok(Value::Null)
-    //     } else {
-    //         Err(format!("Sound '{}' not found", name))
-    //     }
-    // } else {
-    //     Err("stop_sound() requires a single string argument".to_string())
-    // }
-    Err("TODO: stop_sound() is not implemented yet".to_string())
+    if let [Value::String(name)] = args {
+        if let Some(sound_handle) = state.sprite.sound_handles.get_mut(name) {
+            sound_handle.stop(Tween::default());
+            Ok(Value::Null)
+        } else {
+            Err(format!("Sound '{}' not found", name))
+        }
+    } else {
+        Err("stop_sound() requires a single string argument".to_string())
+    }
 }
 
 pub fn change_sound_effect(state: &mut State, args: &[Value]) -> Result {

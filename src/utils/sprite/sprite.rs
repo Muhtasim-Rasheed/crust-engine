@@ -12,7 +12,7 @@
 
 use glam::*;
 use indexmap::IndexMap;
-use kira::sound::static_sound::StaticSoundData;
+use kira::sound::static_sound::{StaticSoundData, StaticSoundHandle};
 use kira::{AudioManager, DefaultBackend};
 use std::collections::{HashMap, HashSet};
 use std::f32::consts::*;
@@ -150,6 +150,7 @@ pub struct Sprite {
     pub(super) time_waiting: u32,
     pub(super) glide: Option<Glide>,
     pub(super) delete_pending: bool,
+    pub(super) sound_handles: HashMap<String, StaticSoundHandle>,
     pub(super) skip_further_execution_of_frame: bool,
     pub(super) uv: [Vec2; 2],
     clone_setup: Vec<Statement>,
@@ -358,6 +359,7 @@ impl Sprite {
             tags,
             broadcast_recievers,
             boolean_recievers,
+            sound_handles: HashMap::new(),
             skip_further_execution_of_frame: false,
             uv: [vec2(0.0, 1.0), vec2(1.0, 0.0)],
             completed_broadcasts: vec![],
@@ -406,6 +408,7 @@ impl Sprite {
             tags: self.tags.clone(),
             broadcast_recievers: self.broadcast_recievers.clone(),
             boolean_recievers: self.boolean_recievers.clone(),
+            sound_handles: HashMap::new(),
             skip_further_execution_of_frame: false,
             uv: self.uv,
             completed_broadcasts: vec![],
