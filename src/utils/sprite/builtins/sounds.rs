@@ -3,13 +3,21 @@ use kira::Tween;
 use crate::utils::{sprite::function::Result, *};
 
 pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
-    fn play_sound_inner(
-        state: &mut State,
-        name: &str,
-    ) -> Result {
+    fn play_sound_inner(state: &mut State, name: &str) -> Result {
         if let Some(sound) = state.sprite.sounds.get(name) {
-            let handle = state.audio_manager.play(sound.clone())
+            let mut handle = state
+                .audio_manager
+                .play(sound.clone())
                 .map_err(|e| e.to_string())?;
+            handle.set_volume(
+                state
+                    .sprite
+                    .sound_effects
+                    .get("volume")
+                    .cloned()
+                    .unwrap_or(1.0),
+                Tween::default(),
+            );
             state.sprite.sound_handles.insert(name.to_string(), handle);
             Ok(Value::Null)
         } else {
@@ -17,9 +25,7 @@ pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
         }
     }
     match args {
-        [Value::String(name)] => {
-            play_sound_inner(state, name)
-        }
+        [Value::String(name)] => play_sound_inner(state, name),
         [Value::String(name), Value::Boolean(stop_other)] => {
             if *stop_other {
                 stop_all_sounds(state)?;
@@ -52,7 +58,8 @@ pub fn stop_sound(state: &mut State, args: &[Value]) -> Result {
 
 pub fn change_sound_effect(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(effect), Value::Number(value)] = args {
-        state.sprite
+        state
+            .sprite
             .sound_effects
             .entry(effect.clone())
             .and_modify(|v| *v += *value)

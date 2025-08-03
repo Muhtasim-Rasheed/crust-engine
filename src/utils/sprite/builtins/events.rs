@@ -22,49 +22,48 @@ pub fn key_pressed(state: &State, args: &[Value]) -> Result {
 pub fn key_released(state: &State, args: &[Value]) -> Result {
     if let [Value::String(key)] = args {
         let key_code = string_to_keycode(key).ok_or(format!("Invalid key code: '{}'", key))?;
-        Ok(Value::Boolean(state.input_manager.is_key_released(key_code)))
+        Ok(Value::Boolean(
+            state.input_manager.is_key_released(key_code),
+        ))
     } else {
         Err("key_released() requires a single string argument".to_string())
     }
 }
 
-pub fn mouse_button_down(args: &[Value]) -> Result {
-    // if let [Value::String(button)] = args {
-    //     let button_code =
-    //         string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
-    //     Ok(Value::Boolean(macroquad::input::is_mouse_button_down(
-    //         button_code,
-    //     )))
-    // } else {
-    //     Err("mouse_button_down() requires a single string argument".to_string())
-    // }
-    Err("TODO: mouse_button_down() is not implemented yet".to_string())
+pub fn mouse_button_down(state: &State, args: &[Value]) -> Result {
+    if let [Value::String(button)] = args {
+        let button_code =
+            string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
+        Ok(Value::Boolean(
+            state.input_manager.is_mouse_button_down(button_code),
+        ))
+    } else {
+        Err("mouse_button_down() requires a single string argument".to_string())
+    }
 }
 
-pub fn mouse_button_pressed(args: &[Value]) -> Result {
-    // if let [Value::String(button)] = args {
-    //     let button_code =
-    //         string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
-    //     Ok(Value::Boolean(macroquad::input::is_mouse_button_pressed(
-    //         button_code,
-    //     )))
-    // } else {
-    //     Err("mouse_button_pressed() requires a single string argument".to_string())
-    // }
-    Err("TODO: mouse_button_pressed() is not implemented yet".to_string())
+pub fn mouse_button_pressed(state: &State, args: &[Value]) -> Result {
+    if let [Value::String(button)] = args {
+        let button_code =
+            string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
+        Ok(Value::Boolean(
+            state.input_manager.is_mouse_button_pressed(button_code),
+        ))
+    } else {
+        Err("mouse_button_pressed() requires a single string argument".to_string())
+    }
 }
 
-pub fn mouse_button_released(args: &[Value]) -> Result {
-    // if let [Value::String(button)] = args {
-    //     let button_code =
-    //         string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
-    //     Ok(Value::Boolean(macroquad::input::is_mouse_button_released(
-    //         button_code,
-    //     )))
-    // } else {
-    //     Err("mouse_button_released() requires a single string argument".to_string())
-    // }
-    Err("TODO: mouse_button_released() is not implemented yet".to_string())
+pub fn mouse_button_released(state: &State, args: &[Value]) -> Result {
+    if let [Value::String(button)] = args {
+        let button_code =
+            string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
+        Ok(Value::Boolean(
+            state.input_manager.is_mouse_button_released(button_code),
+        ))
+    } else {
+        Err("mouse_button_released() requires a single string argument".to_string())
+    }
 }
 
 pub fn mouse_x(state: &State) -> Result {
@@ -80,32 +79,36 @@ pub fn mouse_y(state: &State) -> Result {
 }
 
 pub fn sprite_clicked(state: &State) -> Result {
-    // if !is_mouse_button_pressed(MouseButton::Left) {
-    //     return Ok(Value::Boolean(false));
-    // }
-    // let xy = mouse_position();
-    // let top_left = state.sprite.center
-    //     - Vec2::new(
-    //         state.sprite.size.x * state.sprite.scale,
-    //         state.sprite.size.y * state.sprite.scale,
-    //     );
-    // let bottom_right = state.sprite.center
-    //     + Vec2::new(
-    //         state.sprite.size.x * state.sprite.scale,
-    //         state.sprite.size.y * state.sprite.scale,
-    //     );
-    // let rect = Rect::new(
-    //     top_left.x,
-    //     top_left.y,
-    //     top_left.x - bottom_right.x,
-    //     top_left.y - bottom_right.y,
-    // );
-    // if rect.contains(xy.into()) {
-    //     Ok(Value::Boolean(true))
-    // } else {
-    //     Ok(Value::Boolean(false))
-    // }
-    Err("TODO: sprite_clicked() is not implemented yet".to_string())
+    if !state
+        .input_manager
+        .is_mouse_button_pressed(glfw::MouseButton::Left)
+    {
+        return Ok(Value::Boolean(false));
+    }
+    let (x, y) = state.window.get_cursor_pos();
+    let xy = Vec2::new(
+        x as f32 * 2.0 - state.window.get_size().0 as f32,
+        -(y as f32 * 2.0 - state.window.get_size().1 as f32),
+    );
+    let top_left = state.sprite.center
+        - Vec2::new(
+            state.sprite.size.x * state.sprite.scale,
+            state.sprite.size.y * state.sprite.scale,
+        );
+    let bottom_right = state.sprite.center
+        + Vec2::new(
+            state.sprite.size.x * state.sprite.scale,
+            state.sprite.size.y * state.sprite.scale,
+        );
+    if {
+        let collide_x = xy.x >= top_left.x && xy.x <= bottom_right.x;
+        let collide_y = xy.y >= top_left.y && xy.y <= bottom_right.y;
+        collide_x && collide_y
+    } {
+        Ok(Value::Boolean(true))
+    } else {
+        Ok(Value::Boolean(false))
+    }
 }
 
 pub fn is_backdrop(state: &State, args: &[Value]) -> Result {

@@ -69,7 +69,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "whoami", |st, _| misc::whoami(st));
     builtin!(builtins, "cloneid", |st, _| misc::cloneid(st));
     builtin!(builtins, "frame", |st, _| misc::frame(st));
-    builtin!(builtins, "delta_time", |_, _| misc::delta_time());
+    builtin!(builtins, "delta_time", |st, _| misc::delta_time(st));
 
     // MOTION
     builtin!(builtins, "move", |st, ar| motion::r#move(st, ar));
@@ -127,9 +127,9 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "key_down", |st, ar| events::key_down(st, ar));
     builtin!(builtins, "key_pressed", |st, ar| events::key_pressed(st, ar));
     builtin!(builtins, "key_released", |st, ar| events::key_released(st, ar));
-    builtin!(builtins, "mouse_button_down", |_, ar| events::mouse_button_down(ar));
-    builtin!(builtins, "mouse_button_pressed", |_, ar| events::mouse_button_pressed(ar));
-    builtin!(builtins, "mouse_button_released", |_, ar| events::mouse_button_released(ar));
+    builtin!(builtins, "mouse_button_down", |st, ar| events::mouse_button_down(st, ar));
+    builtin!(builtins, "mouse_button_pressed", |st, ar| events::mouse_button_pressed(st, ar));
+    builtin!(builtins, "mouse_button_released", |st, ar| events::mouse_button_released(st, ar));
     builtin!(builtins, "mouse_x", |st, _| events::mouse_x(st));
     builtin!(builtins, "mouse_y", |st, _| events::mouse_y(st));
     builtin!(builtins, "sprite_clicked", |st, _| events::sprite_clicked(st));

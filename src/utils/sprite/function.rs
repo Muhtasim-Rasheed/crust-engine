@@ -25,6 +25,7 @@ impl Function {
         }
         let mut new_state = State {
             start: state.start,
+            dt: state.dt,
             sprite: state.sprite,
             project: state.project,
             snapshots: state.snapshots,

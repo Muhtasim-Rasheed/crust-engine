@@ -14,7 +14,7 @@ use glam::*;
 use indexmap::IndexMap;
 use kira::sound::static_sound::{StaticSoundData, StaticSoundHandle};
 use kira::{AudioManager, DefaultBackend};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::f32::consts::*;
 use std::path::PathBuf;
 
@@ -23,6 +23,7 @@ use crate::utils::*;
 
 pub struct State<'a> {
     pub start: std::time::Instant,
+    pub dt: f32,
     pub sprite: &'a mut Sprite,
     pub project: &'a mut Project,
     pub snapshots: &'a [SpriteSnapshot],
@@ -682,6 +683,8 @@ impl Sprite {
                     new_local_vars.push((identifier.clone(), value));
                     let mut new_state = State {
                         start: state.start,
+                        dt,
+                        dt: state.dt,
                         sprite: state.sprite,
                         project: state.project,
                         snapshots: state.snapshots,
@@ -854,6 +857,7 @@ impl Sprite {
     pub fn step(
         &mut self,
         start: std::time::Instant,
+        dt: f32,
         project: &mut Project,
         snapshots: &[SpriteSnapshot],
         window: &mut glfw::Window,
@@ -896,6 +900,7 @@ impl Sprite {
                     &statement,
                     &mut State {
                         start,
+                        dt,
                         sprite: self,
                         project,
                         snapshots,
@@ -935,6 +940,7 @@ impl Sprite {
                         &statement,
                         &mut State {
                             start,
+                            dt,
                             sprite: self,
                             project,
                             snapshots,
@@ -980,6 +986,7 @@ impl Sprite {
                         &statement,
                         &mut State {
                             start,
+                            dt,
                             sprite: self,
                             project,
                             snapshots,
@@ -1012,6 +1019,7 @@ impl Sprite {
                 &expr,
                 &mut State {
                     start,
+                    dt,
                     sprite: self,
                     project,
                     snapshots,
@@ -1046,6 +1054,7 @@ impl Sprite {
                         &statement,
                         &mut State {
                             start,
+                            dt,
                             sprite: self,
                             project,
                             snapshots,
@@ -1117,6 +1126,7 @@ impl Sprite {
         for clone in &mut self.clones {
             clone.step(
                 start,
+                dt,
                 project,
                 snapshots,
                 window,

@@ -316,22 +316,50 @@ pub fn set_uv(state: &mut State, args: &[Value]) -> Result {
 }
 
 pub fn screenshot(state: &State, args: &[Value]) -> Result {
-    // if args.len() != 1 {
-    //     return Err("screenshot() expects one string argument".to_string());
-    // }
+    if args.len() != 1 {
+        return Err("screenshot() expects one string argument".to_string());
+    }
 
-    // let file_name = match &args[0] {
-    //     Value::String(name) => name.clone(),
-    //     _ => return Err("screenshot() expects a string argument".to_string()),
-    // };
+    let file_name = match &args[0] {
+        Value::String(name) => name.clone(),
+        _ => return Err("screenshot() expects a string argument".to_string()),
+    };
 
-    // let full_path = Path::new(&state.project.export_path).join(file_name);
-    // let screenshot = get_screen_data();
-    // screenshot.export_png(&full_path.to_string_lossy());
+    let full_path = Path::new(&state.project.export_path).join(file_name);
+    let (width, height) = state.window.get_framebuffer_size();
+    let mut pixels = vec![0; (width * height * 3) as usize];
 
-    // Ok(Value::Null)
+    unsafe {
+        gl::ReadPixels(
+            0,
+            0,
+            width,
+            height,
+            gl::RGB,
+            gl::UNSIGNED_BYTE,
+            pixels.as_mut_ptr() as *mut _,
+        );
+    }
 
-    Err("TODO: screenshot() is not implemented yet".to_string())
+    let row_len = (width * 3) as usize;
+    for y in 0..(height / 2) {
+        let top = y as usize * row_len;
+        let bottom = (height as usize - 1 - y as usize) * row_len;
+        for x in 0..row_len {
+            pixels.swap(top + x, bottom + x);
+        }
+    }
+
+    image::save_buffer(
+        full_path,
+        &pixels,
+        width as u32,
+        height as u32,
+        image::ColorType::Rgb8,
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(Value::Null)
 }
 
 pub fn r#typeof(args: &[Value]) -> Result {
@@ -643,7 +671,6 @@ pub fn frame(state: &State) -> Result {
     Ok(Value::Number(state.start.elapsed().as_secs_f32() * 60.0))
 }
 
-pub fn delta_time() -> Result {
-    // Ok(Value::Number(get_frame_time() as f32))
-    Err("TODO: delta_time() is not implemented yet".to_string())
+pub fn delta_time(state: &State) -> Result {
+    Ok(Value::Number(state.dt))
 }

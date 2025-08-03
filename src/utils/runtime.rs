@@ -1,9 +1,9 @@
 use glam::*;
 use glfw::{Context, Window};
 use kira::sound::static_sound::StaticSoundData;
+use kira::{AudioManager, AudioManagerSettings, DefaultBackend};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
-use kira::{AudioManager, AudioManagerSettings, DefaultBackend};
 
 use crate::utils::core::*;
 use crate::utils::draw_sprite;
@@ -57,6 +57,9 @@ pub struct InputManager {
     keys_down: HashSet<glfw::Key>,
     keys_pressed: HashSet<glfw::Key>,
     keys_released: HashSet<glfw::Key>,
+    mouse_buttons_down: HashSet<glfw::MouseButton>,
+    mouse_buttons_pressed: HashSet<glfw::MouseButton>,
+    mouse_buttons_released: HashSet<glfw::MouseButton>,
 }
 
 impl InputManager {
@@ -65,30 +68,50 @@ impl InputManager {
             keys_down: HashSet::new(),
             keys_pressed: HashSet::new(),
             keys_released: HashSet::new(),
+            mouse_buttons_down: HashSet::new(),
+            mouse_buttons_pressed: HashSet::new(),
+            mouse_buttons_released: HashSet::new(),
         }
     }
 
-    pub fn update(&mut self, window: &mut glfw::Window, events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>) {
+    pub fn update(
+        &mut self,
+        window: &mut glfw::Window,
+        events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,
+    ) {
         self.keys_pressed.clear();
         self.keys_released.clear();
+        self.mouse_buttons_pressed.clear();
+        self.mouse_buttons_released.clear();
 
         for (_, event) in glfw::flush_messages(events) {
             match event {
-                glfw::WindowEvent::Key(key, _, action, _) => {
-                    match action {
-                        glfw::Action::Press => {
-                            if !self.keys_down.contains(&key) {
-                                self.keys_pressed.insert(key);
-                            }
-                            self.keys_down.insert(key);
+                glfw::WindowEvent::Key(key, _, action, _) => match action {
+                    glfw::Action::Press => {
+                        if !self.keys_down.contains(&key) {
+                            self.keys_pressed.insert(key);
                         }
-                        glfw::Action::Release => {
-                            self.keys_released.insert(key);
-                            self.keys_down.remove(&key);
-                        }
-                        _ => {}
+                        self.keys_down.insert(key);
                     }
-                }
+                    glfw::Action::Release => {
+                        self.keys_released.insert(key);
+                        self.keys_down.remove(&key);
+                    }
+                    _ => {}
+                },
+                glfw::WindowEvent::MouseButton(button, action, _) => match action {
+                    glfw::Action::Press => {
+                        if !self.mouse_buttons_down.contains(&button) {
+                            self.mouse_buttons_pressed.insert(button);
+                        }
+                        self.mouse_buttons_down.insert(button);
+                    }
+                    glfw::Action::Release => {
+                        self.mouse_buttons_released.insert(button);
+                        self.mouse_buttons_down.remove(&button);
+                    }
+                    _ => {}
+                },
                 glfw::WindowEvent::Close => {
                     window.set_should_close(true);
                 }
@@ -107,6 +130,18 @@ impl InputManager {
 
     pub fn is_key_released(&self, key: glfw::Key) -> bool {
         self.keys_released.contains(&key)
+    }
+
+    pub fn is_mouse_button_down(&self, button: glfw::MouseButton) -> bool {
+        self.mouse_buttons_down.contains(&button)
+    }
+
+    pub fn is_mouse_button_pressed(&self, button: glfw::MouseButton) -> bool {
+        self.mouse_buttons_pressed.contains(&button)
+    }
+
+    pub fn is_mouse_button_released(&self, button: glfw::MouseButton) -> bool {
+        self.mouse_buttons_released.contains(&button)
     }
 }
 
@@ -352,6 +387,7 @@ impl Runtime {
             for sprite in &mut sprites {
                 sprite.step(
                     start,
+                    dt,
                     &mut self.project,
                     &snapshots,
                     window,
