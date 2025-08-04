@@ -683,7 +683,6 @@ impl Sprite {
                     new_local_vars.push((identifier.clone(), value));
                     let mut new_state = State {
                         start: state.start,
-                        dt,
                         dt: state.dt,
                         sprite: state.sprite,
                         project: state.project,
@@ -880,6 +879,10 @@ impl Sprite {
             }
 
             return;
+        }
+
+        if self.effects.len() > 32 {
+            self.effects.shift_remove_index(0);
         }
 
         if !self.setup_finished {
