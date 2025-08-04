@@ -208,21 +208,6 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + t * (b - a)
 }
 
-pub fn lerp_vec2(a: Vec2, b: Vec2, t: f32) -> Vec2 {
-    Vec2::new(lerp(a.x, b.x, t), lerp(a.y, b.y, t))
-}
-
-pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
-    let mut flat = vec![0; pixels.len() * 4];
-    for (i, pixel) in pixels.iter().enumerate() {
-        flat[i * 4] = pixel[0];
-        flat[i * 4 + 1] = pixel[1];
-        flat[i * 4 + 2] = pixel[2];
-        flat[i * 4 + 3] = pixel[3];
-    }
-    flat
-}
-
 pub fn format_radix(mut x: u32, radix: u32) -> String {
     let mut result = vec![];
 

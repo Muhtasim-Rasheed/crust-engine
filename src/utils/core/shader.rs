@@ -125,3 +125,11 @@ impl ShaderProgram {
         }
     }
 }
+
+impl Drop for ShaderProgram {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteProgram(self.0);
+        }
+    }
+}

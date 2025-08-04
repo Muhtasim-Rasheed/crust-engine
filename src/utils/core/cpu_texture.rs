@@ -58,15 +58,6 @@ impl CPUTexture {
         })
     }
 
-    pub fn get(&self, x: u32, y: u32) -> Option<U8Vec4> {
-        if x < self.width && y < self.height {
-            let index = (y * self.width + x) as usize;
-            Some(self.data[index])
-        } else {
-            None
-        }
-    }
-
     pub fn set(&mut self, x: u32, y: u32, color: U8Vec4) {
         if x < self.width && y < self.height {
             let index = (y * self.width + x) as usize;

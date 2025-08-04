@@ -47,7 +47,7 @@ impl VertexFormat for Vertex {
 
 pub enum DrawMode {
     Triangles = gl::TRIANGLES as isize,
-    Lines = gl::LINES as isize,
+    // Lines = gl::LINES as isize,
 }
 
 pub struct Mesh<T: VertexFormat> {
