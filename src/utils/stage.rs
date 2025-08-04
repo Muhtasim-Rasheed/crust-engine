@@ -1,34 +1,37 @@
-use macroquad::prelude::*;
+use crate::utils::core::*;
+use glam::*;
+use glfw::Window;
 
 pub struct Stage {
-    pub backdrops: Vec<Texture2D>,
-    pub stamp_layer: Camera2D,
-    stamp_layer_target: RenderTarget,
+    pub backdrops: Vec<GPUTexture>,
+    pub stamp_buffer: Framebuffer,
     current_backdrop: usize,
-    last_screen_width: f32,
-    last_screen_height: f32,
+    last_screen_width: i32,
+    last_screen_height: i32,
 }
 
 impl Stage {
-    pub fn new(backdrops: Vec<Texture2D>) -> Self {
+    pub fn new(backdrops: Vec<GPUTexture>, window: &Window) -> Self {
         Self {
             backdrops,
-            stamp_layer: Camera2D {
-                target: vec2(0.0, 0.0),
-                zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()),
-                render_target: None,
-                ..Default::default()
-            },
-            stamp_layer_target: render_target(screen_width() as u32, screen_height() as u32),
+            stamp_buffer: Framebuffer::new(
+                window.get_size().0 as u32,
+                window.get_size().1 as u32,
+                false,
+            ),
             current_backdrop: 0,
-            last_screen_width: 0.0,
-            last_screen_height: 0.0,
+            last_screen_width: 0,
+            last_screen_height: 0,
         }
     }
 
-    pub fn clear_stamps(&mut self) {
-        self.stamp_layer_target = render_target(screen_width() as u32, screen_height() as u32);
-        self.stamp_layer.render_target = Some(self.stamp_layer_target.clone());
+    pub fn clear_stamps(&self) {
+        self.stamp_buffer.bind();
+        unsafe {
+            gl::ClearColor(0.0, 0.0, 0.0, 0.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
+        Framebuffer::unbind();
     }
 
     pub fn set_backdrop(&mut self, index: usize) {
@@ -53,22 +56,24 @@ impl Stage {
         self.current_backdrop
     }
 
-    pub fn draw(&mut self) {
-        let sw = screen_width();
-        let sh = screen_height();
+    pub fn draw(&mut self, window: &Window, shader_program: &ShaderProgram, projection: &Mat4) {
+        let sw = window.get_size().0;
+        let sh = window.get_size().1;
 
         if sw != self.last_screen_width || sh != self.last_screen_height {
+            unsafe {
+                gl::Viewport(0, 0, sw, sh);
+            }
             self.last_screen_width = sw;
             self.last_screen_height = sh;
-            self.stamp_layer_target = render_target(sw as u32, sh as u32);
-            self.stamp_layer.zoom = vec2(1.0 / sw, 1.0 / sh);
-            self.stamp_layer.render_target = Some(self.stamp_layer_target.clone());
+            self.stamp_buffer = Framebuffer::new(sw as u32, sh as u32, false);
         }
 
         let texture = &self.backdrops[self.current_backdrop];
-        texture.set_filter(FilterMode::Nearest);
-        let tw = texture.width();
-        let th = texture.height();
+        let tw = texture.width() as f32;
+        let th = texture.height() as f32;
+        let sw = sw as f32;
+        let sh = sh as f32;
         let size = if tw / th > sw / sh {
             vec2(sw, th * (sw / tw)) * 2.0
         } else {
@@ -76,25 +81,67 @@ impl Stage {
         };
         let x = -size.x / 2.0;
         let y = -size.y / 2.0;
-        draw_texture_ex(
-            texture,
-            x,
-            y,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(size),
-                ..Default::default()
-            },
-        );
-        draw_texture_ex(
-            &self.stamp_layer_target.texture,
-            -screen_width(),
-            -screen_height(),
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(vec2(screen_width() * 2.0, screen_height() * 2.0)),
-                ..Default::default()
-            },
-        );
+        let backdrop_quad = [
+            Vertex {
+                position: vec2(x, y),
+                uv: vec2(0.0, 1.0),
+            }, // Top-left
+            Vertex {
+                position: vec2(x + size.x, y),
+                uv: vec2(1.0, 1.0),
+            }, // Top-right
+            Vertex {
+                position: vec2(x + size.x, y + size.y),
+                uv: vec2(1.0, 0.0),
+            }, // Bottom-right
+            Vertex {
+                position: vec2(x, y + size.y),
+                uv: vec2(0.0, 0.0),
+            }, // Bottom-left
+        ];
+        let stamp_quad = [
+            Vertex {
+                position: vec2(-sw, -sh),
+                uv: vec2(0.0, 0.0),
+            }, // Bottom-left
+            Vertex {
+                position: vec2(sw, -sh),
+                uv: vec2(1.0, 0.0),
+            }, // Bottom-right
+            Vertex {
+                position: vec2(sw, sh),
+                uv: vec2(1.0, 1.0),
+            }, // Top-right
+            Vertex {
+                position: vec2(-sw, sh),
+                uv: vec2(0.0, 1.0),
+            }, // Top-left
+        ];
+        let indices = [0, 1, 2, 0, 2, 3];
+        let backdrop_mesh = Mesh::new(&backdrop_quad, &indices, DrawMode::Triangles);
+        let stamp_mesh = Mesh::new(&stamp_quad, &indices, DrawMode::Triangles);
+
+        unsafe {
+            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
+
+        shader_program.use_program();
+        shader_program.set_uniform("u_color", vec4(1.0, 1.0, 1.0, 1.0));
+        shader_program.set_uniform("u_projection", *projection);
+        shader_program.set_uniform("u_model", Mat4::IDENTITY);
+        shader_program.set_uniform_ref("u_effects", &[] as &[i32]);
+        shader_program.set_uniform_ref("u_effect_values", &[] as &[f32]);
+        shader_program.set_uniform("u_effects_count", 0);
+        texture.bind();
+        backdrop_mesh.draw();
+        shader_program.set_uniform("u_color", vec4(1.0, 1.0, 1.0, 1.0));
+        shader_program.set_uniform("u_projection", *projection);
+        shader_program.set_uniform("u_model", Mat4::IDENTITY);
+        shader_program.set_uniform_ref("u_effects", &[] as &[i32]);
+        shader_program.set_uniform_ref("u_effect_values", &[] as &[f32]);
+        shader_program.set_uniform("u_effects_count", 0);
+        self.stamp_buffer.texture().bind();
+        stamp_mesh.draw();
     }
 }

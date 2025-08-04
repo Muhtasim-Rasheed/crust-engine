@@ -1,6 +1,6 @@
 // Hello fellow contributor, welcome to Crust's `sprite.rs` file!
 //
-// This file is still *pretty big* (~1000 lines) and contains the core logic for handling
+// This file is still *pretty big* (~1100 lines) and contains the core logic for handling
 // sprites, their behaviors, and interactions in the Crust game engine.
 //
 // Don't worry: You don't need to understand everything at once. Take your time to read through the code.
@@ -10,15 +10,33 @@
 //
 // Happy coding!
 
+use glam::*;
+use indexmap::IndexMap;
+use kira::sound::static_sound::{StaticSoundData, StaticSoundHandle};
+use kira::{AudioManager, DefaultBackend};
 use std::collections::HashMap;
 use std::f32::consts::*;
 use std::path::PathBuf;
 
-use indexmap::IndexMap;
-use macroquad::audio::*;
-use macroquad::prelude::*;
-
+use crate::utils::core::*;
 use crate::utils::*;
+
+pub struct State<'a> {
+    pub start: std::time::Instant,
+    pub dt: f32,
+    pub sprite: &'a mut Sprite,
+    pub project: &'a mut Project,
+    pub snapshots: &'a [SpriteSnapshot],
+    pub window: &'a mut glfw::Window,
+    pub input_manager: &'a mut InputManager,
+    pub glfw: &'a mut glfw::Glfw,
+    pub audio_manager: &'a mut AudioManager<DefaultBackend>,
+    pub shader_program: &'a ShaderProgram,
+    pub projection: Mat4,
+    pub font: &'a BitmapFont,
+    pub local_vars: &'a [(String, Value)],
+    pub script_id: usize,
+}
 
 #[derive(Clone, Debug)]
 pub struct SpriteSnapshot {
@@ -109,8 +127,8 @@ pub(super) struct Dialogue {
 #[derive(Debug)]
 pub struct Sprite {
     pub name: String,
-    pub costumes: Vec<Texture2D>,
-    pub sounds: HashMap<String, Sound>,
+    pub costumes: Vec<GPUTexture>,
+    pub sounds: HashMap<String, StaticSoundData>,
     pub center: Vec2,
     pub size: Vec2,
     pub direction: f32,
@@ -120,7 +138,7 @@ pub struct Sprite {
     pub variables: HashMap<String, Value>,
     pub effects: IndexMap<String, f32>,
     pub sound_effects: HashMap<String, f32>,
-    pub draw_color: Color,
+    pub draw_color: Vec4,
     pub functions: HashMap<String, Callable>,
     pub clone_id: Option<usize>,
     pub stop_request: Option<StopRequest>,
@@ -133,7 +151,9 @@ pub struct Sprite {
     pub(super) time_waiting: u32,
     pub(super) glide: Option<Glide>,
     pub(super) delete_pending: bool,
+    pub(super) sound_handles: HashMap<String, StaticSoundHandle>,
     pub(super) skip_further_execution_of_frame: bool,
+    pub(super) uv: [Vec2; 2],
     clone_setup: Vec<Statement>,
     clone_update: Vec<Vec<Statement>>,
     setup_ast: Vec<Statement>,
@@ -147,8 +167,8 @@ pub struct Sprite {
 impl Sprite {
     pub fn new(
         name: String,
-        costumes: Vec<Texture2D>,
-        sounds: HashMap<String, Sound>,
+        costumes: Vec<GPUTexture>,
+        sounds: HashMap<String, StaticSoundData>,
         ast: Vec<Statement>,
         tags: Vec<String>,
         w: f32,
@@ -305,11 +325,7 @@ impl Sprite {
         }
         let mut costumes = costumes;
         if costumes.is_empty() {
-            costumes.push(Texture2D::from_image(&Image::gen_image_color(
-                1,
-                1,
-                Color::new(0.0, 0.0, 0.0, 0.0),
-            )));
+            costumes.push(CPUTexture::new(100, 100).upload_to_gpu());
         }
         Self {
             name,
@@ -333,7 +349,7 @@ impl Sprite {
             time_waiting: 0,
             dialogue: None,
             glide: None,
-            draw_color: BLACK,
+            draw_color: Vec3::splat(0.0).extend(1.0),
             edge_bounce: false,
             clones: vec![],
             clone_setup,
@@ -344,7 +360,9 @@ impl Sprite {
             tags,
             broadcast_recievers,
             boolean_recievers,
+            sound_handles: HashMap::new(),
             skip_further_execution_of_frame: false,
+            uv: [vec2(0.0, 1.0), vec2(1.0, 0.0)],
             completed_broadcasts: vec![],
         }
     }
@@ -391,7 +409,9 @@ impl Sprite {
             tags: self.tags.clone(),
             broadcast_recievers: self.broadcast_recievers.clone(),
             boolean_recievers: self.boolean_recievers.clone(),
+            sound_handles: HashMap::new(),
             skip_further_execution_of_frame: false,
+            uv: self.uv,
             completed_broadcasts: vec![],
         }
     }
@@ -406,29 +426,35 @@ impl Sprite {
         self.direction = dx.atan2(dy).to_degrees();
     }
 
-    pub fn goto_cursor(&mut self) {
-        let (x, y) = mouse_position();
-        self.goto(x * 2. - screen_width(), y * 2. - screen_height());
+    pub fn goto_cursor(&mut self, window: &glfw::Window) {
+        let (x, y) = window.get_cursor_pos();
+        self.goto(
+            x as f32 * 2. - window.get_size().0 as f32,
+            y as f32 * 2. - window.get_size().1 as f32,
+        );
     }
 
-    pub fn point_cursor(&mut self) {
-        let (x, y) = mouse_position();
-        let (x, y) = (x * 2. - screen_width(), y * 2. - screen_height());
+    pub fn point_cursor(&mut self, window: &glfw::Window) {
+        let (x, y) = window.get_cursor_pos();
+        let (x, y) = (
+            x as f32 * 2. - window.get_size().0 as f32,
+            y as f32 * 2. - window.get_size().1 as f32,
+        );
         let dx = y - self.center.y;
         let dy = x - self.center.x;
         self.direction = dx.atan2(dy).to_degrees();
     }
 
-    pub fn move_by(&mut self, step: f32) {
-        self.center.x += step * self.direction.to_radians().cos();
-        self.center.y += step * self.direction.to_radians().sin();
-        self.handle_edge_bounce();
+    pub fn move_by(&mut self, step: f32, window: &glfw::Window) {
+        self.center.x += -step * self.direction.to_radians().cos();
+        self.center.y += -step * self.direction.to_radians().sin();
+        self.handle_edge_bounce(window);
     }
 
-    pub fn handle_edge_bounce(&mut self) {
+    pub fn handle_edge_bounce(&mut self, window: &glfw::Window) {
         if self.edge_bounce {
-            let screen_width = screen_width();
-            let screen_height = screen_height();
+            let screen_width = window.get_size().0 as f32;
+            let screen_height = window.get_size().1 as f32;
             if self.center.x < -screen_width / 2. || self.center.x > screen_width / 2. {
                 self.direction = (180.0 - self.direction) % 360.0;
             }
@@ -509,31 +535,24 @@ impl Sprite {
         }
     }
 
-    pub fn execute_statement(
-        &mut self,
-        statement: &Statement,
-        project: &mut Project,
-        snapshots: &[SpriteSnapshot],
-        camera: &Camera2D,
-        local_vars: &[(String, Value)],
-        script_id: usize,
-    ) {
+    pub fn execute_statement(statement: &Statement, state: &mut State<'_>) {
         match statement {
             Statement::Assignment {
                 is_global,
                 identifier,
                 value,
             } => {
-                let value = crate::utils::resolve_expression(
-                    value, project, self, local_vars, snapshots, camera, script_id,
-                );
+                let value = crate::utils::resolve_expression(value, state);
                 if *is_global {
-                    project.global_variables.insert(identifier.clone(), value);
+                    state
+                        .project
+                        .global_variables
+                        .insert(identifier.clone(), value);
                 } else {
-                    if self.variables.get(identifier).is_none() {
-                        self.new_variable(identifier, value.clone());
+                    if state.sprite.variables.get(identifier).is_none() {
+                        state.sprite.new_variable(identifier, value.clone());
                     } else {
-                        self.set_variable(identifier, value);
+                        state.sprite.set_variable(identifier, value);
                     }
                 }
             }
@@ -543,15 +562,12 @@ impl Sprite {
                 index,
                 value,
             } => {
-                let value = crate::utils::resolve_expression(
-                    value, project, self, local_vars, snapshots, camera, script_id,
-                );
-                let index = crate::utils::resolve_expression(
-                    index, project, self, local_vars, snapshots, camera, script_id,
-                );
+                let value = crate::utils::resolve_expression(value, state);
+                let index = crate::utils::resolve_expression(index, state);
                 if let Value::Number(index) = index {
                     if *is_global {
-                        if let Some(global_list) = project
+                        if let Some(global_list) = state
+                            .project
                             .global_variables
                             .get_mut(identifier.to_string().as_str())
                         {
@@ -560,8 +576,10 @@ impl Sprite {
                             }
                         }
                     } else {
-                        if let Some(local_list) =
-                            self.variables.get_mut(identifier.to_string().as_str())
+                        if let Some(local_list) = state
+                            .sprite
+                            .variables
+                            .get_mut(identifier.to_string().as_str())
                         {
                             if let Value::List(local_list) = local_list {
                                 local_list[index as usize] = value;
@@ -570,7 +588,8 @@ impl Sprite {
                     }
                 } else if let Value::String(key) = index {
                     if *is_global {
-                        if let Some(global_list) = project
+                        if let Some(global_list) = state
+                            .project
                             .global_variables
                             .get_mut(identifier.to_string().as_str())
                         {
@@ -579,8 +598,10 @@ impl Sprite {
                             }
                         }
                     } else {
-                        if let Some(local_list) =
-                            self.variables.get_mut(identifier.to_string().as_str())
+                        if let Some(local_list) = state
+                            .sprite
+                            .variables
+                            .get_mut(identifier.to_string().as_str())
                         {
                             if let Value::Object(local_list) = local_list {
                                 local_list.insert(key.clone(), value);
@@ -593,11 +614,7 @@ impl Sprite {
             }
             Statement::Nop => {}
             Statement::Assert { condition } => {
-                if !crate::utils::resolve_expression(
-                    condition, project, self, local_vars, snapshots, camera, script_id,
-                )
-                .to_boolean()
-                {
+                if !crate::utils::resolve_expression(condition, state).to_boolean() {
                     println!("assert {:?}: Failed", condition);
                 } else {
                     println!("assert {:?}: Passed", condition);
@@ -608,28 +625,18 @@ impl Sprite {
                 cases,
                 default,
             } => {
-                let resolved_value = crate::utils::resolve_expression(
-                    value, project, self, local_vars, snapshots, camera, script_id,
-                );
+                let resolved_value = crate::utils::resolve_expression(value, state);
                 for (case_value, body) in cases {
-                    if resolved_value
-                        == crate::utils::resolve_expression(
-                            case_value, project, self, local_vars, snapshots, camera, script_id,
-                        )
-                    {
+                    if resolved_value == crate::utils::resolve_expression(case_value, state) {
                         for statement in body {
-                            self.execute_statement(
-                                statement, project, snapshots, camera, local_vars, script_id,
-                            );
+                            Sprite::execute_statement(statement, state);
                         }
                         return;
                     }
                 }
                 if let Some(default_body) = default {
                     for statement in default_body {
-                        self.execute_statement(
-                            statement, project, snapshots, camera, local_vars, script_id,
-                        );
+                        Sprite::execute_statement(statement, state);
                     }
                 }
             }
@@ -639,56 +646,30 @@ impl Sprite {
                 else_if_bodies,
                 else_body,
             } => {
-                if crate::utils::resolve_expression(
-                    condition, project, self, local_vars, snapshots, camera, script_id,
-                )
-                .to_boolean()
-                {
+                if crate::utils::resolve_expression(condition, state).to_boolean() {
                     for statement in body {
-                        self.execute_statement(
-                            statement, project, snapshots, camera, local_vars, script_id,
-                        );
+                        Sprite::execute_statement(statement, state);
                     }
                 } else {
                     for (else_if_condition, else_if_body) in else_if_bodies {
-                        if crate::utils::resolve_expression(
-                            else_if_condition,
-                            project,
-                            self,
-                            local_vars,
-                            snapshots,
-                            camera,
-                            script_id,
-                        )
-                        .to_boolean()
-                        {
+                        if crate::utils::resolve_expression(else_if_condition, state).to_boolean() {
                             for statement in else_if_body {
-                                self.execute_statement(
-                                    statement, project, snapshots, camera, local_vars, script_id,
-                                );
+                                Sprite::execute_statement(statement, state);
                             }
                             return;
                         }
                     }
                     if let Some(else_body) = else_body {
                         for statement in else_body {
-                            self.execute_statement(
-                                statement, project, snapshots, camera, local_vars, script_id,
-                            );
+                            Sprite::execute_statement(statement, state);
                         }
                     }
                 }
             }
             Statement::While { condition, body } => {
-                while crate::utils::resolve_expression(
-                    condition, project, self, local_vars, snapshots, camera, script_id,
-                )
-                .to_boolean()
-                {
+                while crate::utils::resolve_expression(condition, state).to_boolean() {
                     for statement in body {
-                        self.execute_statement(
-                            statement, project, snapshots, camera, local_vars, script_id,
-                        );
+                        Sprite::execute_statement(statement, state);
                     }
                 }
             }
@@ -697,22 +678,27 @@ impl Sprite {
                 iterable,
                 body,
             } => {
-                for value in crate::utils::resolve_expression(
-                    iterable, project, self, local_vars, snapshots, camera, script_id,
-                )
-                .to_list()
-                {
-                    let mut new_local_vars = local_vars.to_vec();
+                for value in crate::utils::resolve_expression(iterable, state).to_list() {
+                    let mut new_local_vars = state.local_vars.to_vec();
                     new_local_vars.push((identifier.clone(), value));
+                    let mut new_state = State {
+                        start: state.start,
+                        dt: state.dt,
+                        sprite: state.sprite,
+                        project: state.project,
+                        snapshots: state.snapshots,
+                        window: state.window,
+                        input_manager: state.input_manager,
+                        glfw: state.glfw,
+                        audio_manager: state.audio_manager,
+                        shader_program: state.shader_program,
+                        projection: state.projection,
+                        font: state.font,
+                        local_vars: &new_local_vars,
+                        script_id: state.script_id,
+                    };
                     for statement in body {
-                        self.execute_statement(
-                            statement,
-                            project,
-                            snapshots,
-                            camera,
-                            &new_local_vars,
-                            script_id,
-                        );
+                        Sprite::execute_statement(statement, &mut new_state);
                     }
                 }
             }
@@ -720,33 +706,21 @@ impl Sprite {
                 if let Expression::Call { function, args } = c {
                     let args = args
                         .iter()
-                        .map(|arg| {
-                            crate::utils::resolve_expression(
-                                arg, project, self, local_vars, snapshots, camera, script_id,
-                            )
-                        })
+                        .map(|arg| crate::utils::resolve_expression(arg, state))
                         .collect::<Vec<_>>();
-                    if let Some(callable) = self.functions.clone().get(function) {
-                        let _ = callable
-                            .call(
-                                self, project, snapshots, camera, local_vars, script_id,
-                                &args,
-                            )
-                            .unwrap_or_else(|e| {
-                                println!("Error calling {}(): {}", function, e);
-                                Value::Null
-                            });
-                    } else if let Some(variable) = self.variables.get(function).cloned() {
+                    if let Some(callable) = state.sprite.functions.clone().get(function) {
+                        let _ = callable.call(state, &args).unwrap_or_else(|e| {
+                            println!("Error calling {}(): {}", function, e);
+                            Value::Null
+                        });
+                    } else if let Some(variable) = state.sprite.variables.get(function).cloned() {
                         let Value::Closure(closure) = variable else {
                             println!("Variable '{}' is not a function", function);
                             return;
                         };
                         let function_struct = *closure;
                         let _ = Callable::Function(function_struct)
-                            .call(
-                                self, project, snapshots, camera, local_vars, script_id,
-                                &args,
-                            )
+                            .call(state, &args)
                             .unwrap_or_else(|e| {
                                 println!("Error calling closure '{}': {}", function, e);
                                 Value::Null
@@ -879,7 +853,20 @@ impl Sprite {
         });
     }
 
-    pub fn step(&mut self, project: &mut Project, snapshots: &[SpriteSnapshot], camera: &Camera2D) {
+    pub fn step(
+        &mut self,
+        start: std::time::Instant,
+        dt: f32,
+        project: &mut Project,
+        snapshots: &[SpriteSnapshot],
+        window: &mut glfw::Window,
+        input_manager: &mut InputManager,
+        glfw: &mut glfw::Glfw,
+        audio_manager: &mut AudioManager<DefaultBackend>,
+        shader_program: &ShaderProgram,
+        projection: Mat4,
+        font: &BitmapFont,
+    ) {
         if let Some(glide) = &mut self.glide {
             let t = 1.0 - (glide.remaining as f32 / glide.duration as f32);
             if glide.remaining > 0 {
@@ -892,6 +879,10 @@ impl Sprite {
             }
 
             return;
+        }
+
+        if self.effects.len() > 32 {
+            self.effects.shift_remove_index(0);
         }
 
         if !self.setup_finished {
@@ -908,7 +899,25 @@ impl Sprite {
                     }
                     break;
                 }
-                self.execute_statement(&statement, project, snapshots, camera, &vec![], 0);
+                Sprite::execute_statement(
+                    &statement,
+                    &mut State {
+                        start,
+                        dt,
+                        sprite: self,
+                        project,
+                        snapshots,
+                        window,
+                        input_manager,
+                        glfw,
+                        audio_manager,
+                        shader_program,
+                        projection,
+                        font,
+                        local_vars: &vec![],
+                        script_id: 0,
+                    },
+                );
                 if self.skip_further_execution_of_frame {
                     self.skip_further_execution_of_frame = false;
                     break;
@@ -930,7 +939,25 @@ impl Sprite {
                         }
                         break;
                     }
-                    self.execute_statement(&statement, project, snapshots, camera, &vec![], i + 1);
+                    Sprite::execute_statement(
+                        &statement,
+                        &mut State {
+                            start,
+                            dt,
+                            sprite: self,
+                            project,
+                            snapshots,
+                            window,
+                            input_manager,
+                            glfw,
+                            audio_manager,
+                            shader_program,
+                            projection,
+                            font,
+                            local_vars: &vec![],
+                            script_id: i + 1,
+                        },
+                    );
                     if self.skip_further_execution_of_frame {
                         self.skip_further_execution_of_frame = false;
                         break;
@@ -957,13 +984,25 @@ impl Sprite {
                         }
                         break;
                     }
-                    self.execute_statement(
+                    let update_ast_len = self.update_ast.len();
+                    Sprite::execute_statement(
                         &statement,
-                        project,
-                        snapshots,
-                        camera,
-                        &vec![],
-                        i + self.update_ast.len() + 1,
+                        &mut State {
+                            start,
+                            dt,
+                            sprite: self,
+                            project,
+                            snapshots,
+                            window,
+                            input_manager,
+                            glfw,
+                            audio_manager,
+                            shader_program,
+                            projection,
+                            font,
+                            local_vars: &vec![],
+                            script_id: i + update_ast_len + 1,
+                        },
                     );
                     if self.skip_further_execution_of_frame {
                         self.skip_further_execution_of_frame = false;
@@ -978,14 +1017,25 @@ impl Sprite {
 
         let mut called_s = vec![];
         for (i, (expr, body, _)) in self.boolean_recievers.clone().iter().enumerate() {
+            let update_broadcast_len = self.update_ast.len() + self.broadcast_recievers.len();
             let value = crate::utils::resolve_expression(
                 &expr,
-                project,
-                self,
-                &vec![],
-                snapshots,
-                camera,
-                i + self.update_ast.len() + self.broadcast_recievers.len() + 1,
+                &mut State {
+                    start,
+                    dt,
+                    sprite: self,
+                    project,
+                    snapshots,
+                    window,
+                    input_manager,
+                    glfw,
+                    audio_manager,
+                    shader_program,
+                    projection,
+                    font,
+                    local_vars: &vec![],
+                    script_id: i + update_broadcast_len + 1,
+                },
             );
             if value.to_boolean() {
                 for statement in body {
@@ -1001,13 +1051,26 @@ impl Sprite {
                         }
                         break;
                     }
-                    self.execute_statement(
+                    let update_broadcast_len =
+                        self.update_ast.len() + self.broadcast_recievers.len();
+                    Sprite::execute_statement(
                         &statement,
-                        project,
-                        snapshots,
-                        camera,
-                        &vec![],
-                        i + self.update_ast.len() + self.broadcast_recievers.len() + 1,
+                        &mut State {
+                            start,
+                            dt,
+                            sprite: self,
+                            project,
+                            snapshots,
+                            window,
+                            input_manager,
+                            glfw,
+                            audio_manager,
+                            shader_program,
+                            projection,
+                            font,
+                            local_vars: &vec![],
+                            script_id: i + update_broadcast_len + 1,
+                        },
                     );
                     if self.skip_further_execution_of_frame {
                         self.skip_further_execution_of_frame = false;
@@ -1064,7 +1127,19 @@ impl Sprite {
 
         // idk run step for all the clones too
         for clone in &mut self.clones {
-            clone.step(project, snapshots, camera);
+            clone.step(
+                start,
+                dt,
+                project,
+                snapshots,
+                window,
+                input_manager,
+                glfw,
+                audio_manager,
+                shader_program,
+                projection,
+                font,
+            );
         }
     }
 }

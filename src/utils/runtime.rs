@@ -1,10 +1,11 @@
-use std::collections::HashMap;
-
-use macroquad::audio::*;
-use macroquad::prelude::*;
-
+use glam::*;
+use glfw::{Context, Window};
+use kira::sound::static_sound::StaticSoundData;
+use kira::{AudioManager, AudioManagerSettings, DefaultBackend};
 use serde::Deserialize;
+use std::collections::{HashMap, HashSet};
 
+use crate::utils::core::*;
 use crate::utils::draw_sprite;
 
 use super::sprite::StopRequest;
@@ -51,13 +52,109 @@ struct ProjectConfig {
     tags: Option<Vec<TagConfig>>,
 }
 
+#[derive(Debug)]
+pub struct InputManager {
+    keys_down: HashSet<glfw::Key>,
+    keys_pressed: HashSet<glfw::Key>,
+    keys_released: HashSet<glfw::Key>,
+    mouse_buttons_down: HashSet<glfw::MouseButton>,
+    mouse_buttons_pressed: HashSet<glfw::MouseButton>,
+    mouse_buttons_released: HashSet<glfw::MouseButton>,
+}
+
+impl InputManager {
+    pub fn new() -> Self {
+        Self {
+            keys_down: HashSet::new(),
+            keys_pressed: HashSet::new(),
+            keys_released: HashSet::new(),
+            mouse_buttons_down: HashSet::new(),
+            mouse_buttons_pressed: HashSet::new(),
+            mouse_buttons_released: HashSet::new(),
+        }
+    }
+
+    pub fn update(
+        &mut self,
+        window: &mut glfw::Window,
+        events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,
+    ) {
+        self.keys_pressed.clear();
+        self.keys_released.clear();
+        self.mouse_buttons_pressed.clear();
+        self.mouse_buttons_released.clear();
+
+        for (_, event) in glfw::flush_messages(events) {
+            match event {
+                glfw::WindowEvent::Key(key, _, action, _) => match action {
+                    glfw::Action::Press => {
+                        if !self.keys_down.contains(&key) {
+                            self.keys_pressed.insert(key);
+                        }
+                        self.keys_down.insert(key);
+                    }
+                    glfw::Action::Release => {
+                        self.keys_released.insert(key);
+                        self.keys_down.remove(&key);
+                    }
+                    _ => {}
+                },
+                glfw::WindowEvent::MouseButton(button, action, _) => match action {
+                    glfw::Action::Press => {
+                        if !self.mouse_buttons_down.contains(&button) {
+                            self.mouse_buttons_pressed.insert(button);
+                        }
+                        self.mouse_buttons_down.insert(button);
+                    }
+                    glfw::Action::Release => {
+                        self.mouse_buttons_released.insert(button);
+                        self.mouse_buttons_down.remove(&button);
+                    }
+                    _ => {}
+                },
+                glfw::WindowEvent::Close => {
+                    window.set_should_close(true);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    pub fn is_key_down(&self, key: glfw::Key) -> bool {
+        self.keys_down.contains(&key)
+    }
+
+    pub fn is_key_pressed(&self, key: glfw::Key) -> bool {
+        self.keys_pressed.contains(&key)
+    }
+
+    pub fn is_key_released(&self, key: glfw::Key) -> bool {
+        self.keys_released.contains(&key)
+    }
+
+    pub fn is_mouse_button_down(&self, button: glfw::MouseButton) -> bool {
+        self.mouse_buttons_down.contains(&button)
+    }
+
+    pub fn is_mouse_button_pressed(&self, button: glfw::MouseButton) -> bool {
+        self.mouse_buttons_pressed.contains(&button)
+    }
+
+    pub fn is_mouse_button_released(&self, button: glfw::MouseButton) -> bool {
+        self.mouse_buttons_released.contains(&button)
+    }
+}
+
 pub struct Runtime {
     pub project: Project,
+    pub audio_manager: AudioManager<DefaultBackend>,
     debug_options: Vec<String>,
 }
 
 impl Runtime {
-    pub async fn new(file_path: &str, args: Vec<String>) -> Self {
+    pub fn new(file_path: &str, args: Vec<String>, window: &Window) -> Self {
+        let audio_manager = AudioManager::new(AudioManagerSettings::default())
+            .expect("Failed to create audio manager");
         let dir = std::path::Path::new(file_path).parent().unwrap();
         let raw = std::fs::read_to_string(file_path).unwrap();
         let config: ProjectConfig = toml::from_str(&raw).unwrap();
@@ -73,12 +170,11 @@ impl Runtime {
             })
             .collect::<HashMap<_, _>>();
 
-        println!("{:#?}", config);
-
         let mut project = Project::new(
             dir.to_string_lossy().to_string(),
             dir.join("export").to_string_lossy().to_string(),
             args,
+            window,
         );
 
         for path in config
@@ -87,25 +183,52 @@ impl Runtime {
             .backdrops
         {
             let path = dir.join(path);
-            let tex = load_texture(&path.to_string_lossy()).await.unwrap();
+            let tex = CPUTexture::load_from_file(&path.to_string_lossy())
+                .or_else(|_| {
+                    CPUTexture::load_from_bytes(
+                        include_bytes!("../../assets/missing.png"),
+                        100,
+                        100,
+                    )
+                })
+                .unwrap_or_else(|e| {
+                    panic!(
+                        "Failed to load backdrop texture: {}. Error: {}",
+                        path.to_string_lossy(),
+                        e
+                    );
+                });
+            let tex = tex.upload_to_gpu();
             project.stage.backdrops.push(tex);
         }
 
         if project.stage.backdrops.is_empty() {
-            project.stage.backdrops.push(Texture2D::empty());
+            project
+                .stage
+                .backdrops
+                .push(CPUTexture::new(1, 1).upload_to_gpu());
         }
 
         for sprite in config.sprites {
             let mut textures = vec![];
             for path in sprite.costumes {
                 let path = dir.join(path);
-                let tex = load_texture(&path.to_string_lossy()).await.unwrap_or(
-                    Texture2D::from_file_with_format(
-                        include_bytes!("../../assets/missing.png"),
-                        None,
-                    ),
-                );
-                textures.push(tex);
+                let tex = CPUTexture::load_from_file(&path.to_string_lossy())
+                    .or_else(|_| {
+                        CPUTexture::load_from_bytes(
+                            include_bytes!("../../assets/missing.png"),
+                            100,
+                            100,
+                        )
+                    })
+                    .unwrap_or_else(|e| {
+                        panic!(
+                            "Failed to load sprite texture: {}. Error: {}",
+                            path.to_string_lossy(),
+                            e
+                        );
+                    });
+                textures.push(tex.upload_to_gpu());
             }
 
             let mut sounds = vec![];
@@ -113,9 +236,14 @@ impl Runtime {
                 let sounds_ = sprite.sounds.unwrap();
                 for sound in sounds_ {
                     let path = dir.join(&sound.file);
-                    let sound_data = load_sound(&path.to_string_lossy()).await.unwrap_or_else(|_| {
-                        panic!("Failed to load sound: {}. Make sure the path is correct. Relative paths are allowed.", path.to_string_lossy())
-                    });
+                    let sound_data = StaticSoundData::from_file(&*path.to_string_lossy())
+                        .unwrap_or_else(|e| {
+                            panic!(
+                                "Failed to load sound: {}. Error: {}",
+                                path.to_string_lossy(),
+                                e
+                            );
+                        });
                     sounds.push((sound.name, sound_data));
                 }
             }
@@ -169,27 +297,54 @@ impl Runtime {
 
         Self {
             project,
+            audio_manager,
             debug_options: config.debug_options.unwrap_or(vec![]),
         }
     }
 
-    pub async fn run(&mut self) {
-        let camera = Camera2D {
-            target: vec2(0.0, 0.0),
-            zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()),
-            ..Default::default()
-        };
-        loop {
-            rand::srand(
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis() as u64,
-            );
+    pub async fn run(
+        &mut self,
+        window: &mut Window,
+        events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,
+        font: &BitmapFont,
+        shader_program: &ShaderProgram,
+        glfw: &mut glfw::Glfw,
+    ) {
+        let mut input_manager = InputManager::new();
+        let projection = Mat4::orthographic_rh_gl(
+            -window.get_size().0 as f32,
+            window.get_size().0 as f32,
+            -window.get_size().1 as f32,
+            window.get_size().1 as f32,
+            -1.0,
+            1.0,
+        );
+        let top_left_projection = Mat4::orthographic_rh_gl(
+            0.0,
+            window.get_size().0 as f32,
+            window.get_size().1 as f32,
+            0.0,
+            -1.0,
+            1.0,
+        );
+        let start = std::time::Instant::now();
+        let mut last_time = start;
+        let mut duration = std::time::Instant::now();
+        let mut fps = 0.0;
+        while !window.should_close() {
+            let now = std::time::Instant::now();
+            let dt = now.duration_since(last_time).as_secs_f32();
+            if duration.elapsed().as_secs_f32() >= 1.0 {
+                fps = 1.0 / dt;
+                duration = std::time::Instant::now();
+            }
+            last_time = now;
 
-            set_camera(&camera);
-            clear_background(WHITE);
-            self.project.stage.draw();
+            glfw.poll_events();
+
+            input_manager.update(window, events);
+
+            self.project.stage.draw(window, shader_program, &projection);
 
             let mut sprites = std::mem::take(&mut self.project.sprites);
 
@@ -230,40 +385,55 @@ impl Runtime {
             }
 
             for sprite in &mut sprites {
-                sprite.step(&mut self.project, &snapshots, &camera);
+                sprite.step(
+                    start,
+                    dt,
+                    &mut self.project,
+                    &snapshots,
+                    window,
+                    &mut input_manager,
+                    glfw,
+                    &mut self.audio_manager,
+                    shader_program,
+                    projection,
+                    font,
+                );
             }
 
             sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
 
             for sprite in &mut sprites {
-                draw_sprite(sprite);
+                draw_sprite(sprite, shader_program, projection, font);
             }
 
             self.project.sprites = sprites;
 
-            set_default_camera();
-
-            let mut debugs = HashMap::new();
-            debugs.insert("show_fps", get_fps().to_string());
-            debugs.insert(
-                "show_mouse_pos",
-                format!(
-                    "({}, {})",
-                    mouse_position().0 * 2.0 - screen_width(),
-                    mouse_position().1 * 2.0 - screen_height()
-                ),
-            );
-            let debug_options: Vec<String> = self
-                .debug_options
-                .iter()
-                .filter(|option| debugs.contains_key(option.as_str()))
-                .map(|option| format!("{}: {}", option, debugs[option.as_str()]))
-                .collect();
-            for (i, debug) in debug_options.iter().enumerate() {
-                draw_text(debug, 10.0, 30.0 + (i as f32 * 30.0), 24.0, BLACK);
+            let mut debug_texts = Vec::new();
+            if self.debug_options.contains(&"show_fps".to_string()) {
+                debug_texts.push(format!("FPS: {:.2}", fps));
+            }
+            if self.debug_options.contains(&"show_mouse_pos".to_string()) {
+                let pos = vec2(
+                    window.get_cursor_pos().0 as f32,
+                    window.get_cursor_pos().1 as f32,
+                ) * 2.0
+                    - vec2(window.get_size().0 as f32, window.get_size().1 as f32);
+                let pos = pos * Vec2::new(1.0, -1.0);
+                debug_texts.push(format!("Mouse: {:?}", pos));
             }
 
-            next_frame().await;
+            for (i, text) in debug_texts.iter().enumerate() {
+                draw_text(TextParams {
+                    text,
+                    projection: top_left_projection,
+                    pos: Vec2::new(10.0, 10.0 + i as f32 * 30.0),
+                    font_size: 24.0,
+                    down_positive: true,
+                    ..TextParams::default_params(font, shader_program)
+                });
+            }
+
+            window.swap_buffers();
         }
     }
 }

@@ -1,46 +1,31 @@
-use macroquad::prelude::*;
+use glam::*;
+use glfw::{Key, MouseButton};
 
-use crate::utils::*;
+use crate::utils::{core::*, *};
 
 // Helper functions!
 
-pub fn resolve_expression(
-    expr: &Expression,
-    project: &mut Project,
-    sprite: &mut Sprite,
-    local_vars: &[(String, Value)],
-    snapshots: &[SpriteSnapshot],
-    camera: &Camera2D,
-    script_id: usize,
-) -> Value {
+pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
     match expr {
         Expression::Value(v) => v.clone(),
         Expression::List(l) => {
             let mut list = vec![];
             for element in l {
-                list.push(resolve_expression(
-                    element, project, sprite, local_vars, snapshots, camera, script_id,
-                ));
+                list.push(resolve_expression(element, state));
             }
             Value::List(list)
         }
         Expression::Object(o) => {
             let mut object = std::collections::HashMap::new();
             for (key, value) in o {
-                let resolved_value = resolve_expression(
-                    value, project, sprite, local_vars, snapshots, camera, script_id,
-                );
+                let resolved_value = resolve_expression(value, state);
                 object.insert(key.clone(), resolved_value);
             }
             Value::Object(object)
         }
         Expression::ListMemberAccess { list, index } => {
-            let index = resolve_expression(
-                index, project, sprite, local_vars, snapshots, camera, script_id,
-            );
-            let list = resolve_expression(
-                list, project, sprite, local_vars, snapshots, camera, script_id,
-            );
+            let index = resolve_expression(index, state);
+            let list = resolve_expression(list, state);
             if let Value::List(list) = list {
                 if let Value::Number(index) = index {
                     if index >= 0.0 && index < list.len() as f32 {
@@ -65,39 +50,54 @@ pub fn resolve_expression(
                 return Value::Null;
             }
         }
-        Expression::Identifier(id) => sprite.variable(id, project, local_vars).clone(),
+        Expression::Identifier(id) => state
+            .sprite
+            .variable(id, state.project, state.local_vars)
+            .clone(),
         Expression::PostIncrement(id) => {
-            let value = sprite.variable(id, project, local_vars).clone();
+            let value = state
+                .sprite
+                .variable(id, state.project, state.local_vars)
+                .clone();
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num + 1.0);
-                sprite.set_variable(id, new_value);
+                state.sprite.set_variable(id, new_value);
                 return value;
             }
             Value::Null
         }
         Expression::PreIncrement(id) => {
-            let value = sprite.variable(id, project, local_vars).clone();
+            let value = state
+                .sprite
+                .variable(id, state.project, state.local_vars)
+                .clone();
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num + 1.0);
-                sprite.set_variable(id, new_value.clone());
+                state.sprite.set_variable(id, new_value.clone());
                 return new_value;
             }
             Value::Null
         }
         Expression::PostDecrement(id) => {
-            let value = sprite.variable(id, project, local_vars).clone();
+            let value = state
+                .sprite
+                .variable(id, state.project, state.local_vars)
+                .clone();
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num - 1.0);
-                sprite.set_variable(id, new_value);
+                state.sprite.set_variable(id, new_value);
                 return value;
             }
             Value::Null
         }
         Expression::PreDecrement(id) => {
-            let value = sprite.variable(id, project, local_vars).clone();
+            let value = state
+                .sprite
+                .variable(id, state.project, state.local_vars)
+                .clone();
             if let Value::Number(num) = value {
                 let new_value = Value::Number(num - 1.0);
-                sprite.set_variable(id, new_value.clone());
+                state.sprite.set_variable(id, new_value.clone());
                 return new_value;
             }
             Value::Null
@@ -107,12 +107,8 @@ pub fn resolve_expression(
             right,
             operator,
         } => {
-            let left_value = resolve_expression(
-                left, project, sprite, local_vars, snapshots, camera, script_id,
-            );
-            let right_value = resolve_expression(
-                right, project, sprite, local_vars, snapshots, camera, script_id,
-            );
+            let left_value = resolve_expression(left, state);
+            let right_value = resolve_expression(right, state);
             match operator.as_str() {
                 "+" => Value::Number(left_value.to_number() + right_value.to_number()),
                 "-" => Value::Number(left_value.to_number() - right_value.to_number()),
@@ -153,9 +149,7 @@ pub fn resolve_expression(
             }
         }
         Expression::Unary { operator, operand } => {
-            let operand_value = resolve_expression(
-                operand, project, sprite, local_vars, snapshots, camera, script_id,
-            );
+            let operand_value = resolve_expression(operand, state);
             match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
                 "!" => Value::Boolean(!operand_value.to_boolean()),
@@ -165,31 +159,21 @@ pub fn resolve_expression(
         Expression::Call { function, args } => {
             let args = args
                 .iter()
-                .map(|arg| {
-                    resolve_expression(
-                        arg, project, sprite, local_vars, snapshots, camera, script_id,
-                    )
-                })
+                .map(|arg| resolve_expression(arg, state))
                 .collect::<Vec<_>>();
-            if let Some(function_struct) = sprite.functions.clone().get(function) {
-                function_struct
-                    .call(
-                        sprite, project, snapshots, camera, local_vars, script_id, &args,
-                    )
-                    .unwrap_or_else(|e| {
-                        println!("Error calling function {}(): {}", function, e);
-                        Value::Null
-                    })
-            } else if let Some(variable) = sprite.variables.get(function).cloned() {
+            if let Some(function_struct) = state.sprite.functions.clone().get(function) {
+                function_struct.call(state, &args).unwrap_or_else(|e| {
+                    println!("Error calling function {}(): {}", function, e);
+                    Value::Null
+                })
+            } else if let Some(variable) = state.sprite.variables.get(function).cloned() {
                 let Value::Closure(closure) = variable else {
                     println!("Variable '{}' is not a function", function);
                     return Value::Null;
                 };
                 let function_struct = &*closure;
                 Callable::Function(function_struct.clone())
-                    .call(
-                        sprite, project, snapshots, camera, local_vars, script_id, &args,
-                    )
+                    .call(state, &args)
                     .unwrap_or_else(|e| {
                         println!("Error calling function '{}': {}", function, e);
                         Value::Null
@@ -198,33 +182,6 @@ pub fn resolve_expression(
                 return Value::Null;
             }
         }
-    }
-}
-
-pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, color: Color) {
-    assert_eq!(xs.len(), ys.len());
-    assert!(xs.len() >= 3, "Need at least 3 points to form a polygon!");
-
-    let center_x = xs.iter().sum::<f32>() / xs.len() as f32;
-    let center_y = ys.iter().sum::<f32>() / ys.len() as f32;
-
-    for i in 0..xs.len() {
-        let next_i = (i + 1) % xs.len();
-        draw_triangle(
-            Vec2::new(center_x, center_y),
-            Vec2::new(xs[i], ys[i]),
-            Vec2::new(xs[next_i], ys[next_i]),
-            color,
-        );
-    }
-}
-
-pub fn draw_convex_polygon_lines(xs: &Vec<f32>, ys: &Vec<f32>, thickness: f32, color: Color) {
-    assert_eq!(xs.len(), ys.len());
-
-    for i in 0..xs.len() {
-        let next_i = (i + 1) % xs.len();
-        draw_line(xs[i], ys[i], xs[next_i], ys[next_i], thickness, color);
     }
 }
 
@@ -251,31 +208,6 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + t * (b - a)
 }
 
-pub fn lerp_vec2(a: Vec2, b: Vec2, t: f32) -> Vec2 {
-    Vec2::new(lerp(a.x, b.x, t), lerp(a.y, b.y, t))
-}
-
-pub fn sample_texture(texture: &Image, uv: Vec2) -> Color {
-    let tex_width = texture.width() as usize;
-    let tex_height = texture.height() as usize;
-
-    let x = (uv.x * tex_width as f32).clamp(0.0, tex_width as f32 - 1.0) as u32;
-    let y = (uv.y * tex_height as f32).clamp(0.0, tex_height as f32 - 1.0) as u32;
-
-    texture.get_pixel(x, y)
-}
-
-pub fn flatten(pixels: Vec<[u8; 4]>) -> Vec<u8> {
-    let mut flat = vec![0; pixels.len() * 4];
-    for (i, pixel) in pixels.iter().enumerate() {
-        flat[i * 4] = pixel[0];
-        flat[i * 4 + 1] = pixel[1];
-        flat[i * 4 + 2] = pixel[2];
-        flat[i * 4 + 3] = pixel[3];
-    }
-    flat
-}
-
 pub fn format_radix(mut x: u32, radix: u32) -> String {
     let mut result = vec![];
 
@@ -300,8 +232,8 @@ pub fn string_to_mouse(s: &str) -> Option<MouseButton> {
     }
 }
 
-pub fn string_to_keycode(s: &str) -> Option<KeyCode> {
-    use KeyCode::*;
+pub fn string_to_keycode(s: &str) -> Option<Key> {
+    use Key::*;
     match s.to_lowercase().as_str() {
         "a" => Some(A),
         "b" => Some(B),
@@ -330,16 +262,16 @@ pub fn string_to_keycode(s: &str) -> Option<KeyCode> {
         "y" => Some(Y),
         "z" => Some(Z),
 
-        "0" => Some(Key0),
-        "1" => Some(Key1),
-        "2" => Some(Key2),
-        "3" => Some(Key3),
-        "4" => Some(Key4),
-        "5" => Some(Key5),
-        "6" => Some(Key6),
-        "7" => Some(Key7),
-        "8" => Some(Key8),
-        "9" => Some(Key9),
+        "0" => Some(Num0),
+        "1" => Some(Num1),
+        "2" => Some(Num2),
+        "3" => Some(Num3),
+        "4" => Some(Num4),
+        "5" => Some(Num5),
+        "6" => Some(Num6),
+        "7" => Some(Num7),
+        "8" => Some(Num8),
+        "9" => Some(Num9),
 
         "`" => Some(GraveAccent),
         "-" => Some(Minus),
@@ -377,8 +309,130 @@ pub fn string_to_keycode(s: &str) -> Option<KeyCode> {
     }
 }
 
+pub fn draw_line(start: Vec2, end: Vec2, thickness: f32, shader: &ShaderProgram, color: Vec4) {
+    let direction = (end - start).normalize();
+    let length = (end - start).length();
+    let angle = direction.y.atan2(direction.x);
+    let half_thickness = thickness / 2.0;
+    let vertices = [
+        Vertex {
+            position: Vec2::new(0.0, -half_thickness),
+            uv: Vec2::new(0.0, 1.0),
+        },
+        Vertex {
+            position: Vec2::new(length, -half_thickness),
+            uv: Vec2::new(1.0, 1.0),
+        },
+        Vertex {
+            position: Vec2::new(length, half_thickness),
+            uv: Vec2::new(1.0, 0.0),
+        },
+        Vertex {
+            position: Vec2::new(0.0, half_thickness),
+            uv: Vec2::new(0.0, 0.0),
+        },
+    ];
+    let indices = [0, 1, 2, 0, 2, 3];
+    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let mut m = Mat4::from_translation(start.extend(0.0));
+    m = m * Mat4::from_rotation_z(angle);
+    let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
+    shader.use_program();
+    shader.set_uniform("u_color", color);
+    shader.set_uniform("u_model", m);
+    shader.set_uniform_ref("u_effects", &[] as &[i32]);
+    shader.set_uniform_ref("u_effect_values", &[] as &[f32]);
+    shader.set_uniform("u_effects_count", 0);
+    texture.bind();
+    mesh.draw();
+}
+
+pub fn draw_rectangle(start: Vec2, end: Vec2, shader: &ShaderProgram, color: Vec4) {
+    let vertices = [
+        Vertex {
+            position: Vec2::new(start.x, start.y),
+            uv: Vec2::new(0.0, 1.0),
+        },
+        Vertex {
+            position: Vec2::new(end.x, start.y),
+            uv: Vec2::new(1.0, 1.0),
+        },
+        Vertex {
+            position: Vec2::new(end.x, end.y),
+            uv: Vec2::new(1.0, 0.0),
+        },
+        Vertex {
+            position: Vec2::new(start.x, end.y),
+            uv: Vec2::new(0.0, 0.0),
+        },
+    ];
+    let indices = [0, 1, 2, 0, 2, 3];
+    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
+    shader.use_program();
+    shader.set_uniform("u_color", color);
+    shader.set_uniform("u_model", Mat4::IDENTITY);
+    shader.set_uniform_ref("u_effects", &[] as &[i32]);
+    shader.set_uniform_ref("u_effect_values", &[] as &[f32]);
+    shader.set_uniform("u_effects_count", 0);
+    texture.bind();
+    mesh.draw();
+}
+
+pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, shader: &ShaderProgram, color: Vec4) {
+    assert_eq!(xs.len(), ys.len());
+    assert!(xs.len() >= 3, "Need at least 3 points to form a polygon!");
+
+    let vertices: Vec<Vertex> = xs
+        .iter()
+        .zip(ys.iter())
+        .map(|(&x, &y)| Vertex {
+            position: Vec2::new(x, y),
+            uv: Vec2::new(0.0, 0.0),
+        })
+        .collect();
+    let indices = trianglulate_polygon(&vertices.iter().map(|v| v.position).collect());
+    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
+    shader.use_program();
+    shader.set_uniform("u_color", color);
+    shader.set_uniform("u_model", Mat4::IDENTITY);
+    shader.set_uniform_ref("u_effects", &[] as &[i32]);
+    shader.set_uniform_ref("u_effect_values", &[] as &[f32]);
+    shader.set_uniform("u_effects_count", 0);
+    texture.bind();
+    mesh.draw();
+}
+
+pub fn draw_convex_polygon_lines(
+    xs: &Vec<f32>,
+    ys: &Vec<f32>,
+    thickness: f32,
+    shader: &ShaderProgram,
+    color: Vec4,
+) {
+    assert_eq!(xs.len(), ys.len());
+
+    for i in 0..xs.len() {
+        let next_i = (i + 1) % xs.len();
+        let start = Vec2::new(xs[i], ys[i]);
+        let end = Vec2::new(xs[next_i], ys[next_i]);
+        draw_line(start, end, thickness, shader, color);
+    }
+}
+
 // Helper functions that help other helper functions!!
 fn cubic_bezier(t: f32, p0: f32, p1: f32, p2: f32, p3: f32) -> f32 {
     let u = 1.0 - t;
     u * u * u * p0 + 3.0 * u * u * t * p1 + 3.0 * u * t * t * p2 + t * t * t * p3
+}
+
+fn trianglulate_polygon(vertices: &Vec<Vec2>) -> Vec<u32> {
+    let mut indices = Vec::new();
+    for i in 1..vertices.len() - 1 {
+        indices.push(0);
+        indices.push(i as u32);
+        indices.push((i + 1) as u32);
+    }
+    indices
 }

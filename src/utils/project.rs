@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use glfw::Window;
+
 use super::*;
 
 #[derive(Debug, Clone)]
@@ -19,12 +21,12 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn new(home_path: String, export_path: String, args: Vec<String>) -> Self {
+    pub fn new(home_path: String, export_path: String, args: Vec<String>, window: &Window) -> Self {
         Self {
             global_variables: HashMap::new(),
             broadcast_history: Vec::new(),
             sprites: Vec::new(),
-            stage: Stage::new(vec![]),
+            stage: Stage::new(vec![], window),
             args,
             home_path,
             export_path,
