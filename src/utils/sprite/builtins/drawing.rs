@@ -19,7 +19,7 @@ pub fn set_color(state: &mut State, args: &[Value]) -> Result {
 
 pub fn change_r(state: &mut State, args: &[Value]) -> Result {
     if let [Value::Number(amount)] = args {
-        state.sprite.draw_color.x = (state.sprite.draw_color.x + *amount / 255.0).clamp(0.0, 1.0);
+state.sprite.draw_color.x = (state.sprite.draw_color.x + *amount / 255.0).clamp(0.0, 1.0);
         Ok(Value::Null)
     } else {
         Err("change_r() requires a single number argument".to_string())
@@ -353,57 +353,49 @@ pub fn hpolygon(state: &State, args: &[Value]) -> Result {
     }
 }
 
-pub fn textured_quad(state: &State, args: &[Value]) -> Result {
+pub fn textured_tri(state: &State, args: &[Value]) -> Result {
     if let [
         Value::List(parse_image_result),
-        Value::Number(x1),
-        Value::Number(y1),
-        Value::Number(x2),
-        Value::Number(y2),
-        Value::Number(x3),
-        Value::Number(y3),
-        Value::Number(x4),
-        Value::Number(y4),
-    ] = args
-    {
+        Value::List(xs),
+        Value::List(ys),
+        Value::List(us),
+        Value::List(vs),
+    ] = args {
         if let [
             Value::Number(width),
             Value::Number(height),
             Value::List(pixels),
-        ] = parse_image_result.as_slice()
-        {
-            let mut cpu_texture = CPUTexture::new(*width as u32, *height as u32);
-            for i in 0..*width as usize {
-                for j in 0..*height as usize {
-                    let index = (i + j * (*width as usize)) * 4;
-                    let r = pixels[index].to_number() as u8;
-                    let g = pixels[index + 1].to_number() as u8;
-                    let b = pixels[index + 2].to_number() as u8;
-                    let a = pixels[index + 3].to_number() as u8;
-                    cpu_texture.set(i as u32, j as u32, U8Vec4::new(r, g, b, a));
-                }
+        ] = parse_image_result.as_slice() {
+            if xs.len() != ys.len() || xs.len() != us.len() || xs.len() != vs.len() || xs.len() != 3 {
+                return Err(
+                    "textured_tri() requires three lists of equal length: x, y, u, v coordinates"
+                        .to_string(),
+                );
             }
+            let mut cpu_texture = CPUTexture::new(*width as u32, *height as u32);
+            cpu_texture.data = pixels
+                .chunks(4)
+                .map(|c| {
+                    if c.len() == 4 {
+                        U8Vec4::new(c[0].to_number() as u8, c[1].to_number() as u8, c[2].to_number() as u8, c[3].to_number() as u8)
+                    } else {
+                        U8Vec4::new(0, 0, 0, 0)
+                    }
+                })
+                .collect();
             let gpu_texture = cpu_texture.upload_to_gpu();
-            let quad = [
-                Vertex {
-                    position: vec2(*x4, *y4),
-                    uv: vec2(0.0, 1.0),
-                },
-                Vertex {
-                    position: vec2(*x3, *y3),
-                    uv: vec2(1.0, 1.0),
-                },
-                Vertex {
-                    position: vec2(*x2, *y2),
-                    uv: vec2(1.0, 0.0),
-                },
-                Vertex {
-                    position: vec2(*x1, *y1),
-                    uv: vec2(0.0, 0.0),
-                },
-            ];
-            let indices = [0, 1, 2, 0, 2, 3];
-            let mesh = Mesh::new(&quad, &indices, core::DrawMode::Triangles);
+            let vertices: Vec<Vertex> = xs
+                .iter()
+                .zip(ys.iter())
+                .zip(us.iter())
+                .zip(vs.iter())
+                .map(|(((x, y), u), v)| Vertex {
+                    position: vec2(x.to_number(), y.to_number()),
+                    uv: vec2(u.to_number(), v.to_number()),
+                })
+                .collect();
+            let indices = [0, 1, 2];
+            let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
             state.shader_program.use_program();
             state
                 .shader_program
@@ -423,10 +415,10 @@ pub fn textured_quad(state: &State, args: &[Value]) -> Result {
             mesh.draw();
             Ok(Value::Null)
         } else {
-            Err("textured_quad() requires an image with width, height, and pixel data".to_string())
+            return Err("textured_tri() requires an image with width, height, and pixel data".to_string());
         }
     } else {
-        Err("textured_quad() requires an image and four pairs of coordinates".to_string())
+        return Err("textured_tri() requires an image and lists of x, y, u, v coordinates".to_string());
     }
 }
 

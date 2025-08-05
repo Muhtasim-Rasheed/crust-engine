@@ -15,7 +15,7 @@ The drawing functions are used to draw shapes and lines on the screen unlike in 
 - `hellipse(x, y, width, height, rotation, thickness)`: Draws a hollow ellipse with the center at `(x, y)`, the specified width and height, the specified rotation in degrees, and the specified thickness. The ellipse is outlined with the current drawing color.
 - `polygon(xs, ys)`: Draws a filled polygon with the specified vertices. The polygon is filled with the current drawing color.
 - `hpolygon(thickness, xs, ys)`: Draws a hollow polygon with the specified vertices and thickness. The polygon is outlined with the current drawing color.
-- `textured_quad(parse_image_result, x1, y1, x2, y2, x3, y3, x4, y4)`: Draws a textured quadrilateral using the specified image result from `parse_image(binary)`. The quadrilateral is defined by the four points `(x1, y1)`, `(x2, y2)`, `(x3, y3)`, and `(x4, y4)`.
+- `textured_tri(parse_image_result, xs, ys, us, vs)`: Draws a textured triangle using the specified vertices and texture coordinates. The `parse_image_result` is the result from the `parse_image()` function.
 - `stamp()`: Stamps the sprite onto the stage at its current position. The stamp is a copy of the sprite's current appearance, effects included.
 - `clear_all_stamps()`: Clears all the stamps on the stage.
 - `r()`: Returns the current red component of the drawing color.
@@ -23,4 +23,4 @@ The drawing functions are used to draw shapes and lines on the screen unlike in 
 - `b()`: Returns the current blue component of the drawing color.
 
 !!! note
-    The drawing functions draw in world coordinates, not screen coordinates. The origin `(0, 0)` is at the center of the screen, with positive x values to the right and positive y values downwards.
+    The drawing functions draw in world coordinates, not screen coordinates. The origin `(0, 0)` is at the center of the screen, with positive x values to the right and positive y values upwards.
