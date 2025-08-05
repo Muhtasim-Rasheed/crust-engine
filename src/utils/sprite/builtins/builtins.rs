@@ -119,9 +119,9 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "play_sound", |st, ar| sounds::play_sound(st, ar));
     builtin!(builtins, "stop_all_sounds", |st, _| sounds::stop_all_sounds(st));
     builtin!(builtins, "stop_sound", |st, ar| sounds::stop_sound(st, ar));
-    builtin!(builtins, "change_sound_effect", |st, ar| sounds::change_sound_effect(st, ar));
-    builtin!(builtins, "set_sound_effect", |st, ar| sounds::set_sound_effect(st, ar));
-    builtin!(builtins, "sound_effect", |st, ar| sounds::sound_effect(st, ar));
+    builtin!(builtins, "change_sound_filter", |st, ar| sounds::change_sound_filter(st, ar));
+    builtin!(builtins, "set_sound_filter", |st, ar| sounds::set_sound_filter(st, ar));
+    builtin!(builtins, "sound_filter", |st, ar| sounds::sound_filter(st, ar));
 
     // EVENTS
     builtin!(builtins, "key_down", |st, ar| events::key_down(st, ar));

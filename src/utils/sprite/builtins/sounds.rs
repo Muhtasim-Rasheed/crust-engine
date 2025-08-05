@@ -3,8 +3,8 @@ use kira::{Tween, sound::static_sound::StaticSoundHandle};
 
 use crate::utils::{sprite::function::Result, *};
 
-fn update_sound_handle(sound_effects: &IndexMap<String, f32>, handle: &mut StaticSoundHandle) {
-    for (effect, value) in sound_effects {
+fn update_sound_handle(sound_filters: &IndexMap<String, f32>, handle: &mut StaticSoundHandle) {
+    for (effect, value) in sound_filters {
         match effect.as_str() {
             "volume" => handle.set_volume(percentage_to_decibels(*value / 100.0), Tween::default()),
             "pitch" => handle.set_playback_rate(*value as f64 / 100.0, Tween::default()),
@@ -21,7 +21,7 @@ pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
                 .audio_manager
                 .play(sound.clone())
                 .map_err(|e| e.to_string())?;
-            update_sound_handle(&state.sprite.sound_effects, &mut handle);
+            update_sound_handle(&state.sprite.sound_filters, &mut handle);
             state.sprite.sound_handles.insert(name.to_string(), handle);
             Ok(Value::Null)
         } else {
@@ -60,43 +60,43 @@ pub fn stop_sound(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn change_sound_effect(state: &mut State, args: &[Value]) -> Result {
+pub fn change_sound_filter(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(effect), Value::Number(value)] = args {
         state
             .sprite
-            .sound_effects
+            .sound_filters
             .entry(effect.clone())
             .and_modify(|v| *v += *value)
             .or_insert(*value);
         for sound_handle in state.sprite.sound_handles.values_mut() {
-            update_sound_handle(&state.sprite.sound_effects, sound_handle);
+            update_sound_handle(&state.sprite.sound_filters, sound_handle);
         }
         Ok(Value::Null)
     } else {
-        Err("change_sound_effect() requires a string and a numeric argument".to_string())
+        Err("change_sound_filter() requires a string and a numeric argument".to_string())
     }
 }
 
-pub fn set_sound_effect(state: &mut State, args: &[Value]) -> Result {
+pub fn set_sound_filter(state: &mut State, args: &[Value]) -> Result {
     if let [Value::String(effect), Value::Number(value)] = args {
-        state.sprite.sound_effects.insert(effect.clone(), *value);
+        state.sprite.sound_filters.insert(effect.clone(), *value);
         for sound_handle in state.sprite.sound_handles.values_mut() {
-            update_sound_handle(&state.sprite.sound_effects, sound_handle);
+            update_sound_handle(&state.sprite.sound_filters, sound_handle);
         }
         Ok(Value::Null)
     } else {
-        Err("set_sound_effect() requires a string and a numeric argument".to_string())
+        Err("set_sound_filter() requires a string and a numeric argument".to_string())
     }
 }
 
-pub fn sound_effect(state: &State, args: &[Value]) -> Result {
+pub fn sound_filter(state: &State, args: &[Value]) -> Result {
     if let [Value::String(effect)] = args {
-        if let Some(value) = state.sprite.sound_effects.get(effect) {
+        if let Some(value) = state.sprite.sound_filters.get(effect) {
             Ok(Value::Number(*value))
         } else {
             Err(format!("Sound effect '{}' not found", effect))
         }
     } else {
-        Err("sound_effect() requires a single string argument".to_string())
+        Err("sound_filter() requires a single string argument".to_string())
     }
 }
