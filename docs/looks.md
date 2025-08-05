@@ -42,11 +42,13 @@ All the valid effects that can be used are:
 - `"grayscale-averaged"`: Changes the grayscale effect of the sprite, using the average method.
 - `"grayscale-weighted"`: Changes the grayscale effect of the sprite, using the weighted method.
 - `"invert"`: Inverts the colors of the sprite.
-- `"multiply"`: Multiplies the colors of the sprite by the specified value.
+- `"multiply"`: Multiplies the RGB excluding transparency of the sprite by the specified value.
 - `"multiply-r"`: Multiplies the red channel of the sprite by the specified value.
 - `"multiply-g"`: Multiplies the green channel of the sprite by the specified value.
 - `"multiply-b"`: Multiplies the blue channel of the sprite by the specified value.
-- `"add"`: Adds the specified value to the colors of the sprite.
+- `"multiply-a"`: Multiplies the transparency channel of the sprite by the specified value.
+- `"add"`: Adds the specified value to the RGB excluding transparency of the sprite.
 - `"add-r"`: Adds the specified value to the red channel of the sprite.
 - `"add-g"`: Adds the specified value to the green channel of the sprite.
 - `"add-b"`: Adds the specified value to the blue channel of the sprite.
+- `"add-a"`: Adds the specified value to the transparency channel of the sprite.

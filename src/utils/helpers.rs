@@ -421,6 +421,13 @@ pub fn draw_convex_polygon_lines(
     }
 }
 
+pub fn percentage_to_decibels(percentage: f32) -> f32 {
+    if percentage <= 0.0 {
+        return f32::NEG_INFINITY;
+    }
+    20.0 * percentage.log10()
+}
+
 // Helper functions that help other helper functions!!
 fn cubic_bezier(t: f32, p0: f32, p1: f32, p2: f32, p3: f32) -> f32 {
     let u = 1.0 - t;

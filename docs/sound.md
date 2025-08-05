@@ -11,4 +11,6 @@ The sound functions are used to play and control sounds in the project. They can
 
 All the valid sound effects that can be used are:
 
-- `"volume"`: Changes the volume of the sound.
+- `"volume"`: Changes the volume of the sound (0 - 100).
+- `"pitch"`: Changes the pitch of the sound (0 - 100).
+- `"pan"`: Changes the stereo panning of the sound (0 - 100, where 0 is left, 50 is center, and 100 is right).
