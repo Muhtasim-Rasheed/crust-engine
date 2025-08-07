@@ -32,6 +32,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "property_of", |st, ar| misc::property_of(st, ar));
     builtin!(builtins, "to_rad", |_, ar| misc::to_rad(ar));
     builtin!(builtins, "to_deg", |_, ar| misc::to_deg(ar));
+    builtin!(builtins, "set_cam", |st, ar| misc::set_cam(st, ar));
     builtin!(builtins, "clamp", |_, ar| misc::clamp(ar));
     builtin!(builtins, "len", |_, ar| misc::len(ar));
     builtin!(builtins, "keys", |_, ar| misc::key_value(ar, "keys"));

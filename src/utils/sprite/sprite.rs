@@ -32,7 +32,7 @@ pub struct State<'a> {
     pub glfw: &'a mut glfw::Glfw,
     pub audio_manager: &'a mut AudioManager<DefaultBackend>,
     pub shader_program: &'a ShaderProgram,
-    pub projection: Mat4,
+    pub projection: &'a mut Mat4,
     pub font: &'a BitmapFont,
     pub local_vars: &'a [(String, Value)],
     pub script_id: usize,
@@ -864,7 +864,7 @@ impl Sprite {
         glfw: &mut glfw::Glfw,
         audio_manager: &mut AudioManager<DefaultBackend>,
         shader_program: &ShaderProgram,
-        projection: Mat4,
+        projection: &mut Mat4,
         font: &BitmapFont,
     ) {
         if let Some(glide) = &mut self.glide {

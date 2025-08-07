@@ -121,6 +121,53 @@ pub fn to_deg(args: &[Value]) -> Result {
     }
 }
 
+pub fn set_cam(state: &mut State, args: &[Value]) -> Result {
+    match args {
+        [] => {
+            let (width, height) = state.window.get_size();
+            let sprite_center = state.sprite.center;
+            *state.projection = Mat4::orthographic_rh(
+                -width as f32 + sprite_center.x,
+                width as f32 + sprite_center.x,
+                -height as f32 + sprite_center.y,
+                height as f32 + sprite_center.y,
+                -1.0,
+                1.0,
+            );
+            Ok(Value::Null)
+        }
+        [Value::Number(x), Value::Number(y)] => {
+            let (width, height) = state.window.get_size();
+            *state.projection = Mat4::orthographic_rh(
+                -width as f32 + x,
+                width as f32 + x,
+                -height as f32 + y,
+                height as f32 + y,
+                -1.0,
+                1.0,
+            );
+            Ok(Value::Null)
+        }
+        [Value::Number(x), Value::Number(y), Value::Number(zoom_x), Value::Number(zoom_y)] => {
+            let (width, height) = state.window.get_size();
+            let zoom_x = (zoom_x / 100.0).max(0.01);
+            let zoom_y = (zoom_y / 100.0).max(0.01);
+            *state.projection = Mat4::orthographic_rh(
+                -width as f32 * zoom_x + x,
+                width as f32 * zoom_x + x,
+                -height as f32 * zoom_y + y,
+                height as f32 * zoom_y + y,
+                -1.0,
+                1.0,
+            );
+            Ok(Value::Null)
+        }
+        _ => {
+            Err("set_cam() expects zero or two number arguments".to_string())
+        }
+    }
+}
+
 pub fn clamp(args: &[Value]) -> Result {
     if let [Value::Number(value), Value::Number(min), Value::Number(max)] = args {
         let clamped_value = value.clamp(*min, *max);

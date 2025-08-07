@@ -410,7 +410,7 @@ pub fn textured_tri(state: &State, args: &[Value]) -> Result {
                 .set_uniform("u_color", Vec4::splat(1.0));
             state
                 .shader_program
-                .set_uniform("u_projection", state.projection);
+                .set_uniform_ref("u_projection", state.projection);
             state.shader_program.set_uniform("u_model", Mat4::IDENTITY);
             state
                 .shader_program
@@ -439,7 +439,14 @@ pub fn stamp(state: &State) -> Result {
     draw_sprite(
         state.sprite,
         state.shader_program,
-        state.projection,
+        Mat4::orthographic_rh_gl(
+            -state.window.get_size().0 as f32,
+            state.window.get_size().0 as f32,
+            -state.window.get_size().1 as f32,
+            state.window.get_size().1 as f32,
+            -1.0,
+            1.0,
+        ),
         state.font,
     );
     Framebuffer::unbind();

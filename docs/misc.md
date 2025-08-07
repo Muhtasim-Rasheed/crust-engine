@@ -25,6 +25,9 @@ The miscellaneous functions do not fit into any other category. They are used fo
     - `tags`: A list of tags that the sprite is in.
 - `to_rad(deg)`: Converts the given angle in degrees to radians.
 - `to_deg(rad)`: Converts the given angle in radians to degrees.
+- `set_cam()`: Sets the camera's 0, 0 position to the sprite's current position.
+- `set_cam(x, y)`: Sets the camera's 0, 0 position to the given coordinates `(x, y)`.
+- `set_cam(x, y, zoom_x, zoom_y)`: Sets the camera's 0, 0 position to the given coordinates `(x, y)` and sets the zoom level to `(zoom_x, zoom_y)`. The zoom level is a number where 100 is 100% zoom.
 - `clamp(value, min, max)`: Clamps the given value between the minimum and maximum values.
 - `len(list | string)`: Returns the length of the given list or string.
 - `keys(object)`: Returns a list of keys in the given object.

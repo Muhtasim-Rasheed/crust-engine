@@ -311,7 +311,7 @@ impl Runtime {
         glfw: &mut glfw::Glfw,
     ) {
         let mut input_manager = InputManager::new();
-        let projection = Mat4::orthographic_rh_gl(
+        let mut projection = Mat4::orthographic_rh_gl(
             -window.get_size().0 as f32,
             window.get_size().0 as f32,
             -window.get_size().1 as f32,
@@ -395,7 +395,7 @@ impl Runtime {
                     glfw,
                     &mut self.audio_manager,
                     shader_program,
-                    projection,
+                    &mut projection,
                     font,
                 );
             }
