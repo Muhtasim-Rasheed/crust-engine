@@ -162,8 +162,25 @@ pub fn set_cam(state: &mut State, args: &[Value]) -> Result {
             );
             Ok(Value::Null)
         }
+        [Value::Number(x), Value::Number(y), Value::Number(zoom_x), Value::Number(zoom_y), Value::Number(rotation)] => {
+            let (width, height) = state.window.get_size();
+            let zoom_x = (zoom_x / 100.0).max(0.01);
+            let zoom_y = (zoom_y / 100.0).max(0.01);
+            let rotation_rad = rotation.to_radians();
+            let view = Mat4::from_rotation_z(rotation_rad)
+                * Mat4::from_translation(Vec3::new(*x, *y, 0.0));
+            *state.projection = Mat4::orthographic_rh(
+                -width as f32 * zoom_x,
+                width as f32 * zoom_x,
+                -height as f32 * zoom_y,
+                height as f32 * zoom_y,
+                -1.0,
+                1.0,
+            ) * view;
+            Ok(Value::Null)
+        }
         _ => {
-            Err("set_cam() expects zero or two number arguments".to_string())
+            Err("set_cam() expects (), (x, y), (x, y, zoom_x, zoom_y), or (x, y, zoom_x, zoom_y, rotation)".to_string())
         }
     }
 }

@@ -28,6 +28,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `set_cam()`: Sets the camera's 0, 0 position to the sprite's current position.
 - `set_cam(x, y)`: Sets the camera's 0, 0 position to the given coordinates `(x, y)`.
 - `set_cam(x, y, zoom_x, zoom_y)`: Sets the camera's 0, 0 position to the given coordinates `(x, y)` and sets the zoom level to `(zoom_x, zoom_y)`. The zoom level is a number where 100 is 100% zoom.
+- `set_cam(x, y, zoom_x, zoom_y, rotation)`: Sets the camera's 0, 0 position to the given coordinates `(x, y)`, sets the zoom level to `(zoom_x, zoom_y)`, and sets the rotation of the camera in degrees.
 - `clamp(value, min, max)`: Clamps the given value between the minimum and maximum values.
 - `len(list | string)`: Returns the length of the given list or string.
 - `keys(object)`: Returns a list of keys in the given object.
