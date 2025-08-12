@@ -530,7 +530,8 @@ pub fn sort(state: &mut State, args: &[Value]) -> Result {
         let mut error: Option<String> = None;
         new_list.sort_by(|a, b| {
             let args_ = [a.clone(), b.clone()];
-            let result = Callable::Function(function_struct.clone())
+            let result = function_struct
+                .clone()
                 .call(state, &args_)
                 .unwrap_or_else(|e| {
                     error = Some(format!("Error calling closure in sort(): {}", e,));
@@ -563,7 +564,8 @@ pub fn filter(state: &mut State, args: &[Value]) -> Result {
             .iter()
             .filter_map(|item| {
                 let args_ = [item.clone()];
-                let result = Callable::Function(function_struct.clone())
+                let result = function_struct
+                    .clone()
                     .call(state, &args_)
                     .unwrap_or_else(|e| {
                         error = Some(format!("Error calling closure in filter(): {}", e));
@@ -593,7 +595,8 @@ pub fn map(state: &mut State, args: &[Value]) -> Result {
             .iter()
             .map(|item| {
                 let args_ = [item.clone()];
-                Callable::Function(function_struct.clone())
+                function_struct
+                    .clone()
                     .call(state, &args_)
                     .unwrap_or_else(|e| {
                         error = Some(format!("Error calling closure in map(): {}", e));

@@ -495,16 +495,6 @@ impl Sprite {
     pub fn set_variable(&mut self, name: &str, value: Value) {
         if let Some(var) = self.variables.get_mut(name) {
             *var = value;
-        } else if let Some(function) = self.functions.get_mut(name) {
-            if let Value::Closure(closure) = value {
-                *function = Callable::Function(Function {
-                    args: closure.args.clone(),
-                    body: closure.body.clone(),
-                    returns: closure.returns.clone(),
-                });
-            } else {
-                println!("Cannot set function '{}' to non-closure value", name);
-            }
         } else {
             println!("Variable '{}' not found", name);
         }
@@ -518,11 +508,7 @@ impl Sprite {
         } else if let Some(var) = project.global_variables.get(name) {
             var.clone()
         } else if let Some(function) = self.functions.get(name) {
-            // Builtin functions are written in Rust and thus cannot be turned into closures.
-            match function {
-                Callable::Function(func) => Value::Closure(Box::new(func.clone())),
-                Callable::Builtin(_) => Value::Null,
-            }
+            Value::Closure(Box::new(function.clone()))
         } else {
             match name {
                 "PI" => Value::Number(PI),
@@ -719,12 +705,10 @@ impl Sprite {
                             return;
                         };
                         let function_struct = *closure;
-                        let _ = Callable::Function(function_struct)
-                            .call(state, &args)
-                            .unwrap_or_else(|e| {
-                                println!("Error calling closure '{}': {}", function, e);
-                                Value::Null
-                            });
+                        function_struct.call(state, &args).unwrap_or_else(|e| {
+                            println!("Error calling closure '{}': {}", function, e);
+                            Value::Null
+                        });
                     } else {
                         println!("Unknown function or variable '{}'", function);
                     }

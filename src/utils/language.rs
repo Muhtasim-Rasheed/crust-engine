@@ -838,11 +838,13 @@ impl Parser {
         }
         let returns = self.parse_binary(0)?;
         let body = self.parse_block()?;
-        Ok(Expression::Value(Value::Closure(Box::new(Function {
-            args,
-            body,
-            returns,
-        }))))
+        Ok(Expression::Value(Value::Closure(Box::new(
+            crate::utils::Callable::Function(Function {
+                args,
+                body,
+                returns,
+            }),
+        ))))
     }
 
     fn parse_primary(&mut self) -> Result<Expression, String> {

@@ -172,12 +172,10 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
                     return Value::Null;
                 };
                 let function_struct = &*closure;
-                Callable::Function(function_struct.clone())
-                    .call(state, &args)
-                    .unwrap_or_else(|e| {
-                        println!("Error calling function '{}': {}", function, e);
-                        Value::Null
-                    })
+                function_struct.call(state, &args).unwrap_or_else(|e| {
+                    println!("Error calling function '{}': {}", function, e);
+                    Value::Null
+                })
             } else {
                 return Value::Null;
             }

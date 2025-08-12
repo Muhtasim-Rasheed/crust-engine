@@ -58,13 +58,6 @@ impl CPUTexture {
         })
     }
 
-    pub fn set(&mut self, x: u32, y: u32, color: U8Vec4) {
-        if x < self.width && y < self.height {
-            let index = (y * self.width + x) as usize;
-            self.data[index] = color;
-        }
-    }
-
     pub fn upload_to_gpu(self) -> GPUTexture {
         let texture = GPUTexture::new(
             self.width,
