@@ -175,6 +175,7 @@ impl Runtime {
             dir.join("export").to_string_lossy().to_string(),
             args,
             window,
+            builtins,
         );
 
         for path in config
@@ -288,7 +289,6 @@ impl Runtime {
                 sprite.visible.unwrap_or(true),
                 sprite.layer.unwrap_or(0),
                 sprite.direction.unwrap_or(0.0),
-                builtins.clone(),
                 dir.to_string_lossy().to_string(),
             );
 

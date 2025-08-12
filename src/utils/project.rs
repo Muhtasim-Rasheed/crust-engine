@@ -15,18 +15,20 @@ pub struct Project {
     pub broadcast_history: Vec<Broadcast>,
     pub sprites: Vec<Sprite>,
     pub stage: Stage,
+    pub builtins: HashMap<String, Callable>,
     pub args: Vec<String>,
     pub home_path: String,
     pub export_path: String,
 }
 
 impl Project {
-    pub fn new(home_path: String, export_path: String, args: Vec<String>, window: &Window) -> Self {
+    pub fn new(home_path: String, export_path: String, args: Vec<String>, window: &Window, builtins: HashMap<String, Callable>) -> Self {
         Self {
             global_variables: HashMap::new(),
             broadcast_history: Vec::new(),
             sprites: Vec::new(),
             stage: Stage::new(vec![], window),
+            builtins,
             args,
             home_path,
             export_path,

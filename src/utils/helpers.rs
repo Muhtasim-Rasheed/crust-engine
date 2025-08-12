@@ -161,9 +161,14 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
                 .iter()
                 .map(|arg| resolve_expression(arg, state))
                 .collect::<Vec<_>>();
-            if let Some(function_struct) = state.sprite.functions.clone().get(function) {
+            if let Some(function_struct) = state.sprite.functions.get(function).cloned() {
                 function_struct.call(state, &args).unwrap_or_else(|e| {
                     println!("Error calling function {}(): {}", function, e);
+                    Value::Null
+                })
+            } else if let Some(function_struct) = state.project.builtins.get(function).cloned() {
+                function_struct.call(state, &args).unwrap_or_else(|e| {
+                    println!("Error calling builtin function {}(): {}", function, e);
                     Value::Null
                 })
             } else if let Some(variable) = state.sprite.variables.get(function).cloned() {

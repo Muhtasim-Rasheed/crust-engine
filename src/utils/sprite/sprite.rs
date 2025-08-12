@@ -178,14 +178,13 @@ impl Sprite {
         visibility: bool,
         layer: isize,
         direction: f32,
-        builtins: HashMap<String, Callable>,
         base_dir: String,
     ) -> Self {
         let mut setup_ast = vec![];
         let mut update_ast = vec![];
         let mut broadcast_recievers = HashMap::new();
         let mut boolean_recievers = vec![];
-        let mut functions = builtins;
+        let mut functions = HashMap::new();
         let mut clone_setup = vec![];
         let mut clone_update = vec![];
         for statement in ast {
@@ -509,6 +508,8 @@ impl Sprite {
             var.clone()
         } else if let Some(function) = self.functions.get(name) {
             Value::Closure(Box::new(function.clone()))
+        } else if let Some(function) = project.builtins.get(name) {
+            Value::Closure(Box::new(function.clone()))
         } else {
             match name {
                 "PI" => Value::Number(PI),
@@ -695,8 +696,18 @@ impl Sprite {
                         .map(|arg| crate::utils::resolve_expression(arg, state))
                         .collect::<Vec<_>>();
                     if let Some(callable) = state.sprite.functions.clone().get(function) {
-                        let _ = callable.call(state, &args).unwrap_or_else(|e| {
+                        callable.call(state, &args).unwrap_or_else(|e| {
                             println!("Error calling {}(): {}", function, e);
+                            Value::Null
+                        });
+                    } else if let Some(callable) = state
+                        .project
+                        .builtins
+                        .get(function)
+                        .cloned()
+                    {
+                        callable.call(state, &args).unwrap_or_else(|e| {
+                            println!("Error calling builtin function '{}': {}", function, e);
                             Value::Null
                         });
                     } else if let Some(variable) = state.sprite.variables.get(function).cloned() {
