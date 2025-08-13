@@ -160,6 +160,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "hellipse", |st, ar| drawing::hellipse(st, ar));
     builtin!(builtins, "polygon", |st, ar| drawing::polygon(st, ar));
     builtin!(builtins, "hpolygon", |st, ar| drawing::hpolygon(st, ar));
+    builtin!(builtins, "text", |st, ar| drawing::text(st, ar));
     builtin!(builtins, "textured_tri", |st, ar| drawing::textured_tri(st, ar));
     builtin!(builtins, "stamp", |st, _| drawing::stamp(st));
     builtin!(builtins, "clear_all_stamps", |st, _| drawing::clear_all_stamps(st));

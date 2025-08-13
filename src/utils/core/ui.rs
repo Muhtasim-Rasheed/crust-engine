@@ -115,19 +115,19 @@ impl BitmapFont {
                 } else {
                     vertices.push(Vertex {
                         position: glam::vec2(x + italic_offset, y),
-                        uv: glam::vec2(uv0[0], uv0[1]),
+                        uv: glam::vec2(uv0[0], uv1[1]),
                     }); // Bottom-left
                     vertices.push(Vertex {
                         position: glam::vec2(x + w + italic_offset, y),
-                        uv: glam::vec2(uv1[0], uv0[1]),
+                        uv: glam::vec2(uv1[0], uv1[1]),
                     }); // Bottom-right
                     vertices.push(Vertex {
                         position: glam::vec2(x + w - italic_offset, y + h),
-                        uv: glam::vec2(uv1[0], uv1[1]),
+                        uv: glam::vec2(uv1[0], uv0[1]),
                     }); // Top-right
                     vertices.push(Vertex {
                         position: glam::vec2(x - italic_offset, y + h),
-                        uv: glam::vec2(uv0[0], uv1[1]),
+                        uv: glam::vec2(uv0[0], uv0[1]),
                     }); // Top-left
                 }
 

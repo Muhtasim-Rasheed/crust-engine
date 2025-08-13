@@ -15,6 +15,7 @@ The drawing functions are used to draw shapes and lines on the screen unlike in 
 - `hellipse(x, y, width, height, rotation, thickness)`: Draws a hollow ellipse with the center at `(x, y)`, the specified width and height, the specified rotation in degrees, and the specified thickness. The ellipse is outlined with the current drawing color.
 - `polygon(xs, ys)`: Draws a filled polygon with the specified vertices. The polygon is filled with the current drawing color.
 - `hpolygon(thickness, xs, ys)`: Draws a hollow polygon with the specified vertices and thickness. The polygon is outlined with the current drawing color.
+- `text(x, y, text, font_size)`: Draws the specified text at the position `(x, y)` with the specified font size. The text is drawn with the current drawing color.
 - `textured_tri(parse_image_result, xs, ys, us, vs)`: Draws a textured triangle using the specified vertices and texture coordinates. The `parse_image_result` is the result from the `parse_image()` function.
 - `stamp()`: Stamps the sprite onto the stage at its current position. The stamp is a copy of the sprite's current appearance, effects included.
 - `clear_all_stamps()`: Clears all the stamps on the stage.

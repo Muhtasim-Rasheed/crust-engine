@@ -353,6 +353,32 @@ pub fn hpolygon(state: &State, args: &[Value]) -> Result {
     }
 }
 
+pub fn text(state: &State, args: &[Value]) -> Result {
+    if let [
+        Value::String(text),
+        Value::Number(x),
+        Value::Number(y),
+        Value::Number(font_size),
+    ] = args
+    {
+        let pos = Vec2::new(*x, *y);
+        draw_text(TextParams {
+            text,
+            projection: *state.projection,
+            model: Mat4::IDENTITY,
+            pos,
+            down_positive: false,
+            font_size: *font_size * 2.0,
+            color: state.sprite.draw_color,
+            italicised: false,
+            ..TextParams::default_params(state.font, state.shader_program)
+        });
+        Ok(Value::Null)
+    } else {
+        Err("text() requires a string and two numbers: text, x, y".to_string())
+    }
+}
+
 pub fn textured_tri(state: &State, args: &[Value]) -> Result {
     if let [
         Value::List(parse_image_result),
