@@ -7,6 +7,7 @@ pub struct Function {
     pub args: Vec<String>,
     pub body: Vec<Statement>,
     pub returns: Expression,
+    pub captured_vars: Vec<(String, Value)>,
 }
 
 impl Function {
@@ -22,6 +23,9 @@ impl Function {
         let mut new_local_vars = state.local_vars.to_vec();
         for (i, arg) in self.args.iter().enumerate() {
             new_local_vars.push((arg.clone(), args[i].clone()));
+        }
+        for (name, value) in &self.captured_vars {
+            new_local_vars.push((name.clone(), value.clone()));
         }
         let mut new_state = State {
             start: state.start,

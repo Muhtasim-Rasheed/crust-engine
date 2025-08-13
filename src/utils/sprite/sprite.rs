@@ -213,6 +213,7 @@ impl Sprite {
                             args: args.clone(),
                             body: body.clone(),
                             returns: returns.clone(),
+                            captured_vars: vec![],
                         }),
                     );
                 }
@@ -267,6 +268,7 @@ impl Sprite {
                                             args: args.clone(),
                                             body: body.clone(),
                                             returns: returns.clone(),
+                                            captured_vars: vec![],
                                         },
                                     );
                                 }

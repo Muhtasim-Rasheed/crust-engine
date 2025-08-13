@@ -23,6 +23,15 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
             }
             Value::Object(object)
         }
+        Expression::Closure { args, body, returns } => {
+            let closure = Function {
+                args: args.clone(),
+                body: body.clone(),
+                returns: *returns.clone(),
+                captured_vars: state.local_vars.to_vec(),
+            };
+            Value::Closure(Box::new(Callable::Function(closure)))
+        }
         Expression::ListMemberAccess { list, index } => {
             let index = resolve_expression(index, state);
             let list = resolve_expression(list, state);

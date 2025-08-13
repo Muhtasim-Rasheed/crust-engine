@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-
-use super::{Function, Value};
+use super::Value;
 
 // ========================= Tokenizer ========================= \\
 
@@ -257,6 +256,11 @@ pub enum Expression {
     Value(Value),
     List(Vec<Expression>),
     Object(HashMap<String, Expression>),
+    Closure {
+        args: Vec<String>,
+        body: Vec<Statement>,
+        returns: Box<Expression>,
+    },
     ListMemberAccess {
         list: Box<Expression>,
         index: Box<Expression>,
@@ -300,6 +304,14 @@ impl Expression {
                     .collect::<Vec<_>>()
                     .join(", ");
                 format!("{{ {} }}", obj_str)
+            }
+            Expression::Closure { args, returns, .. } => {
+                let args_str = args.join(", ");
+                format!(
+                    "({}) {} {{ ... }}",
+                    args_str,
+                    returns.to_string(),
+                )
             }
             Expression::ListMemberAccess { list, index } => {
                 format!("{}[{}]", list.to_string(), index.to_string())
@@ -838,13 +850,11 @@ impl Parser {
         }
         let returns = self.parse_binary(0)?;
         let body = self.parse_block()?;
-        Ok(Expression::Value(Value::Closure(Box::new(
-            crate::utils::Callable::Function(Function {
-                args,
-                body,
-                returns,
-            }),
-        ))))
+        Ok(Expression::Closure {
+            args,
+            body,
+            returns: Box::new(returns),
+        })
     }
 
     fn parse_primary(&mut self) -> Result<Expression, String> {
