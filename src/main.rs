@@ -111,28 +111,10 @@ async fn main() {
         }]);
     }
 
-    let font = utils::core::BitmapFont::new(
-        {
-            let font_bytes = include_bytes!("../assets/font.png");
-            let font_image = image::load_from_memory(font_bytes)
-                .expect("Failed to load font image")
-                .to_rgba8();
-            let (width, height) = font_image.dimensions();
-            let pixels = font_image.into_raw();
-            let cpu_texture = utils::core::CPUTexture::load_from_bytes(&pixels, width, height)
-                .expect("Failed to load font texture");
-            cpu_texture.upload_to_gpu()
-        },
-        ' ',
-        12,
-        7,
-        12,
-    );
-
     let mut runtime = utils::Runtime::new(&project_file, args.additional_args, &window);
     println!("Loaded project: {}", project_file);
     let shader_program = ShaderProgram::new(VERT_SHADER, FRAG_SHADER);
     runtime
-        .run(&mut window, &events, &font, &shader_program, &mut glfw)
+        .run(&mut window, &events, &shader_program, &mut glfw)
         .await;
 }

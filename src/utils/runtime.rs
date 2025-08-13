@@ -12,6 +12,15 @@ use super::sprite::StopRequest;
 use super::{Parser, Project, Tokenizer, sprite::Sprite, sprite::SpriteSnapshot};
 
 #[derive(Deserialize, Debug)]
+struct FontConfig {
+    file: String,
+    first_char: char,
+    char_width: u32,
+    char_height: u32,
+    chars_per_row: u32,
+}
+
+#[derive(Deserialize, Debug)]
 struct StageConfig {
     backdrops: Vec<String>,
 }
@@ -47,6 +56,7 @@ struct TagConfig {
 #[derive(Deserialize, Debug)]
 struct ProjectConfig {
     debug_options: Option<Vec<String>>,
+    font: Option<FontConfig>,
     stage: Option<StageConfig>,
     sprites: Vec<SpriteConfig>,
     tags: Option<Vec<TagConfig>>,
@@ -148,6 +158,7 @@ impl InputManager {
 pub struct Runtime {
     pub project: Project,
     pub audio_manager: AudioManager<DefaultBackend>,
+    pub font: BitmapFont,
     debug_options: Vec<String>,
 }
 
@@ -177,6 +188,29 @@ impl Runtime {
             window,
             builtins,
         );
+
+        let font = if let Some(font_config) = config.font {
+            let font_path = dir.join(font_config.file);
+            let cpu_texture = CPUTexture::load_from_file(&font_path.to_string_lossy())
+                .expect("Failed to load font texture");
+            BitmapFont::new(
+                cpu_texture.upload_to_gpu(),
+                font_config.first_char,
+                font_config.char_width,
+                font_config.char_height,
+                font_config.chars_per_row,
+            )
+        } else {
+            let font_bytes = include_bytes!("../../assets/font.png");
+            let font_image = image::load_from_memory(font_bytes)
+                .expect("Failed to load font image")
+                .to_rgba8();
+            let (width, height) = font_image.dimensions();
+            let pixels = font_image.into_raw();
+            let cpu_texture = CPUTexture::load_from_bytes(&pixels, width, height)
+                .expect("Failed to load font texture");
+            BitmapFont::new(cpu_texture.upload_to_gpu(), ' ', 12, 7, 12)
+        };
 
         for path in config
             .stage
@@ -298,6 +332,7 @@ impl Runtime {
         Self {
             project,
             audio_manager,
+            font,
             debug_options: config.debug_options.unwrap_or(vec![]),
         }
     }
@@ -306,7 +341,6 @@ impl Runtime {
         &mut self,
         window: &mut Window,
         events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,
-        font: &BitmapFont,
         shader_program: &ShaderProgram,
         glfw: &mut glfw::Glfw,
     ) {
@@ -396,14 +430,14 @@ impl Runtime {
                     &mut self.audio_manager,
                     shader_program,
                     &mut projection,
-                    font,
+                    &self.font,
                 );
             }
 
             sprites.sort_by(|a, b| a.layer.cmp(&b.layer));
 
             for sprite in &mut sprites {
-                draw_sprite(sprite, shader_program, projection, font);
+                draw_sprite(sprite, shader_program, projection, &self.font);
             }
 
             self.project.sprites = sprites;
@@ -429,7 +463,7 @@ impl Runtime {
                     pos: Vec2::new(10.0, 10.0 + i as f32 * 30.0),
                     font_size: 24.0,
                     down_positive: true,
-                    ..TextParams::default_params(font, shader_program)
+                    ..TextParams::default_params(&self.font, shader_program)
                 });
             }
 

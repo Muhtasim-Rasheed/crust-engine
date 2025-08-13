@@ -700,12 +700,7 @@ impl Sprite {
                             println!("Error calling {}(): {}", function, e);
                             Value::Null
                         });
-                    } else if let Some(callable) = state
-                        .project
-                        .builtins
-                        .get(function)
-                        .cloned()
-                    {
+                    } else if let Some(callable) = state.project.builtins.get(function).cloned() {
                         callable.call(state, &args).unwrap_or_else(|e| {
                             println!("Error calling builtin function '{}': {}", function, e);
                             Value::Null

@@ -49,6 +49,12 @@ All paths mentioned are relative to the `project.toml` file.
 - `debug_options`: A list of debug options to enable. Only available options are `show_fps` and `show_mouse_pos`
     - `show_fps`: Shows the current frames per second (FPS)
     - `show_mouse_pos`: Shows the current mouse position on the screen (World coordinates, not screen coordinates)
+- `[font]`: The font configuration. Defaults to the default Crust font.
+    - `file`: The path to the bitmap font file. The file must be an image file.
+    - `first_char`: The first character in the font.
+    - `char_width`: The width of each character in the font in pixels.
+    - `char_height`: The height of each character in the font in pixels.
+    - `chars_per_row`: The number of characters in each row of the font.
 - `[stage]`: The stage configuration
     - `backdrops`: A list of backdrops for the stage. If the list is empty, the stage will have an empty backdrop
 - `[sprites]`: A list of sprites in the project

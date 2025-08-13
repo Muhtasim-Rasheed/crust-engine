@@ -22,7 +22,13 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn new(home_path: String, export_path: String, args: Vec<String>, window: &Window, builtins: HashMap<String, Callable>) -> Self {
+    pub fn new(
+        home_path: String,
+        export_path: String,
+        args: Vec<String>,
+        window: &Window,
+        builtins: HashMap<String, Callable>,
+    ) -> Self {
         Self {
             global_variables: HashMap::new(),
             broadcast_history: Vec::new(),
