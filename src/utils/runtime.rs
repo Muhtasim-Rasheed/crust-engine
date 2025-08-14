@@ -65,6 +65,7 @@ struct ProjectConfig {
 #[derive(Debug)]
 pub struct InputManager {
     key_history: Vec<glfw::Key>,
+    key_combination_used: bool,
     keys_down: HashSet<glfw::Key>,
     keys_pressed: HashSet<glfw::Key>,
     keys_released: HashSet<glfw::Key>,
@@ -77,6 +78,7 @@ impl InputManager {
     pub fn new() -> Self {
         Self {
             key_history: Vec::new(),
+            key_combination_used: false,
             keys_down: HashSet::new(),
             keys_pressed: HashSet::new(),
             keys_released: HashSet::new(),
@@ -100,6 +102,7 @@ impl InputManager {
             match event {
                 glfw::WindowEvent::Key(key, _, action, _) => match action {
                     glfw::Action::Press => {
+                        self.key_combination_used = false;
                         if !self.keys_down.contains(&key) {
                             self.keys_pressed.insert(key);
                         }
@@ -135,6 +138,12 @@ impl InputManager {
 
     pub fn key_history(&self) -> &[glfw::Key] {
         &self.key_history
+    }
+
+    pub fn combination_pressed(&mut self, key_codes: &[glfw::Key]) -> bool {
+        let previous_key_combination_used = self.key_combination_used;
+        self.key_combination_used = self.key_history().ends_with(&key_codes);
+        self.key_combination_used && !previous_key_combination_used
     }
 
     pub fn is_key_down(&self, key: glfw::Key) -> bool {

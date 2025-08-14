@@ -40,7 +40,7 @@ pub fn last_key(state: &State) -> function::Result {
     }
 }
 
-pub fn combination_pressed(state: &State, args: &[Value]) -> function::Result {
+pub fn combination_pressed(state: &mut State, args: &[Value]) -> function::Result {
     let key_codes: Result<Vec<glfw::Key>, _> = args
         .iter()
         .map(|arg| match arg {
@@ -54,7 +54,7 @@ pub fn combination_pressed(state: &State, args: &[Value]) -> function::Result {
         _ => return Ok(Value::Boolean(false)),
     };
 
-    let matches = state.input_manager.key_history().ends_with(&key_codes);
+    let matches = state.input_manager.combination_pressed(&key_codes);
     Ok(Value::Boolean(matches))
 }
 
