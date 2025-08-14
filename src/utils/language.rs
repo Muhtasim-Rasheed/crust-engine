@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use super::Value;
+use std::collections::HashMap;
 
 // ========================= Tokenizer ========================= \\
 
@@ -307,11 +307,7 @@ impl Expression {
             }
             Expression::Closure { args, returns, .. } => {
                 let args_str = args.join(", ");
-                format!(
-                    "({}) {} {{ ... }}",
-                    args_str,
-                    returns.to_string(),
-                )
+                format!("({}) {} {{ ... }}", args_str, returns.to_string(),)
             }
             Expression::ListMemberAccess { list, index } => {
                 format!("{}[{}]", list.to_string(), index.to_string())

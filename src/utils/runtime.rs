@@ -64,6 +64,7 @@ struct ProjectConfig {
 
 #[derive(Debug)]
 pub struct InputManager {
+    key_history: Vec<glfw::Key>,
     keys_down: HashSet<glfw::Key>,
     keys_pressed: HashSet<glfw::Key>,
     keys_released: HashSet<glfw::Key>,
@@ -75,6 +76,7 @@ pub struct InputManager {
 impl InputManager {
     pub fn new() -> Self {
         Self {
+            key_history: Vec::new(),
             keys_down: HashSet::new(),
             keys_pressed: HashSet::new(),
             keys_released: HashSet::new(),
@@ -101,6 +103,7 @@ impl InputManager {
                         if !self.keys_down.contains(&key) {
                             self.keys_pressed.insert(key);
                         }
+                        self.key_history.push(key);
                         self.keys_down.insert(key);
                     }
                     glfw::Action::Release => {
@@ -128,6 +131,10 @@ impl InputManager {
                 _ => {}
             }
         }
+    }
+
+    pub fn key_history(&self) -> &[glfw::Key] {
+        &self.key_history
     }
 
     pub fn is_key_down(&self, key: glfw::Key) -> bool {

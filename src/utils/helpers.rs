@@ -23,7 +23,11 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
             }
             Value::Object(object)
         }
-        Expression::Closure { args, body, returns } => {
+        Expression::Closure {
+            args,
+            body,
+            returns,
+        } => {
             let closure = Function {
                 args: args.clone(),
                 body: body.clone(),
@@ -318,6 +322,81 @@ pub fn string_to_keycode(s: &str) -> Option<Key> {
         "escape" => Some(Escape),
 
         _ => None,
+    }
+}
+
+pub fn keycode_to_string(key: Key) -> String {
+    use Key::*;
+    match key {
+        A => "a".to_string(),
+        B => "b".to_string(),
+        C => "c".to_string(),
+        D => "d".to_string(),
+        E => "e".to_string(),
+        F => "f".to_string(),
+        G => "g".to_string(),
+        H => "h".to_string(),
+        I => "i".to_string(),
+        J => "j".to_string(),
+        K => "k".to_string(),
+        L => "l".to_string(),
+        M => "m".to_string(),
+        N => "n".to_string(),
+        O => "o".to_string(),
+        P => "p".to_string(),
+        Q => "q".to_string(),
+        R => "r".to_string(),
+        S => "s".to_string(),
+        T => "t".to_string(),
+        U => "u".to_string(),
+        V => "v".to_string(),
+        W => "w".to_string(),
+        X => "x".to_string(),
+        Y => "y".to_string(),
+        Z => "z".to_string(),
+
+        Num0 => "0".to_string(),
+        Num1 => "1".to_string(),
+        Num2 => "2".to_string(),
+        Num3 => "3".to_string(),
+        Num4 => "4".to_string(),
+        Num5 => "5".to_string(),
+        Num6 => "6".to_string(),
+        Num7 => "7".to_string(),
+        Num8 => "8".to_string(),
+        Num9 => "9".to_string(),
+
+        GraveAccent => "`".to_owned(),
+        Minus => "-".to_owned(),
+        Equal => "=".to_owned(),
+        LeftBracket => "(".to_owned(),
+        RightBracket => ")".to_owned(),
+        Backslash => "\\".to_owned(),
+        Semicolon => ";".to_owned(),
+        Apostrophe => "'".to_owned(),
+        Comma => ",".to_owned(),
+        Period => ".".to_owned(),
+        Slash => "/".to_owned(),
+
+        LeftControl => "lctrl".to_owned(),
+        RightControl => "rctrl".to_owned(),
+        LeftShift => "lshift".to_owned(),
+        RightShift => "rshift".to_owned(),
+        LeftAlt => "lalt".to_owned(),
+        RightAlt => "ralt".to_owned(),
+        LeftSuper => "lsuper".to_owned(),
+        RightSuper => "rsuper".to_owned(),
+        Tab => "tab".to_owned(),
+        Delete => "del".to_owned(),
+        Backspace => "back".to_owned(),
+        Left => "left".to_owned(),
+        Right => "right".to_owned(),
+        Up => "up".to_owned(),
+        Down => "down".to_owned(),
+        Space => "space".to_owned(),
+        Enter => "enter".to_owned(),
+        Escape => "escape".to_owned(),
+        _ => "unknown".to_owned(),
     }
 }
 

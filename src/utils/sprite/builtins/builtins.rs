@@ -97,7 +97,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "switch_costume", |st, ar| looks::switch_costume(st, ar));
     builtin!(builtins, "next_costume", |st, _| looks::next_costume(st));
     builtin!(builtins, "previous_costume", |st, _| looks::previous_costume(st));
-    builtin!(builtins,"switch_backdrop",|st, ar| looks::switch_backdrop(st, ar));
+    builtin!(builtins, "switch_backdrop",|st, ar| looks::switch_backdrop(st, ar));
     builtin!(builtins, "next_backdrop", |st, _| looks::next_backdrop(st));
     builtin!(builtins, "previous_backdrop", |st, _| looks::previous_backdrop(st));
     builtin!(builtins, "set_scale", |st, ar| looks::set_scale(st, ar));
@@ -128,6 +128,8 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "key_down", |st, ar| events::key_down(st, ar));
     builtin!(builtins, "key_pressed", |st, ar| events::key_pressed(st, ar));
     builtin!(builtins, "key_released", |st, ar| events::key_released(st, ar));
+    builtin!(builtins, "last_key", |st, _| events::last_key(st));
+    builtin!(builtins, "combination_pressed", |st, ar| events::combination_pressed(st, ar));
     builtin!(builtins, "mouse_button_down", |st, ar| events::mouse_button_down(st, ar));
     builtin!(builtins, "mouse_button_pressed", |st, ar| events::mouse_button_pressed(st, ar));
     builtin!(builtins, "mouse_button_released", |st, ar| events::mouse_button_released(st, ar));
