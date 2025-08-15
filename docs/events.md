@@ -3,6 +3,8 @@ The event functions are used to handle events in the project. They can be used t
 - `key_down(key)`: Returns `true` if the specified key is currently pressed down.
 - `key_pressed(key)`: Returns `true` if the specified key was pressed down in the current frame.
 - `key_released(key)`: Returns `true` if the specified key was released in the current frame.
+- `last_key()`: Returns the last key that was pressed down. If no key was pressed down, it returns `null`.
+- `combination_pressed(keys...)`: Returns `true` if the specified combination of keys was pressed down in order. Fires only once when the combination is pressed, not every frame.
 - `mouse_button_down(button)`: Returns `true` if the specified mouse button is currently pressed down.
 - `mouse_button_pressed(button)`: Returns `true` if the specified mouse button was pressed down in the current frame.
 - `mouse_button_released(button)`: Returns `true` if the specified mouse button was released in the current frame.
