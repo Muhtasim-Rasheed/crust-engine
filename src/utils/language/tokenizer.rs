@@ -1,7 +1,7 @@
 use crate::utils::Value;
 
-#[derive(Clone, PartialEq)]
-pub enum Token {
+#[derive(Debug, Clone, PartialEq)]
+pub enum TokenType {
     Newline,
     EOF,
     Identifier(String),
@@ -11,23 +11,34 @@ pub enum Token {
     Symbol(String),
 }
 
-impl Token {
-    pub fn to_string(&self) -> String {
+impl std::fmt::Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Token::Newline => "\n".to_string(),
-            Token::EOF => "EOF".to_string(),
-            Token::Identifier(s) => format!("ID[{}]", s),
-            Token::Value(v) => format!("VAL[{}]", v.to_string()),
-            Token::Operator(s) => format!("OP[{}]", s),
-            Token::Keyword(s) => format!("KEY[{}]", s),
-            Token::Symbol(s) => format!("SYM[{}]", s),
+            TokenType::Newline => write!(f, "\n"),
+            TokenType::EOF => write!(f, "EOF"),
+            TokenType::Identifier(s) => write!(f, "ID[{}]", s),
+            TokenType::Value(v) => write!(f, "VAL[{}]", v.to_string()),
+            TokenType::Operator(s) => write!(f, "OP[{}]", s),
+            TokenType::Keyword(s) => write!(f, "KEY[{}]", s),
+            TokenType::Symbol(s) => write!(f, "SYM[{}]", s),
         }
     }
 }
 
-impl std::fmt::Debug for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string())
+#[derive(Debug, Clone, PartialEq)]
+pub struct Token {
+    pub token_type: TokenType,
+    pub line: usize,
+    pub column: usize,
+}
+
+impl Token {
+    pub fn new(token_type: TokenType, line: usize, column: usize) -> Self {
+        Self {
+            token_type,
+            line,
+            column,
+        }
     }
 }
 
@@ -53,7 +64,7 @@ impl Tokenizer {
         let start = self.pointer;
         while self.pointer < self.code.len()
             && self.code[self.pointer..].starts_with(char::is_numeric)
-                | self.code[self.pointer..].starts_with('.')
+                || self.code[self.pointer..].starts_with('.')
         {
             self.pointer += 1;
         }
@@ -91,6 +102,13 @@ impl Tokenizer {
             "import",
         ];
 
+        self.skip_whitespace();
+
+        let line = self.code[..self.pointer].lines().count();
+        let column = self.code[..self.pointer]
+            .rfind('\n')
+            .map_or(self.pointer, |pos| self.pointer - pos - 1) + 1;
+
         if self.pointer >= self.code.len() {
             return None;
         }
@@ -98,10 +116,12 @@ impl Tokenizer {
         // Newline
         if self.code[self.pointer..].starts_with('\n') {
             self.pointer += 1;
-            return Some(Token::Newline);
+            return Some(Token::new(
+                TokenType::Newline,
+                line,
+                column,
+            ));
         }
-
-        self.skip_whitespace();
 
         if self.pointer >= self.code.len() {
             return None;
@@ -114,7 +134,11 @@ impl Tokenizer {
             while self.pointer < self.code.len() && !self.code[self.pointer..].starts_with('\n') {
                 self.pointer += 1;
             }
-            return Some(Token::Newline);
+            return Some(Token::new(
+                TokenType::Newline,
+                line,
+                column,
+            ));
         }
 
         if c.starts_with("/*") {
@@ -125,24 +149,40 @@ impl Tokenizer {
             if self.pointer < self.code.len() {
                 self.pointer += 2; // Skip */
             }
-            return Some(Token::Newline);
+            return Some(Token::new(
+                TokenType::Newline,
+                line,
+                column,
+            ));
         }
 
         // Null
         if c.starts_with("null") {
             self.pointer += 4;
-            return Some(Token::Value(Value::Null));
+            return Some(Token::new(
+                TokenType::Value(Value::Null),
+                line,
+                column,
+            ));
         }
 
         // Booleans
         if c.starts_with("true") {
             self.pointer += 4;
-            return Some(Token::Value(Value::Boolean(true)));
+            return Some(Token::new(
+                TokenType::Value(Value::Boolean(true)),
+                line,
+                column,
+            ));
         }
 
         if c.starts_with("false") {
             self.pointer += 5;
-            return Some(Token::Value(Value::Boolean(false)));
+            return Some(Token::new(
+                TokenType::Value(Value::Boolean(false)),
+                line,
+                column,
+            ));
         }
 
         // Strings
@@ -157,7 +197,11 @@ impl Tokenizer {
                 .replace("\\n", "\n") // Unescape newlines
                 .replace("\\t", "\t"); // Unescape tabs
             self.pointer += 1; // Skip closing "
-            return Some(Token::Value(Value::String(string.to_string())));
+            return Some(Token::new(
+                TokenType::Value(Value::String(string.to_string())),
+                line,
+                column,
+            ));
         }
 
         // Multi-char operators first
@@ -169,20 +213,32 @@ impl Tokenizer {
         .contains(&two)
         {
             self.pointer += 2;
-            return Some(Token::Operator(two.to_string()));
+            return Some(Token::new(
+                TokenType::Operator(two.to_string()),
+                line,
+                column,
+            ));
         }
 
         // Single-char operators
         let one = &self.code[self.pointer..self.pointer + 1];
         if ["=", "+", "-", "*", "/", "%", "^", "&", "|", "<", ">", "!"].contains(&one) {
             self.pointer += 1;
-            return Some(Token::Operator(one.to_string()));
+            return Some(Token::new(
+                TokenType::Operator(one.to_string()),
+                line,
+                column,
+            ));
         }
 
         // Symbols
         if ["(", ")", "[", "]", "{", "}", ",", ":", "."].contains(&one) {
             self.pointer += 1;
-            return Some(Token::Symbol(one.to_string()));
+            return Some(Token::new(
+                TokenType::Symbol(one.to_string()),
+                line,
+                column,
+            ));
         }
 
         // Numbers
@@ -203,31 +259,49 @@ impl Tokenizer {
                 self.pointer += 1;
             }
             let number = &self.code[start..self.pointer];
-            return Some(Token::Value(Value::Number(
-                i64::from_str_radix(number, base).unwrap() as f32,
-            )));
+            return Some(Token::new(
+                TokenType::Value(Value::Number(
+                    i64::from_str_radix(number, base).unwrap() as f32,
+                )),
+                line,
+                column,
+            ));
         }
 
         if c.chars().next().unwrap().is_ascii_digit() {
             let number = self.get_number();
-            return Some(Token::Value(Value::Number(number.parse().unwrap())));
+            return Some(Token::new(
+                TokenType::Value(Value::Number(number.parse().unwrap())),
+                line,
+                column,
+            ));
         }
 
         if c.chars().next().unwrap() == '.' {
             self.pointer += 1;
             let number = self.get_number();
-            return Some(Token::Value(Value::Number(
-                format!(".{}", number).parse().unwrap(),
-            )));
+            return Some(Token::new(
+                TokenType::Value(Value::Number(format!(".{}", number).parse().unwrap())),
+                line,
+                column,
+            ));
         }
 
         // Identifiers or keywords
         if c.chars().next().unwrap().is_alphabetic() || c.starts_with('_') {
             let ident = self.get_identifier();
             if keyword_list.contains(&ident.as_str()) {
-                return Some(Token::Keyword(ident));
+                return Some(Token::new(
+                    TokenType::Keyword(ident),
+                    line,
+                    column,
+                ));
             } else {
-                return Some(Token::Identifier(ident));
+                return Some(Token::new(
+                    TokenType::Identifier(ident),
+                    line,
+                    column,
+                ));
             }
         }
 
@@ -241,7 +315,11 @@ impl Tokenizer {
         while let Some(token) = self.tokenize() {
             tokens.push(token);
         }
-        tokens.push(Token::EOF);
+        tokens.push(Token::new(
+            TokenType::EOF,
+            self.code.lines().count(),
+            self.code.len() - self.code.rfind('\n').map(|pos| pos + 1).unwrap_or(0),
+        ));
         tokens
     }
 }

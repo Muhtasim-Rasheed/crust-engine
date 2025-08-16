@@ -1,4 +1,4 @@
-use crate::utils::{Token, Value};
+use crate::utils::{Token, TokenType, Value};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -289,11 +289,11 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    fn peek(&self) -> Option<&Token> {
+    fn peek(&self) -> &Token {
         if self.current < self.tokens.len() {
-            Some(&self.tokens[self.current])
+            &self.tokens[self.current]
         } else {
-            None
+            &self.tokens.last().unwrap()
         }
     }
 
@@ -303,15 +303,15 @@ impl Parser {
         }
     }
 
-    fn eat(&mut self, token: &Token) -> bool {
-        if self.peek() == Some(token) {
+    fn eat(&mut self, token: &TokenType) -> bool {
+        if self.peek().token_type == *token {
             self.advance();
             return true;
         }
         false
     }
 
-    fn eat_any(&mut self, tokens: &[Token]) -> Option<Token> {
+    fn eat_any(&mut self, tokens: &[TokenType]) -> Option<TokenType> {
         for token in tokens {
             if self.eat(token) {
                 return Some(token.clone());
@@ -325,8 +325,8 @@ impl Parser {
 
         let mut errors = vec![];
 
-        while self.peek() != Some(&Token::EOF) {
-            if self.eat(&Token::Newline) {
+        while self.peek().token_type != TokenType::EOF {
+            if self.eat(&TokenType::Newline) {
                 continue;
             }
             let statement = self.parse_statement().unwrap_or_else(|e| {
@@ -358,43 +358,43 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
-        match self.peek().unwrap_or(&Token::EOF) {
-            Token::Keyword(k) if k == "nop" => {
+        match self.peek().token_type {
+            TokenType::Keyword(ref k) if k == "nop" => {
                 self.advance();
                 Ok(Statement::Nop)
             }
-            Token::Keyword(k) if k == "assert" => {
+            TokenType::Keyword(ref k) if k == "assert" => {
                 self.advance();
                 let condition = self.parse_binary(0)?;
                 Ok(Statement::Assert { condition })
             }
-            Token::Keyword(k) if k == "match" => self.parse_match(),
-            Token::Keyword(k) if k == "if" => self.parse_if(),
-            Token::Keyword(k) if k == "while" => self.parse_while(),
-            Token::Keyword(k) if k == "for" => self.parse_for(),
-            Token::Keyword(k) if k == "setup" => {
+            TokenType::Keyword(ref k) if k == "match" => self.parse_match(),
+            TokenType::Keyword(ref k) if k == "if" => self.parse_if(),
+            TokenType::Keyword(ref k) if k == "while" => self.parse_while(),
+            TokenType::Keyword(ref k) if k == "for" => self.parse_for(),
+            TokenType::Keyword(ref k) if k == "setup" => {
                 self.advance();
                 let body = self.parse_block()?;
                 Ok(Statement::Setup { body })
             }
-            Token::Keyword(k) if k == "update" => {
+            TokenType::Keyword(ref k) if k == "update" => {
                 self.advance();
                 let body = self.parse_block()?;
                 Ok(Statement::Update { body })
             }
-            Token::Keyword(k) if k == "clone_setup" => {
+            TokenType::Keyword(ref k) if k == "clone_setup" => {
                 self.advance();
                 let body = self.parse_block()?;
                 Ok(Statement::CloneSetup { body })
             }
-            Token::Keyword(k) if k == "clone_update" => {
+            TokenType::Keyword(ref k) if k == "clone_update" => {
                 self.advance();
                 let body = self.parse_block()?;
                 Ok(Statement::CloneUpdate { body })
             }
-            Token::Keyword(k) if k == "when" => {
+            TokenType::Keyword(ref k) if k == "when" => {
                 self.advance();
-                if let Some(Token::Value(Value::String(broadcast))) = self.peek().cloned() {
+                if let TokenType::Value(Value::String(broadcast)) = self.peek().clone().token_type {
                     self.advance();
                     let body = self.parse_block()?;
                     Ok(Statement::WhenBroadcasted {
@@ -408,13 +408,13 @@ impl Parser {
                     Ok(Statement::WhenBoolean { condition, body })
                 }
             }
-            Token::Keyword(k) if k == "fn" => self.parse_function_definition(),
-            Token::Keyword(k) if k == "import" => self.parse_import(),
-            Token::Keyword(k) if k == "global" => self.parse_global_assignment(),
-            Token::Identifier(_) => self.parse_assignment_or_call(),
+            TokenType::Keyword(ref k) if k == "fn" => self.parse_function_definition(),
+            TokenType::Keyword(ref k) if k == "import" => self.parse_import(),
+            TokenType::Keyword(ref k) if k == "global" => self.parse_global_assignment(),
+            TokenType::Identifier(_) => self.parse_assignment_or_call(),
             _ => Err(format!(
-                "Unexpected token: {:?}",
-                self.peek().unwrap_or(&Token::EOF)
+                "Unexpected token: {:?} at {}:{}",
+                self.peek().token_type, self.peek().line, self.peek().column
             )),
         }
     }
@@ -422,20 +422,26 @@ impl Parser {
     fn parse_block(&mut self) -> Result<Vec<Statement>, String> {
         let mut statements = vec![];
 
-        if !self.eat(&Token::Symbol("{".to_string())) {
-            return Err("Expected '{' at the start of block".to_string());
+        if !self.eat(&TokenType::Symbol("{".to_string())) {
+            return Err(format!(
+                "Expected '{{' at the start of block at {}:{}",
+                self.peek().line, self.peek().column
+            ));
         }
 
-        while self.peek() != Some(&Token::Symbol("}".to_string())) {
-            if self.eat(&Token::Newline) {
+        while self.peek().token_type != TokenType::Symbol("}".to_string()) {
+            if self.eat(&TokenType::Newline) {
                 continue;
             }
             let statement = self.parse_statement()?;
             statements.push(statement);
         }
 
-        if !self.eat(&Token::Symbol("}".to_string())) {
-            return Err("Expected '}' at the end of block".to_string());
+        if !self.eat(&TokenType::Symbol("}".to_string())) {
+            return Err(format!(
+                "Expected '}}' at the end of block at {}:{}",
+                self.peek().line, self.peek().column
+            ));
         }
 
         Ok(statements)
@@ -459,10 +465,11 @@ impl Parser {
     fn parse_binary(&mut self, min_prec: u8) -> Result<Expression, String> {
         let mut left = self.parse_primary()?;
 
-        while let Some(token) = self.peek().cloned() {
-            let op = match token {
-                Token::Operator(op) => op,
-                Token::Keyword(k) if k == "in" => k,
+        loop {
+            let token = self.peek().clone();
+            let op = match token.token_type {
+                TokenType::Operator(op) => op,
+                TokenType::Keyword(k) if k == "in" => k,
                 _ => break,
             };
 
@@ -482,9 +489,9 @@ impl Parser {
                     }
                 } else {
                     return Err(format!(
-                        "Expected identifier for post-{} but got {:?}",
+                        "Expected identifier for post-{} but got {:?} at {}:{}",
                         if op == "++" { "increment" } else { "decrement" },
-                        left
+                        left, self.peek().line, self.peek().column
                     ));
                 }
                 continue;
@@ -507,21 +514,24 @@ impl Parser {
 
     fn parse_list(&mut self) -> Result<Expression, String> {
         let mut list = vec![];
-        while self.peek() != Some(&Token::Symbol("]".to_string())) {
-            if self.eat(&Token::Newline) {
+        while self.peek().token_type != TokenType::Symbol("]".to_string()) {
+            if self.eat(&TokenType::Newline) {
                 continue;
             }
             let expr = self.parse_binary(0)?;
             list.push(expr);
-            if !self.eat(&Token::Symbol(",".to_string())) {
+            if !self.eat(&TokenType::Symbol(",".to_string())) {
                 break;
             }
         }
 
-        self.eat(&Token::Newline);
+        self.eat(&TokenType::Newline);
 
-        if !self.eat(&Token::Symbol("]".to_string())) {
-            return Err("Expected ']' at the end of list".to_string());
+        if !self.eat(&TokenType::Symbol("]".to_string())) {
+            return Err(format!(
+                "Expected ']' at the end of list at {}:{}",
+                self.peek().line, self.peek().column
+            ));
         }
 
         Ok(Expression::List(list))
@@ -529,60 +539,75 @@ impl Parser {
 
     fn parse_object(&mut self) -> Result<Expression, String> {
         let mut object = HashMap::new();
-        while self.peek() != Some(&Token::Symbol("}".to_string())) {
-            if self.eat(&Token::Newline) {
+        while self.peek().token_type != TokenType::Symbol("}".to_string()) {
+            if self.eat(&TokenType::Newline) {
                 continue;
             }
-            let peeked = self.peek().unwrap_or(&Token::EOF).clone();
-            if let Token::Identifier(key) | Token::Value(Value::String(key)) = peeked {
+            let peeked = self.peek().clone();
+            if let TokenType::Identifier(key) | TokenType::Value(Value::String(key)) = peeked.token_type {
                 self.advance();
-                if !self.eat(&Token::Symbol(":".to_string())) {
+                if !self.eat(&TokenType::Symbol(":".to_string())) {
                     return Err(format!(
-                        "Expected ':' after key in object but got {:?}",
-                        self.peek()
+                        "Expected ':' after key in object but got {:?} at {}:{}",
+                        self.peek().token_type, self.peek().line, self.peek().column
                     ));
                 }
                 let value = self.parse_binary(0)?;
                 object.insert(key.clone(), value);
-                if !self.eat(&Token::Symbol(",".to_string())) {
+                if !self.eat(&TokenType::Symbol(",".to_string())) {
                     break;
                 }
             } else {
-                return Err("Expected identifier as key in object".to_string());
+                return Err(format!(
+                    "Expected identifier or string as key in object but got {:?} at {}:{}",
+                    peeked, self.peek().line, self.peek().column
+                ));
             }
         }
 
-        self.eat(&Token::Newline);
+        self.eat(&TokenType::Newline);
 
-        if !self.eat(&Token::Symbol("}".to_string())) {
-            return Err("Expected '}' at the end of object".to_string());
+        if !self.eat(&TokenType::Symbol("}".to_string())) {
+            return Err(format!(
+                "Expected '}}' at the end of object at {}:{}",
+                self.peek().line, self.peek().column
+            ));
         }
 
         Ok(Expression::Object(object))
     }
 
     fn parse_closure(&mut self) -> Result<Expression, String> {
-        if !self.eat(&Token::Symbol("(".to_string())) {
-            return Err("Expected '(' after 'fn'".to_string());
+        if !self.eat(&TokenType::Symbol("(".to_string())) {
+            return Err(format!(
+                "Expected '(' after 'fn' at {}:{}",
+                self.peek().line, self.peek().column
+            ));
         }
         let mut args = vec![];
-        while self.peek() != Some(&Token::Symbol(")".to_string())) {
-            if self.eat(&Token::Newline) {
+        while self.peek().token_type != TokenType::Symbol(")".to_string()) {
+            if self.eat(&TokenType::Newline) {
                 continue;
             }
-            if let Some(Token::Identifier(arg)) = self.peek() {
+            if let TokenType::Identifier(ref arg) = self.peek().token_type {
                 args.push(arg.clone());
                 self.advance();
             } else {
-                return Err("Expected identifier in closure arguments".to_string());
+                return Err(format!(
+                    "Expected identifier in closure arguments but got {:?} at {}:{}",
+                    self.peek().token_type, self.peek().line, self.peek().column
+                ));
             }
-            if !self.eat(&Token::Symbol(",".to_string())) {
+            if !self.eat(&TokenType::Symbol(",".to_string())) {
                 break;
             }
         }
-        self.eat(&Token::Newline);
-        if !self.eat(&Token::Symbol(")".to_string())) {
-            return Err("Expected ')' after closure arguments".to_string());
+        self.eat(&TokenType::Newline);
+        if !self.eat(&TokenType::Symbol(")".to_string())) {
+            return Err(format!(
+                "Expected ')' after closure arguments at {}:{}",
+                self.peek().line, self.peek().column
+            ));
         }
         let returns = self.parse_binary(0)?;
         let body = self.parse_block()?;
@@ -594,45 +619,51 @@ impl Parser {
     }
 
     fn parse_primary(&mut self) -> Result<Expression, String> {
-        let peeked = self.peek().unwrap_or(&Token::EOF).clone();
-        match peeked {
-            Token::Value(v) => {
+        let peeked = self.peek().clone();
+        match peeked.token_type {
+            TokenType::Value(v) => {
                 self.advance();
                 Ok(Expression::Value(v.clone()))
             }
-            Token::Identifier(id) => {
+            TokenType::Identifier(id) => {
                 self.advance();
                 let name = id.clone();
-                if self.eat(&Token::Symbol("(".to_string())) {
+                if self.eat(&TokenType::Symbol("(".to_string())) {
                     // Function call
                     let mut args = vec![];
-                    while self.peek() != Some(&Token::Symbol(")".to_string())) {
-                        if self.eat(&Token::Newline) {
+                    while self.peek().token_type != TokenType::Symbol(")".to_string()) {
+                        if self.eat(&TokenType::Newline) {
                             continue;
                         }
                         let arg = self.parse_binary(0)?;
                         args.push(arg);
-                        if !self.eat(&Token::Symbol(",".to_string())) {
+                        if !self.eat(&TokenType::Symbol(",".to_string())) {
                             break;
                         }
                     }
-                    if !self.eat(&Token::Symbol(")".to_string())) {
-                        return Err("Expected ')' after function call".to_string());
+                    if !self.eat(&TokenType::Symbol(")".to_string())) {
+                        return Err(format!(
+                            "Expected ')' after function call at {}:{}",
+                            self.peek().line, self.peek().column
+                        ));
                     }
                     Ok(Expression::Call {
                         function: name,
                         args,
                     })
-                } else if self.eat(&Token::Symbol("[".to_string())) {
+                } else if self.eat(&TokenType::Symbol("[".to_string())) {
                     let index = self.parse_binary(0)?;
-                    if !self.eat(&Token::Symbol("]".to_string())) {
-                        return Err("Expected ']' after list member access".to_string());
+                    if !self.eat(&TokenType::Symbol("]".to_string())) {
+                        return Err(format!(
+                            "Expected ']' after list member access at {}:{}",
+                            self.peek().line, self.peek().column
+                        ));
                     }
                     Ok(Expression::ListMemberAccess {
                         list: Box::new(Expression::Identifier(name)),
                         index: Box::new(index),
                     })
-                } else if self.eat(&Token::Symbol(".".to_string())) {
+                } else if self.eat(&TokenType::Symbol(".".to_string())) {
                     let index = self.parse_primary()?;
                     match index {
                         Expression::Identifier(index_name) => Ok(Expression::ListMemberAccess {
@@ -644,8 +675,8 @@ impl Parser {
                             index: Box::new(Expression::Value(Value::Number(num))),
                         }),
                         _ => Err(format!(
-                            "Expected identifier or number after '.' but got {:?}",
-                            index
+                            "Expected identifier or number after '.' but got {:?} at {}:{}",
+                            index, self.peek().line, self.peek().column
                         )),
                     }
                 } else {
@@ -653,7 +684,7 @@ impl Parser {
                     Ok(Expression::Identifier(name))
                 }
             }
-            Token::Operator(op) if op == "-" || op == "!" => {
+            TokenType::Operator(op) if op == "-" || op == "!" => {
                 self.advance();
                 let operand = self.parse_primary()?;
                 Ok(Expression::Unary {
@@ -661,9 +692,9 @@ impl Parser {
                     operand: Box::new(operand),
                 })
             }
-            Token::Operator(op) if op == "++" || op == "--" => {
+            TokenType::Operator(op) if op == "++" || op == "--" => {
                 self.advance();
-                if let Some(Token::Identifier(id)) = self.peek().cloned() {
+                if let TokenType::Identifier(id) = self.peek().clone().token_type {
                     self.advance();
                     if op == "++" {
                         Ok(Expression::PreIncrement(id.clone()))
@@ -671,55 +702,75 @@ impl Parser {
                         Ok(Expression::PreDecrement(id.clone()))
                     }
                 } else {
-                    Err("Expected identifier after '++' or '--'".to_string())
+                    Err(format!(
+                        "Expected identifier after '{}' but got {:?} at {}:{}",
+                        op, self.peek().token_type, self.peek().line, self.peek().column
+                    ))
                 }
             }
-            Token::Symbol(s) if s == "(" => {
+            TokenType::Symbol(s) if s == "(" => {
                 self.advance();
                 let expr = self.parse_binary(0)?;
-                if !self.eat(&Token::Symbol(")".to_string())) {
-                    return Err("Expected ')'".to_string());
+                if !self.eat(&TokenType::Symbol(")".to_string())) {
+                    return Err(format!(
+                        "Expected ')' at the end of expression at {}:{}",
+                        self.peek().line, self.peek().column
+                    ));
                 }
                 Ok(expr)
             }
-            Token::Symbol(s) if s == "[" => {
+            TokenType::Symbol(s) if s == "[" => {
                 self.advance();
                 Ok(self.parse_list()?)
             }
-            Token::Symbol(s) if s == "{" => {
+            TokenType::Symbol(s) if s == "{" => {
                 self.advance();
                 Ok(self.parse_object()?)
             }
-            Token::Keyword(k) if k == "fn" => {
+            TokenType::Keyword(k) if k == "fn" => {
                 self.advance();
                 Ok(self.parse_closure()?)
             }
-            _ => Err(format!("Unexpected token in expression: {:?}", self.peek())),
+            _ => Err(format!(
+                "Unexpected token in expression: {:?} at {}:{}",
+                self.peek().token_type,
+                self.peek().line,
+                self.peek().column
+            )),
         }
     }
 
     fn parse_match(&mut self) -> Result<Statement, String> {
         self.advance();
         let value = self.parse_binary(0)?;
-        if !self.eat(&Token::Symbol("{".to_string())) {
-            return Err("Expected '{' after 'match'".to_string());
+        if !self.eat(&TokenType::Symbol("{".to_string())) {
+            return Err(format!(
+                "Expected '{{' after 'match' at {}:{}",
+                self.peek().line, self.peek().column
+            ));
         }
         let mut cases = vec![];
-        while self.peek() != Some(&Token::Symbol("}".to_string())) {
-            if self.eat(&Token::Newline) {
+        while self.peek().token_type != TokenType::Symbol("}".to_string()) {
+            if self.eat(&TokenType::Newline) {
                 continue;
             }
             let case_value = self.parse_binary(0)?;
-            if !self.eat(&Token::Symbol(":".to_string())) {
-                return Err("Expected ':' after case value".to_string());
+            if !self.eat(&TokenType::Symbol(":".to_string())) {
+                return Err(format!(
+                    "Expected ':' after case value at {}:{}",
+                    self.peek().line, self.peek().column
+                ));
             }
             let body = self.parse_block()?;
             cases.push((case_value, body));
         }
-        if !self.eat(&Token::Symbol("}".to_string())) {
-            return Err("Expected '}' at the end of match".to_string());
+        if !self.eat(&TokenType::Symbol("}".to_string())) {
+            return Err(format!(
+                "Expected '}}' at the end of match at {}:{}",
+                self.peek().line, self.peek().column
+            ));
         }
-        let default = if self.eat(&Token::Keyword("else".to_string())) {
+        let default = if self.eat(&TokenType::Keyword("else".to_string())) {
             let body = self.parse_block()?;
             Some(body)
         } else {
@@ -738,8 +789,8 @@ impl Parser {
         let body = self.parse_block()?;
         let mut else_body = None;
         let mut else_if_bodies = vec![];
-        while self.eat(&Token::Keyword("else".to_string())) {
-            if self.eat(&Token::Keyword("if".to_string())) {
+        while self.eat(&TokenType::Keyword("else".to_string())) {
+            if self.eat(&TokenType::Keyword("if".to_string())) {
                 let else_if_condition = self.parse_binary(0)?;
                 let else_if_body = self.parse_block()?;
                 else_if_bodies.push((else_if_condition, else_if_body))
@@ -766,11 +817,14 @@ impl Parser {
 
     fn parse_for(&mut self) -> Result<Statement, String> {
         self.advance();
-        if let Some(Token::Identifier(id)) = self.peek() {
+        if let TokenType::Identifier(ref id) = self.peek().token_type {
             let identifier = id.clone();
             self.advance();
-            if !self.eat(&Token::Operator("in".to_string())) {
-                return Err("Expected 'in' after for loop identifier".to_string());
+            if !self.eat(&TokenType::Operator("in".to_string())) {
+                return Err(format!(
+                    "Expected 'in' after for loop identifier at {}:{}",
+                    self.peek().line, self.peek().column
+                ));
             }
             let iterable = self.parse_binary(0)?;
             let body = self.parse_block()?;
@@ -780,35 +834,47 @@ impl Parser {
                 body,
             })
         } else {
-            Err("Expected identifier after 'for'".to_string())
+            Err(format!(
+                "Expected identifier after 'for' at {}:{}",
+                self.peek().line, self.peek().column
+            ))
         }
     }
 
     fn parse_function_definition(&mut self) -> Result<Statement, String> {
         self.advance();
-        if let Some(Token::Identifier(id)) = self.peek() {
+        if let TokenType::Identifier(ref id) = self.peek().token_type {
             let name = id.clone();
             self.advance();
-            if !self.eat(&Token::Symbol("(".to_string())) {
-                return Err("Expected '(' after function name".to_string());
+            if !self.eat(&TokenType::Symbol("(".to_string())) {
+                return Err(format!(
+                    "Expected '(' after function name at {}:{}",
+                    self.peek().line, self.peek().column
+                ));
             }
             let mut args = vec![];
-            while self.peek() != Some(&Token::Symbol(")".to_string())) {
-                if self.eat(&Token::Newline) {
+            while self.peek().token_type != TokenType::Symbol(")".to_string()) {
+                if self.eat(&TokenType::Newline) {
                     continue;
                 }
-                if let Some(Token::Identifier(arg)) = self.peek() {
+                if let TokenType::Identifier(ref arg) = self.peek().token_type {
                     args.push(arg.clone());
                     self.advance();
                 } else {
-                    return Err("Expected identifier in function arguments".to_string());
+                    return Err(format!(
+                        "Expected identifier in function arguments but got {:?} at {}:{}",
+                        self.peek().token_type, self.peek().line, self.peek().column
+                    ));
                 }
-                if !self.eat(&Token::Symbol(",".to_string())) {
+                if !self.eat(&TokenType::Symbol(",".to_string())) {
                     break;
                 }
             }
-            if !self.eat(&Token::Symbol(")".to_string())) {
-                return Err("Expected ')' after function arguments".to_string());
+            if !self.eat(&TokenType::Symbol(")".to_string())) {
+                return Err(format!(
+                    "Expected ')' after function arguments at {}:{}",
+                    self.peek().line, self.peek().column
+                ));
             }
             let returns = self.parse_binary(0)?;
             let body = self.parse_block()?;
@@ -819,44 +885,56 @@ impl Parser {
                 returns,
             })
         } else {
-            Err("Expected name (identifier) after 'fn'".to_string())
+            Err(format!(
+                "Expected identifier after 'fn' at {}:{}",
+                self.peek().line, self.peek().column
+            ))
         }
     }
 
     fn parse_import(&mut self) -> Result<Statement, String> {
         self.advance();
-        if let Some(Token::Value(Value::String(path))) = self.peek() {
+        if let TokenType::Value(Value::String(ref path)) = self.peek().token_type {
             let path = path.clone();
             self.advance();
-            if !self.eat(&Token::Newline) {
-                return Err("Expected newline after import statement".to_string());
+            if !self.eat(&TokenType::Newline) {
+                return Err(format!(
+                    "Expected newline after import path at {}:{}",
+                    self.peek().line, self.peek().column
+                ));
             }
             Ok(Statement::Import { path: path.clone() })
         } else {
-            Err("Expected string path after 'import'".to_string())
+            Err(format!(
+                "Expected string path after 'import' at {}:{}",
+                self.peek().line, self.peek().column
+            ))
         }
     }
 
     fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
-        let identifier = if let Some(Token::Identifier(id)) = self.peek() {
+        let identifier = if let TokenType::Identifier(ref id) = self.peek().token_type {
             id.clone()
         } else {
-            return Err("Expected identifier".to_string());
+            return Err(format!(
+                "Expected identifier but got {:?} at {}:{}",
+                self.peek().token_type, self.peek().line, self.peek().column
+            ));
         };
         self.advance();
 
-        if self.eat(&Token::Operator("=".to_string())) {
+        if self.eat(&TokenType::Operator("=".to_string())) {
             let value = self.parse_binary(0)?;
             Ok(Statement::Assignment {
                 is_global: false,
                 identifier,
                 value,
             })
-        } else if let Some(Token::Operator(op)) = self.eat_any(&[
-            Token::Operator("+=".to_string()),
-            Token::Operator("-=".to_string()),
-            Token::Operator("*=".to_string()),
-            Token::Operator("/=".to_string()),
+        } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
+            TokenType::Operator("+=".to_string()),
+            TokenType::Operator("-=".to_string()),
+            TokenType::Operator("*=".to_string()),
+            TokenType::Operator("/=".to_string()),
         ]) {
             let real_op = op[0..1].to_string(); // extract +, -, *, /
             let right = self.parse_binary(0)?;
@@ -871,13 +949,16 @@ impl Parser {
                 identifier,
                 value: combined_expr,
             })
-        } else if self.eat(&Token::Symbol("[".to_string())) {
+        } else if self.eat(&TokenType::Symbol("[".to_string())) {
             // List member access
             let index = self.parse_binary(0)?;
-            if !self.eat(&Token::Symbol("]".to_string())) {
-                return Err("Expected ']' after list member access".to_string());
+            if !self.eat(&TokenType::Symbol("]".to_string())) {
+                return Err(format!(
+                    "Expected ']' after list member access at {}:{}",
+                    self.peek().line, self.peek().column
+                ));
             }
-            if self.eat(&Token::Operator("=".to_string())) {
+            if self.eat(&TokenType::Operator("=".to_string())) {
                 let value = self.parse_binary(0)?;
                 Ok(Statement::ListMemberAssignment {
                     is_global: false,
@@ -885,11 +966,11 @@ impl Parser {
                     index,
                     value,
                 })
-            } else if let Some(Token::Operator(op)) = self.eat_any(&[
-                Token::Operator("+=".to_string()),
-                Token::Operator("-=".to_string()),
-                Token::Operator("*=".to_string()),
-                Token::Operator("/=".to_string()),
+            } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
+                TokenType::Operator("+=".to_string()),
+                TokenType::Operator("-=".to_string()),
+                TokenType::Operator("*=".to_string()),
+                TokenType::Operator("/=".to_string()),
             ]) {
                 let real_op = op[0..1].to_string(); // extract +, -, *, /
                 let right = self.parse_binary(0)?;
@@ -911,19 +992,22 @@ impl Parser {
             } else {
                 // Function call
                 let mut args = vec![];
-                if self.eat(&Token::Symbol("(".to_string())) {
-                    while self.peek() != Some(&Token::Symbol(")".to_string())) {
-                        if self.eat(&Token::Newline) {
+                if self.eat(&TokenType::Symbol("(".to_string())) {
+                    while self.peek().token_type != TokenType::Symbol(")".to_string()) {
+                        if self.eat(&TokenType::Newline) {
                             continue;
                         }
                         let arg = self.parse_binary(0)?;
                         args.push(arg);
-                        if !self.eat(&Token::Symbol(",".to_string())) {
+                        if !self.eat(&TokenType::Symbol(",".to_string())) {
                             break;
                         }
                     }
-                    if !self.eat(&Token::Symbol(")".to_string())) {
-                        return Err("Expected ')' after function call".to_string());
+                    if !self.eat(&TokenType::Symbol(")".to_string())) {
+                        return Err(format!(
+                            "Expected ')' after function call at {}:{}",
+                            self.peek().line, self.peek().column
+                        ));
                     }
                 }
                 Ok(Statement::Call(Expression::Call {
@@ -931,12 +1015,12 @@ impl Parser {
                     args,
                 }))
             }
-        } else if self.eat(&Token::Symbol(".".to_string())) {
+        } else if self.eat(&TokenType::Symbol(".".to_string())) {
             // List member access with dot notation
             let index = self.parse_primary()?;
             match index {
                 Expression::Identifier(index_name) => {
-                    if self.eat(&Token::Operator("=".to_string())) {
+                    if self.eat(&TokenType::Operator("=".to_string())) {
                         let value = self.parse_binary(0)?;
                         Ok(Statement::ListMemberAssignment {
                             is_global: false,
@@ -944,11 +1028,11 @@ impl Parser {
                             index: Expression::Value(Value::String(index_name)),
                             value,
                         })
-                    } else if let Some(Token::Operator(op)) = self.eat_any(&[
-                        Token::Operator("+=".to_string()),
-                        Token::Operator("-=".to_string()),
-                        Token::Operator("*=".to_string()),
-                        Token::Operator("/=".to_string()),
+                    } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
+                        TokenType::Operator("+=".to_string()),
+                        TokenType::Operator("-=".to_string()),
+                        TokenType::Operator("*=".to_string()),
+                        TokenType::Operator("/=".to_string()),
                     ]) {
                         let real_op = op[0..1].to_string(); // extract +, -, *, /
                         let right = self.parse_binary(0)?;
@@ -968,27 +1052,38 @@ impl Parser {
                             value: combined_expr,
                         })
                     } else {
-                        Err("Expected '=' or operator after '.'".to_string())
+                        return Err(format!(
+                            "Expected '=' or operator after '.' but got {:?} at {}:{}",
+                            self.peek().token_type, self.peek().line, self.peek().column
+                        ));
                     }
                 }
-                _ => Err(format!("Expected identifier after '.' but got {:?}", index)),
+                _ => {
+                    return Err(format!(
+                        "Expected identifier after '.' but got {:?} at {}:{}",
+                        index, self.peek().line, self.peek().column
+                    ));
+                }
             }
         } else {
             // Function call
             let mut args = vec![];
-            if self.eat(&Token::Symbol("(".to_string())) {
-                while self.peek() != Some(&Token::Symbol(")".to_string())) {
-                    if self.eat(&Token::Newline) {
+            if self.eat(&TokenType::Symbol("(".to_string())) {
+                while self.peek().token_type != TokenType::Symbol(")".to_string()) {
+                    if self.eat(&TokenType::Newline) {
                         continue;
                     }
                     let arg = self.parse_binary(0)?;
                     args.push(arg);
-                    if !self.eat(&Token::Symbol(",".to_string())) {
+                    if !self.eat(&TokenType::Symbol(",".to_string())) {
                         break;
                     }
                 }
-                if !self.eat(&Token::Symbol(")".to_string())) {
-                    return Err("Expected ')' after function call".to_string());
+                if !self.eat(&TokenType::Symbol(")".to_string())) {
+                    return Err(format!(
+                        "Expected ')' after function call at {}:{}",
+                        self.peek().line, self.peek().column
+                    ));
                 }
             }
             Ok(Statement::Call(Expression::Call {
@@ -999,26 +1094,26 @@ impl Parser {
     }
 
     pub fn parse_global_assignment(&mut self) -> Result<Statement, String> {
-        if self.eat(&Token::Keyword("global".to_string())) {
-            let identifier = if let Some(Token::Identifier(id)) = self.peek() {
+        if self.eat(&TokenType::Keyword("global".to_string())) {
+            let identifier = if let TokenType::Identifier(ref id) = self.peek().token_type {
                 id.clone()
             } else {
                 return Err("Expected identifier after 'global'".to_string());
             };
             self.advance();
 
-            if self.eat(&Token::Operator("=".to_string())) {
+            if self.eat(&TokenType::Operator("=".to_string())) {
                 let value = self.parse_binary(0)?;
                 Ok(Statement::Assignment {
                     is_global: true,
                     identifier,
                     value,
                 })
-            } else if let Some(Token::Operator(op)) = self.eat_any(&[
-                Token::Operator("+=".to_string()),
-                Token::Operator("-=".to_string()),
-                Token::Operator("*=".to_string()),
-                Token::Operator("/=".to_string()),
+            } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
+                TokenType::Operator("+=".to_string()),
+                TokenType::Operator("-=".to_string()),
+                TokenType::Operator("*=".to_string()),
+                TokenType::Operator("/=".to_string()),
             ]) {
                 let real_op = op[0..1].to_string(); // extract +, -, *, /
                 let right = self.parse_binary(0)?;
@@ -1033,13 +1128,16 @@ impl Parser {
                     identifier,
                     value: combined_expr,
                 })
-            } else if self.eat(&Token::Symbol("[".to_string())) {
+            } else if self.eat(&TokenType::Symbol("[".to_string())) {
                 // List member access
                 let index = self.parse_binary(0)?;
-                if !self.eat(&Token::Symbol("]".to_string())) {
-                    return Err("Expected ']' after list member access".to_string());
+                if !self.eat(&TokenType::Symbol("]".to_string())) {
+                    return Err(format!(
+                        "Expected ']' after list member access at {}:{}",
+                        self.peek().line, self.peek().column
+                    ));
                 }
-                if self.eat(&Token::Operator("=".to_string())) {
+                if self.eat(&TokenType::Operator("=".to_string())) {
                     let value = self.parse_binary(0)?;
                     Ok(Statement::ListMemberAssignment {
                         is_global: true,
@@ -1047,11 +1145,11 @@ impl Parser {
                         index,
                         value,
                     })
-                } else if let Some(Token::Operator(op)) = self.eat_any(&[
-                    Token::Operator("+=".to_string()),
-                    Token::Operator("-=".to_string()),
-                    Token::Operator("*=".to_string()),
-                    Token::Operator("/=".to_string()),
+                } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
+                    TokenType::Operator("+=".to_string()),
+                    TokenType::Operator("-=".to_string()),
+                    TokenType::Operator("*=".to_string()),
+                    TokenType::Operator("/=".to_string()),
                 ]) {
                     let real_op = op[0..1].to_string(); // extract +, -, *, /
                     let right = self.parse_binary(0)?;
@@ -1071,13 +1169,16 @@ impl Parser {
                         value: combined_expr,
                     })
                 } else {
-                    Err("Expected '=' or operator after list member access".to_string())
+                    Err(format!(
+                        "Expected '=' or operator after list member access at {}:{}",
+                        self.peek().line, self.peek().column
+                    ))
                 }
-            } else if self.eat(&Token::Symbol(".".to_string())) {
+            } else if self.eat(&TokenType::Symbol(".".to_string())) {
                 let index = self.parse_primary()?;
                 match index {
                     Expression::Identifier(index_name) => {
-                        if self.eat(&Token::Operator("=".to_string())) {
+                        if self.eat(&TokenType::Operator("=".to_string())) {
                             let value = self.parse_binary(0)?;
                             Ok(Statement::ListMemberAssignment {
                                 is_global: true,
@@ -1085,11 +1186,11 @@ impl Parser {
                                 index: Expression::Value(Value::String(index_name)),
                                 value,
                             })
-                        } else if let Some(Token::Operator(op)) = self.eat_any(&[
-                            Token::Operator("+=".to_string()),
-                            Token::Operator("-=".to_string()),
-                            Token::Operator("*=".to_string()),
-                            Token::Operator("/=".to_string()),
+                        } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
+                            TokenType::Operator("+=".to_string()),
+                            TokenType::Operator("-=".to_string()),
+                            TokenType::Operator("*=".to_string()),
+                            TokenType::Operator("/=".to_string()),
                         ]) {
                             let real_op = op[0..1].to_string(); // extract +, -, *, /
                             let right = self.parse_binary(0)?;
@@ -1111,16 +1212,30 @@ impl Parser {
                                 value: combined_expr,
                             })
                         } else {
-                            Err("Expected '=' or operator after '.'".to_string())
+                            Err(format!(
+                                "Expected '=' or operator after '.' but got {:?} at {}:{}",
+                                self.peek().token_type, self.peek().line, self.peek().column
+                            ))
                         }
                     }
-                    _ => Err(format!("Expected identifier after '.' but got {:?}", index)),
+                    _ => {
+                        Err(format!(
+                            "Expected identifier or number after '.' but got {:?} at {}:{}",
+                            index, self.peek().line, self.peek().column
+                        ))
+                    }
                 }
             } else {
-                Err("Expected '=' or operator after identifier".to_string())
+                Err(format!(
+                    "Expected '=' or operator after identifier '{}' at {}:{}",
+                    identifier, self.peek().line, self.peek().column
+                ))
             }
         } else {
-            Err("Expected 'global' keyword".to_string())
+            Err(format!(
+                "Expected 'global' keyword at {}:{}",
+                self.peek().line, self.peek().column
+            ))
         }
     }
 }
