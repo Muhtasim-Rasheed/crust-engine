@@ -27,6 +27,10 @@ Inline statements are single-line statements that perform a specific action. The
 - `nop`: Does absolutely nothing.
 - `assert condition`: Checks if the condition is true, and if not, it throws an error. Example: `assert x > 0`
 - `function_name(arguments)`: Calls a function or a closure with the given arguments. Example: `goto("mouse")`
+
+!!! note
+    Closures can be put inside of lists, and calling them looks like this: `list[0](1, 2)`. This calls the closure at index 0 of the list with the arguments 1 and 2. Another example is `object.key(1, 2)`, which calls the closure at the key `key` of the object with the arguments 1 and 2.
+
 - `import "file.crst"`: Imports a Crust file. The file can contain functions and variables. Import statements are defined at the head of the program. Example: `import "utils.crst"`
 
 To assign a list's or object's value, you can use the following syntax:

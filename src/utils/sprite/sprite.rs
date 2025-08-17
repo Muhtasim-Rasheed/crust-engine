@@ -543,7 +543,9 @@ impl Sprite {
                 value,
             } => {
                 let value = crate::utils::resolve_expression(value, state);
-                crate::utils::assign_expression(identifier, value, state, *is_global);
+                crate::utils::assign_expression(identifier, value, state, *is_global).unwrap_or_else(|e| {
+                    println!("Error assigning variable '{}': {}", identifier, e);
+                });
             }
             Statement::Nop => {}
             Statement::Assert { condition } => {
@@ -637,32 +639,25 @@ impl Sprite {
             }
             Statement::Call(c) => {
                 if let Expression::Call { function, args } = c {
+                    // evaluate the function expression
+                    let func_val = resolve_expression(function, state);
+
+                    // evaluate args
                     let args = args
                         .iter()
-                        .map(|arg| crate::utils::resolve_expression(arg, state))
+                        .map(|arg| resolve_expression(arg, state))
                         .collect::<Vec<_>>();
-                    if let Some(callable) = state.sprite.functions.clone().get(function) {
-                        callable.call(state, &args).unwrap_or_else(|e| {
-                            println!("Error calling {}(): {}", function, e);
-                            Value::Null
-                        });
-                    } else if let Some(callable) = state.project.builtins.get(function).cloned() {
-                        callable.call(state, &args).unwrap_or_else(|e| {
-                            println!("Error calling builtin function '{}': {}", function, e);
-                            Value::Null
-                        });
-                    } else if let Some(variable) = state.sprite.variables.get(function).cloned() {
-                        let Value::Closure(closure) = variable else {
-                            println!("Variable '{}' is not a function", function);
-                            return;
-                        };
-                        let function_struct = *closure;
-                        function_struct.call(state, &args).unwrap_or_else(|e| {
-                            println!("Error calling closure '{}': {}", function, e);
-                            Value::Null
-                        });
-                    } else {
-                        println!("Unknown function or variable '{}'", function);
+
+                    match func_val {
+                        Value::Closure(callable) => {
+                            let _ = callable.call(state, &args).unwrap_or_else(|e| {
+                                println!("Error calling function: {}", e);
+                                Value::Null
+                            });
+                        }
+                        _ => {
+                            println!("Attempted to call non-function: {:?}", func_val);
+                        }
                     }
                 }
             }

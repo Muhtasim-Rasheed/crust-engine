@@ -30,7 +30,7 @@ pub enum Expression {
         operand: Box<Expression>,
     },
     Call {
-        function: String,
+        function: Box<Expression>,
         args: Vec<Expression>,
     },
 }
@@ -599,7 +599,7 @@ impl Parser {
         })
     }
 
-    fn parse_function_call(&mut self, name: String) -> Result<Expression, String> {
+    fn parse_function_call(&mut self, base: Expression) -> Result<Expression, String> {
         let mut args = vec![];
         while self.peek().token_type != TokenType::Symbol(")".to_string()) {
             if self.eat(&TokenType::Newline) {
@@ -618,12 +618,12 @@ impl Parser {
             ));
         }
         Ok(Expression::Call {
-            function: name,
+            function: Box::new(base),
             args,
         })
     }
 
-    fn parse_bracket_access(&mut self, name: String) -> Result<Expression, String> {
+    fn parse_bracket_access(&mut self, base: Expression) -> Result<Expression, String> {
         let index = self.parse_binary(0)?;
         if !self.eat(&TokenType::Symbol("]".to_string())) {
             return Err(format!(
@@ -632,20 +632,20 @@ impl Parser {
             ));
         }
         Ok(Expression::ListMemberAccess {
-            list: Box::new(Expression::Identifier(name)),
+            list: Box::new(base),
             index: Box::new(index),
         })
     }
 
-    fn parse_dot_access(&mut self, name: String) -> Result<Expression, String> {
+    fn parse_dot_access(&mut self, base: Expression) -> Result<Expression, String> {
         let index = self.parse_primary()?;
         match index {
             Expression::Identifier(index_name) => Ok(Expression::ListMemberAccess {
-                list: Box::new(Expression::Identifier(name)),
+                list: Box::new(base),
                 index: Box::new(Expression::Value(Value::String(index_name))),
             }),
             Expression::Value(Value::Number(num)) => Ok(Expression::ListMemberAccess {
-                list: Box::new(Expression::Identifier(name)),
+                list: Box::new(base),
                 index: Box::new(Expression::Value(Value::Number(num))),
             }),
             _ => Err(format!(
@@ -656,15 +656,21 @@ impl Parser {
     }
 
     fn parse_identifier_expr(&mut self, name: String) -> Result<Expression, String> {
-        if self.eat(&TokenType::Symbol("(".to_string())) {
-            self.parse_function_call(name)
-        } else if self.eat(&TokenType::Symbol("[".to_string())) {
-            self.parse_bracket_access(name)
-        } else if self.eat(&TokenType::Symbol(".".to_string())) {
-            self.parse_dot_access(name)
-        } else {
-            Ok(Expression::Identifier(name))
+        let mut expr = Expression::Identifier(name);
+
+        loop {
+            if self.eat(&TokenType::Symbol("(".to_string())) {
+                expr = self.parse_function_call(expr)?;
+            } else if self.eat(&TokenType::Symbol("[".to_string())) {
+                expr = self.parse_bracket_access(expr)?;
+            } else if self.eat(&TokenType::Symbol(".".to_string())) {
+                expr = self.parse_dot_access(expr)?;
+            } else {
+                break;
+            }
         }
+
+        Ok(expr)
     }
 
     fn parse_pre_incdec(&mut self, op: &str) -> Result<Expression, String> {

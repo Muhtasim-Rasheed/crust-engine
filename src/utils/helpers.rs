@@ -170,32 +170,26 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
             }
         }
         Expression::Call { function, args } => {
+            // evaluate the function expression
+            let func_val = resolve_expression(function, state);
+
+            // evaluate args
             let args = args
                 .iter()
                 .map(|arg| resolve_expression(arg, state))
                 .collect::<Vec<_>>();
-            if let Some(function_struct) = state.sprite.functions.get(function).cloned() {
-                function_struct.call(state, &args).unwrap_or_else(|e| {
-                    println!("Error calling function {}(): {}", function, e);
+
+            match func_val {
+                Value::Closure(callable) => {
+                    callable.call(state, &args).unwrap_or_else(|e| {
+                        println!("Error calling function: {}", e);
+                        Value::Null
+                    })
+                }
+                _ => {
+                    println!("Attempted to call non-function: {:?}", func_val);
                     Value::Null
-                })
-            } else if let Some(function_struct) = state.project.builtins.get(function).cloned() {
-                function_struct.call(state, &args).unwrap_or_else(|e| {
-                    println!("Error calling builtin function {}(): {}", function, e);
-                    Value::Null
-                })
-            } else if let Some(variable) = state.sprite.variables.get(function).cloned() {
-                let Value::Closure(closure) = variable else {
-                    println!("Variable '{}' is not a function", function);
-                    return Value::Null;
-                };
-                let function_struct = &*closure;
-                function_struct.call(state, &args).unwrap_or_else(|e| {
-                    println!("Error calling function '{}': {}", function, e);
-                    Value::Null
-                })
-            } else {
-                return Value::Null;
+                }
             }
         }
     }
