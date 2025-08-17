@@ -89,13 +89,7 @@ impl std::fmt::Display for Expression {
 pub enum Statement {
     Assignment {
         is_global: bool,
-        identifier: String,
-        value: Expression,
-    },
-    ListMemberAssignment {
-        is_global: bool,
         identifier: Expression,
-        index: Expression,
         value: Expression,
     },
     Nop,
@@ -166,19 +160,6 @@ impl std::fmt::Debug for Statement {
                 "ASSIGN[{}{:?} = {}]",
                 if *is_global { "global " } else { "" },
                 identifier,
-                value.to_string()
-            ),
-            Statement::ListMemberAssignment {
-                is_global,
-                identifier,
-                index,
-                value,
-            } => write!(
-                f,
-                "LIST_ASSIGN[{}{:?}[{}] = {}]",
-                if *is_global { "global " } else { "" },
-                identifier,
-                index.to_string(),
                 value.to_string()
             ),
             Statement::Nop => write!(f, "NOP"),
@@ -618,6 +599,90 @@ impl Parser {
         })
     }
 
+    fn parse_function_call(&mut self, name: String) -> Result<Expression, String> {
+        let mut args = vec![];
+        while self.peek().token_type != TokenType::Symbol(")".to_string()) {
+            if self.eat(&TokenType::Newline) {
+                continue;
+            }
+            let arg = self.parse_binary(0)?;
+            args.push(arg);
+            if !self.eat(&TokenType::Symbol(",".to_string())) {
+                break;
+            }
+        }
+        if !self.eat(&TokenType::Symbol(")".to_string())) {
+            return Err(format!(
+                "Expected ')' after function call at {}:{}",
+                self.peek().line, self.peek().column
+            ));
+        }
+        Ok(Expression::Call {
+            function: name,
+            args,
+        })
+    }
+
+    fn parse_bracket_access(&mut self, name: String) -> Result<Expression, String> {
+        let index = self.parse_binary(0)?;
+        if !self.eat(&TokenType::Symbol("]".to_string())) {
+            return Err(format!(
+                "Expected ']' after list member access at {}:{}",
+                self.peek().line, self.peek().column
+            ));
+        }
+        Ok(Expression::ListMemberAccess {
+            list: Box::new(Expression::Identifier(name)),
+            index: Box::new(index),
+        })
+    }
+
+    fn parse_dot_access(&mut self, name: String) -> Result<Expression, String> {
+        let index = self.parse_primary()?;
+        match index {
+            Expression::Identifier(index_name) => Ok(Expression::ListMemberAccess {
+                list: Box::new(Expression::Identifier(name)),
+                index: Box::new(Expression::Value(Value::String(index_name))),
+            }),
+            Expression::Value(Value::Number(num)) => Ok(Expression::ListMemberAccess {
+                list: Box::new(Expression::Identifier(name)),
+                index: Box::new(Expression::Value(Value::Number(num))),
+            }),
+            _ => Err(format!(
+                "Expected identifier or number after '.' but got {:?} at {}:{}",
+                index, self.peek().line, self.peek().column
+            )),
+        }
+    }
+
+    fn parse_identifier_expr(&mut self, name: String) -> Result<Expression, String> {
+        if self.eat(&TokenType::Symbol("(".to_string())) {
+            self.parse_function_call(name)
+        } else if self.eat(&TokenType::Symbol("[".to_string())) {
+            self.parse_bracket_access(name)
+        } else if self.eat(&TokenType::Symbol(".".to_string())) {
+            self.parse_dot_access(name)
+        } else {
+            Ok(Expression::Identifier(name))
+        }
+    }
+
+    fn parse_pre_incdec(&mut self, op: &str) -> Result<Expression, String> {
+        if let TokenType::Identifier(id) = self.peek().clone().token_type {
+            self.advance();
+            if op == "++" {
+                Ok(Expression::PreIncrement(id.clone()))
+            } else {
+                Ok(Expression::PreDecrement(id.clone()))
+            }
+        } else {
+            Err(format!(
+                "Expected identifier after '{}' but got {:?} at {}:{}",
+                op, self.peek().token_type, self.peek().line, self.peek().column
+            ))
+        }
+    }
+
     fn parse_primary(&mut self) -> Result<Expression, String> {
         let peeked = self.peek().clone();
         match peeked.token_type {
@@ -628,61 +693,7 @@ impl Parser {
             TokenType::Identifier(id) => {
                 self.advance();
                 let name = id.clone();
-                if self.eat(&TokenType::Symbol("(".to_string())) {
-                    // Function call
-                    let mut args = vec![];
-                    while self.peek().token_type != TokenType::Symbol(")".to_string()) {
-                        if self.eat(&TokenType::Newline) {
-                            continue;
-                        }
-                        let arg = self.parse_binary(0)?;
-                        args.push(arg);
-                        if !self.eat(&TokenType::Symbol(",".to_string())) {
-                            break;
-                        }
-                    }
-                    if !self.eat(&TokenType::Symbol(")".to_string())) {
-                        return Err(format!(
-                            "Expected ')' after function call at {}:{}",
-                            self.peek().line, self.peek().column
-                        ));
-                    }
-                    Ok(Expression::Call {
-                        function: name,
-                        args,
-                    })
-                } else if self.eat(&TokenType::Symbol("[".to_string())) {
-                    let index = self.parse_binary(0)?;
-                    if !self.eat(&TokenType::Symbol("]".to_string())) {
-                        return Err(format!(
-                            "Expected ']' after list member access at {}:{}",
-                            self.peek().line, self.peek().column
-                        ));
-                    }
-                    Ok(Expression::ListMemberAccess {
-                        list: Box::new(Expression::Identifier(name)),
-                        index: Box::new(index),
-                    })
-                } else if self.eat(&TokenType::Symbol(".".to_string())) {
-                    let index = self.parse_primary()?;
-                    match index {
-                        Expression::Identifier(index_name) => Ok(Expression::ListMemberAccess {
-                            list: Box::new(Expression::Identifier(name)),
-                            index: Box::new(Expression::Value(Value::String(index_name))),
-                        }),
-                        Expression::Value(Value::Number(num)) => Ok(Expression::ListMemberAccess {
-                            list: Box::new(Expression::Identifier(name)),
-                            index: Box::new(Expression::Value(Value::Number(num))),
-                        }),
-                        _ => Err(format!(
-                            "Expected identifier or number after '.' but got {:?} at {}:{}",
-                            index, self.peek().line, self.peek().column
-                        )),
-                    }
-                } else {
-                    // * ACTUALLY * an identifier
-                    Ok(Expression::Identifier(name))
-                }
+                self.parse_identifier_expr(name)
             }
             TokenType::Operator(op) if op == "-" || op == "!" => {
                 self.advance();
@@ -694,19 +705,7 @@ impl Parser {
             }
             TokenType::Operator(op) if op == "++" || op == "--" => {
                 self.advance();
-                if let TokenType::Identifier(id) = self.peek().clone().token_type {
-                    self.advance();
-                    if op == "++" {
-                        Ok(Expression::PreIncrement(id.clone()))
-                    } else {
-                        Ok(Expression::PreDecrement(id.clone()))
-                    }
-                } else {
-                    Err(format!(
-                        "Expected identifier after '{}' but got {:?} at {}:{}",
-                        op, self.peek().token_type, self.peek().line, self.peek().column
-                    ))
-                }
+                self.parse_pre_incdec(op.as_str())
             }
             TokenType::Symbol(s) if s == "(" => {
                 self.advance();
@@ -913,7 +912,7 @@ impl Parser {
     }
 
     fn parse_assignment_or_call(&mut self) -> Result<Statement, String> {
-        let identifier = if let TokenType::Identifier(ref id) = self.peek().token_type {
+        let name = if let TokenType::Identifier(ref id) = self.peek().token_type {
             id.clone()
         } else {
             return Err(format!(
@@ -923,11 +922,13 @@ impl Parser {
         };
         self.advance();
 
+        let target_expr = self.parse_identifier_expr(name)?;
+
         if self.eat(&TokenType::Operator("=".to_string())) {
             let value = self.parse_binary(0)?;
             Ok(Statement::Assignment {
                 is_global: false,
-                identifier,
+                identifier: target_expr,
                 value,
             })
         } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
@@ -936,177 +937,44 @@ impl Parser {
             TokenType::Operator("*=".to_string()),
             TokenType::Operator("/=".to_string()),
         ]) {
-            let real_op = op[0..1].to_string(); // extract +, -, *, /
+            let real_op = op[0..1].to_string();
             let right = self.parse_binary(0)?;
-            let left_expr = Expression::Identifier(identifier.clone());
             let combined_expr = Expression::Binary {
-                left: Box::new(left_expr),
+                left: Box::new(target_expr.clone()),
                 operator: real_op,
                 right: Box::new(right),
             };
             Ok(Statement::Assignment {
                 is_global: false,
-                identifier,
+                identifier: target_expr,
                 value: combined_expr,
             })
-        } else if self.eat(&TokenType::Symbol("[".to_string())) {
-            // List member access
-            let index = self.parse_binary(0)?;
-            if !self.eat(&TokenType::Symbol("]".to_string())) {
-                return Err(format!(
-                    "Expected ']' after list member access at {}:{}",
-                    self.peek().line, self.peek().column
-                ));
-            }
-            if self.eat(&TokenType::Operator("=".to_string())) {
-                let value = self.parse_binary(0)?;
-                Ok(Statement::ListMemberAssignment {
-                    is_global: false,
-                    identifier: Expression::Identifier(identifier),
-                    index,
-                    value,
-                })
-            } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
-                TokenType::Operator("+=".to_string()),
-                TokenType::Operator("-=".to_string()),
-                TokenType::Operator("*=".to_string()),
-                TokenType::Operator("/=".to_string()),
-            ]) {
-                let real_op = op[0..1].to_string(); // extract +, -, *, /
-                let right = self.parse_binary(0)?;
-                let left_expr = Expression::ListMemberAccess {
-                    list: Box::new(Expression::Identifier(identifier.clone())),
-                    index: Box::new(index.clone()),
-                };
-                let combined_expr = Expression::Binary {
-                    left: Box::new(left_expr),
-                    operator: real_op,
-                    right: Box::new(right),
-                };
-                Ok(Statement::ListMemberAssignment {
-                    is_global: false,
-                    identifier: Expression::Identifier(identifier),
-                    index,
-                    value: combined_expr,
-                })
-            } else {
-                // Function call
-                let mut args = vec![];
-                if self.eat(&TokenType::Symbol("(".to_string())) {
-                    while self.peek().token_type != TokenType::Symbol(")".to_string()) {
-                        if self.eat(&TokenType::Newline) {
-                            continue;
-                        }
-                        let arg = self.parse_binary(0)?;
-                        args.push(arg);
-                        if !self.eat(&TokenType::Symbol(",".to_string())) {
-                            break;
-                        }
-                    }
-                    if !self.eat(&TokenType::Symbol(")".to_string())) {
-                        return Err(format!(
-                            "Expected ')' after function call at {}:{}",
-                            self.peek().line, self.peek().column
-                        ));
-                    }
-                }
-                Ok(Statement::Call(Expression::Call {
-                    function: identifier,
-                    args,
-                }))
-            }
-        } else if self.eat(&TokenType::Symbol(".".to_string())) {
-            // List member access with dot notation
-            let index = self.parse_primary()?;
-            match index {
-                Expression::Identifier(index_name) => {
-                    if self.eat(&TokenType::Operator("=".to_string())) {
-                        let value = self.parse_binary(0)?;
-                        Ok(Statement::ListMemberAssignment {
-                            is_global: false,
-                            identifier: Expression::Identifier(identifier),
-                            index: Expression::Value(Value::String(index_name)),
-                            value,
-                        })
-                    } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
-                        TokenType::Operator("+=".to_string()),
-                        TokenType::Operator("-=".to_string()),
-                        TokenType::Operator("*=".to_string()),
-                        TokenType::Operator("/=".to_string()),
-                    ]) {
-                        let real_op = op[0..1].to_string(); // extract +, -, *, /
-                        let right = self.parse_binary(0)?;
-                        let left_expr = Expression::ListMemberAccess {
-                            list: Box::new(Expression::Identifier(identifier.clone())),
-                            index: Box::new(Expression::Value(Value::String(index_name.clone()))),
-                        };
-                        let combined_expr = Expression::Binary {
-                            left: Box::new(left_expr),
-                            operator: real_op,
-                            right: Box::new(right),
-                        };
-                        Ok(Statement::ListMemberAssignment {
-                            is_global: false,
-                            identifier: Expression::Identifier(identifier),
-                            index: Expression::Value(Value::String(index_name)),
-                            value: combined_expr,
-                        })
-                    } else {
-                        return Err(format!(
-                            "Expected '=' or operator after '.' but got {:?} at {}:{}",
-                            self.peek().token_type, self.peek().line, self.peek().column
-                        ));
-                    }
-                }
-                _ => {
-                    return Err(format!(
-                        "Expected identifier after '.' but got {:?} at {}:{}",
-                        index, self.peek().line, self.peek().column
-                    ));
-                }
-            }
+        } else if matches!(target_expr, Expression::Call { .. }) {
+            Ok(Statement::Call(target_expr))
         } else {
-            // Function call
-            let mut args = vec![];
-            if self.eat(&TokenType::Symbol("(".to_string())) {
-                while self.peek().token_type != TokenType::Symbol(")".to_string()) {
-                    if self.eat(&TokenType::Newline) {
-                        continue;
-                    }
-                    let arg = self.parse_binary(0)?;
-                    args.push(arg);
-                    if !self.eat(&TokenType::Symbol(",".to_string())) {
-                        break;
-                    }
-                }
-                if !self.eat(&TokenType::Symbol(")".to_string())) {
-                    return Err(format!(
-                        "Expected ')' after function call at {}:{}",
-                        self.peek().line, self.peek().column
-                    ));
-                }
-            }
-            Ok(Statement::Call(Expression::Call {
-                function: identifier,
-                args,
-            }))
+            Err(format!(
+                "Unexpected token after identifier expression at {}:{}",
+                self.peek().line, self.peek().column
+            ))
         }
     }
 
     pub fn parse_global_assignment(&mut self) -> Result<Statement, String> {
         if self.eat(&TokenType::Keyword("global".to_string())) {
-            let identifier = if let TokenType::Identifier(ref id) = self.peek().token_type {
+            let name = if let TokenType::Identifier(ref id) = self.peek().token_type {
                 id.clone()
             } else {
                 return Err("Expected identifier after 'global'".to_string());
             };
             self.advance();
 
+            let target_expr = self.parse_identifier_expr(name)?;
+
             if self.eat(&TokenType::Operator("=".to_string())) {
                 let value = self.parse_binary(0)?;
                 Ok(Statement::Assignment {
-                    is_global: true,
-                    identifier,
+                    is_global: false,
+                    identifier: target_expr,
                     value,
                 })
             } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
@@ -1115,120 +983,24 @@ impl Parser {
                 TokenType::Operator("*=".to_string()),
                 TokenType::Operator("/=".to_string()),
             ]) {
-                let real_op = op[0..1].to_string(); // extract +, -, *, /
+                let real_op = op[0..1].to_string();
                 let right = self.parse_binary(0)?;
-                let left_expr = Expression::Identifier(identifier.clone());
                 let combined_expr = Expression::Binary {
-                    left: Box::new(left_expr),
+                    left: Box::new(target_expr.clone()),
                     operator: real_op,
                     right: Box::new(right),
                 };
                 Ok(Statement::Assignment {
-                    is_global: true,
-                    identifier,
+                    is_global: false,
+                    identifier: target_expr,
                     value: combined_expr,
                 })
-            } else if self.eat(&TokenType::Symbol("[".to_string())) {
-                // List member access
-                let index = self.parse_binary(0)?;
-                if !self.eat(&TokenType::Symbol("]".to_string())) {
-                    return Err(format!(
-                        "Expected ']' after list member access at {}:{}",
-                        self.peek().line, self.peek().column
-                    ));
-                }
-                if self.eat(&TokenType::Operator("=".to_string())) {
-                    let value = self.parse_binary(0)?;
-                    Ok(Statement::ListMemberAssignment {
-                        is_global: true,
-                        identifier: Expression::Identifier(identifier),
-                        index,
-                        value,
-                    })
-                } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
-                    TokenType::Operator("+=".to_string()),
-                    TokenType::Operator("-=".to_string()),
-                    TokenType::Operator("*=".to_string()),
-                    TokenType::Operator("/=".to_string()),
-                ]) {
-                    let real_op = op[0..1].to_string(); // extract +, -, *, /
-                    let right = self.parse_binary(0)?;
-                    let left_expr = Expression::ListMemberAccess {
-                        list: Box::new(Expression::Identifier(identifier.clone())),
-                        index: Box::new(index.clone()),
-                    };
-                    let combined_expr = Expression::Binary {
-                        left: Box::new(left_expr),
-                        operator: real_op,
-                        right: Box::new(right),
-                    };
-                    Ok(Statement::ListMemberAssignment {
-                        is_global: true,
-                        identifier: Expression::Identifier(identifier),
-                        index,
-                        value: combined_expr,
-                    })
-                } else {
-                    Err(format!(
-                        "Expected '=' or operator after list member access at {}:{}",
-                        self.peek().line, self.peek().column
-                    ))
-                }
-            } else if self.eat(&TokenType::Symbol(".".to_string())) {
-                let index = self.parse_primary()?;
-                match index {
-                    Expression::Identifier(index_name) => {
-                        if self.eat(&TokenType::Operator("=".to_string())) {
-                            let value = self.parse_binary(0)?;
-                            Ok(Statement::ListMemberAssignment {
-                                is_global: true,
-                                identifier: Expression::Identifier(identifier),
-                                index: Expression::Value(Value::String(index_name)),
-                                value,
-                            })
-                        } else if let Some(TokenType::Operator(op)) = self.eat_any(&[
-                            TokenType::Operator("+=".to_string()),
-                            TokenType::Operator("-=".to_string()),
-                            TokenType::Operator("*=".to_string()),
-                            TokenType::Operator("/=".to_string()),
-                        ]) {
-                            let real_op = op[0..1].to_string(); // extract +, -, *, /
-                            let right = self.parse_binary(0)?;
-                            let left_expr = Expression::ListMemberAccess {
-                                list: Box::new(Expression::Identifier(identifier.clone())),
-                                index: Box::new(Expression::Value(Value::String(
-                                    index_name.clone(),
-                                ))),
-                            };
-                            let combined_expr = Expression::Binary {
-                                left: Box::new(left_expr),
-                                operator: real_op,
-                                right: Box::new(right),
-                            };
-                            Ok(Statement::ListMemberAssignment {
-                                is_global: true,
-                                identifier: Expression::Identifier(identifier),
-                                index: Expression::Value(Value::String(index_name)),
-                                value: combined_expr,
-                            })
-                        } else {
-                            Err(format!(
-                                "Expected '=' or operator after '.' but got {:?} at {}:{}",
-                                self.peek().token_type, self.peek().line, self.peek().column
-                            ))
-                        }
-                    }
-                    _ => {
-                        Err(format!(
-                            "Expected identifier or number after '.' but got {:?} at {}:{}",
-                            index, self.peek().line, self.peek().column
-                        ))
-                    }
-                }
+            } else if matches!(target_expr, Expression::Call { .. }) {
+                Ok(Statement::Call(target_expr))
             } else {
                 Err(format!(
-                    "Expected '=' or operator after identifier '{}' at {}:{}",
-                    identifier, self.peek().line, self.peek().column
+                    "Unexpected token after identifier expression at {}:{}",
+                    self.peek().line, self.peek().column
                 ))
             }
         } else {

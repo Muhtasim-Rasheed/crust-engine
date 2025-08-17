@@ -34,7 +34,7 @@ pub struct State<'a> {
     pub shader_program: &'a ShaderProgram,
     pub projection: &'a mut Mat4,
     pub font: &'a BitmapFont,
-    pub local_vars: &'a [(String, Value)],
+    pub local_vars: &'a mut [(String, Value)],
     pub script_id: usize,
 }
 
@@ -524,6 +524,17 @@ impl Sprite {
         }
     }
 
+    pub fn variable_mut<'a>(&'a mut self, name: &str, project: &'a mut Project, local_vars: &'a mut [(String, Value)]) -> Option<&'a mut Value> {
+        if let Some(var) = local_vars.iter_mut().find(|(n, _)| n == name) {
+            return Some(&mut var.1);
+        } else if let Some(var) = self.variables.get_mut(name) {
+            return Some(var);
+        } else if let Some(var) = project.global_variables.get_mut(name) {
+            return Some(var);
+        }
+        None
+    }
+
     pub fn execute_statement(statement: &Statement, state: &mut State<'_>) {
         match statement {
             Statement::Assignment {
@@ -532,74 +543,7 @@ impl Sprite {
                 value,
             } => {
                 let value = crate::utils::resolve_expression(value, state);
-                if *is_global {
-                    state
-                        .project
-                        .global_variables
-                        .insert(identifier.clone(), value);
-                } else {
-                    if state.sprite.variables.get(identifier).is_none() {
-                        state.sprite.new_variable(identifier, value.clone());
-                    } else {
-                        state.sprite.set_variable(identifier, value);
-                    }
-                }
-            }
-            Statement::ListMemberAssignment {
-                is_global,
-                identifier,
-                index,
-                value,
-            } => {
-                let value = crate::utils::resolve_expression(value, state);
-                let index = crate::utils::resolve_expression(index, state);
-                if let Value::Number(index) = index {
-                    if *is_global {
-                        if let Some(global_list) = state
-                            .project
-                            .global_variables
-                            .get_mut(identifier.to_string().as_str())
-                        {
-                            if let Value::List(global_list) = global_list {
-                                global_list[index as usize] = value;
-                            }
-                        }
-                    } else {
-                        if let Some(local_list) = state
-                            .sprite
-                            .variables
-                            .get_mut(identifier.to_string().as_str())
-                        {
-                            if let Value::List(local_list) = local_list {
-                                local_list[index as usize] = value;
-                            }
-                        }
-                    }
-                } else if let Value::String(key) = index {
-                    if *is_global {
-                        if let Some(global_list) = state
-                            .project
-                            .global_variables
-                            .get_mut(identifier.to_string().as_str())
-                        {
-                            if let Value::Object(global_list) = global_list {
-                                global_list.insert(key.clone(), value);
-                            }
-                        }
-                    } else {
-                        if let Some(local_list) = state
-                            .sprite
-                            .variables
-                            .get_mut(identifier.to_string().as_str())
-                        {
-                            if let Value::Object(local_list) = local_list {
-                                local_list.insert(key.clone(), value);
-                            }
-                        }
-                    }
-                } else {
-                    println!("Invalid index type for list assignment (expected number or string)");
-                }
+                crate::utils::assign_expression(identifier, value, state, *is_global);
             }
             Statement::Nop => {}
             Statement::Assert { condition } => {
@@ -683,7 +627,7 @@ impl Sprite {
                         shader_program: state.shader_program,
                         projection: state.projection,
                         font: state.font,
-                        local_vars: &new_local_vars,
+                        local_vars: &mut new_local_vars,
                         script_id: state.script_id,
                     };
                     for statement in body {
@@ -906,7 +850,7 @@ impl Sprite {
                         shader_program,
                         projection,
                         font,
-                        local_vars: &vec![],
+                        local_vars: &mut [],
                         script_id: 0,
                     },
                 );
@@ -946,7 +890,7 @@ impl Sprite {
                             shader_program,
                             projection,
                             font,
-                            local_vars: &vec![],
+                            local_vars: &mut [],
                             script_id: i + 1,
                         },
                     );
@@ -992,7 +936,7 @@ impl Sprite {
                             shader_program,
                             projection,
                             font,
-                            local_vars: &vec![],
+                            local_vars: &mut [],
                             script_id: i + update_ast_len + 1,
                         },
                     );
@@ -1025,7 +969,7 @@ impl Sprite {
                     shader_program,
                     projection,
                     font,
-                    local_vars: &vec![],
+                    local_vars: &mut [],
                     script_id: i + update_broadcast_len + 1,
                 },
             );
@@ -1060,7 +1004,7 @@ impl Sprite {
                             shader_program,
                             projection,
                             font,
-                            local_vars: &vec![],
+                            local_vars: &mut [],
                             script_id: i + update_broadcast_len + 1,
                         },
                     );

@@ -1,7 +1,7 @@
 use glam::*;
 use glfw::{Key, MouseButton};
 
-use crate::utils::{core::*, *};
+use crate::utils::{core::*, Callable, Expression, Function, State, Value};
 
 // Helper functions!
 
@@ -198,6 +198,36 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
                 return Value::Null;
             }
         }
+    }
+}
+
+pub fn assign_expression(expr: &Expression, value: Value, state: &mut State, is_global: bool) -> Result<(), String> {
+    match expr {
+        Expression::Identifier(id) => {
+            if is_global {
+                state.project.global_variables.insert(id.clone(), value);
+            } else {
+                if state.sprite.variables.get(id).is_some() {
+                    state.sprite.set_variable(id, value);
+                } else {
+                    state.sprite.new_variable(id, value);
+                }
+            }
+            Ok(())
+        }
+        Expression::ListMemberAccess { list, index } => {
+            let index_val = resolve_expression(index, state);
+            let list = get_mut_container(list, state, is_global)?;
+            match (list, index_val) {
+                (Value::List(list), Value::Number(idx)) => { list[idx as usize] = value; Ok(()) }
+                (Value::Object(obj), Value::String(s)) => {
+                    obj.insert(s.clone(), value);
+                    Ok(())
+                }
+                _ => Err("Invalid assignment target".into()),
+            }
+        }
+        _ => Err("Invalid assignment target".into()),
     }
 }
 
@@ -499,7 +529,7 @@ pub fn draw_line(start: Vec2, end: Vec2, thickness: f32, shader: &ShaderProgram,
         },
     ];
     let indices = [0, 1, 2, 0, 2, 3];
-    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let mesh = Mesh::new(&vertices, &indices, DrawMode::Triangles);
     let mut m = Mat4::from_translation(start.extend(0.0));
     m = m * Mat4::from_rotation_z(angle);
     let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
@@ -533,7 +563,7 @@ pub fn draw_rectangle(start: Vec2, end: Vec2, shader: &ShaderProgram, color: Vec
         },
     ];
     let indices = [0, 1, 2, 0, 2, 3];
-    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let mesh = Mesh::new(&vertices, &indices, DrawMode::Triangles);
     let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
     shader.use_program();
     shader.set_uniform("u_color", color);
@@ -558,7 +588,7 @@ pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, shader: &ShaderProgram,
         })
         .collect();
     let indices = trianglulate_polygon(&vertices.iter().map(|v| v.position).collect());
-    let mesh = Mesh::new(&vertices, &indices, core::DrawMode::Triangles);
+    let mesh = Mesh::new(&vertices, &indices, DrawMode::Triangles);
     let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
     shader.use_program();
     shader.set_uniform("u_color", color);
@@ -595,6 +625,44 @@ pub fn percentage_to_decibels(percentage: f32) -> f32 {
 }
 
 // Helper functions that help other helper functions!!
+fn get_mut_container<'a>(
+    expr: &'a Expression,
+    state: &'a mut State,
+    is_global: bool,
+) -> Result<&'a mut Value, String> {
+    match expr {
+        Expression::Identifier(id) => {
+            if is_global {
+                state.project.global_variables.get_mut(id)
+                    .ok_or_else(|| format!("Global variable '{}' not found", id))
+            } else {
+                state.sprite.variable_mut(id, state.project, state.local_vars)
+                    .ok_or_else(|| format!("Variable '{}' not found", id))
+            }
+        }
+
+        Expression::ListMemberAccess { list, index } => {
+            let index_val = crate::utils::resolve_expression(index, state); // resolve key first
+            let container = get_mut_container(list, state, is_global)?; // now borrow mutable
+            match (container, index_val) {
+                (Value::List(list), Value::Number(idx)) => {
+                    let idx = idx as usize;
+                    if idx >= list.len() {
+                        list.resize(idx + 1, Value::Null);
+                    }
+                    Ok(&mut list[idx])
+                }
+                (Value::Object(obj), Value::String(s)) => {
+                    Ok(obj.entry(s).or_insert(Value::Null))
+                }
+                _ => Err("Invalid member access target".into()),
+            }
+        }
+
+        _ => Err("Expression is not a valid container".into()),
+    }
+}
+
 fn cubic_bezier(t: f32, p0: f32, p1: f32, p2: f32, p3: f32) -> f32 {
     let u = 1.0 - t;
     u * u * u * p0 + 3.0 * u * u * t * p1 + 3.0 * u * t * t * p2 + t * t * t * p3
