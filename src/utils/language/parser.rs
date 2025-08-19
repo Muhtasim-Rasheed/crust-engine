@@ -11,9 +11,9 @@ pub enum Expression {
         body: Vec<Statement>,
         returns: Box<Expression>,
     },
-    ListMemberAccess {
-        list: Box<Expression>,
-        index: Box<Expression>,
+    MemberAccess {
+        object: Box<Expression>,
+        key: Box<Expression>,
     },
     Identifier(String),
     PostIncrement(String),
@@ -59,8 +59,8 @@ impl std::fmt::Display for Expression {
                 let args_str = args.join(", ");
                 write!(f, "({}) {} {{ ... }}", args_str, returns.to_string())
             }
-            Expression::ListMemberAccess { list, index } => {
-                write!(f, "{}[{}]", list.to_string(), index.to_string())
+            Expression::MemberAccess { object, key } => {
+                write!(f, "{}[{}]", object.to_string(), key.to_string())
             }
             Expression::Identifier(id) => write!(f, "ID[{}]", id),
             Expression::PostIncrement(id) => write!(f, "{}++", id),
@@ -624,33 +624,33 @@ impl Parser {
     }
 
     fn parse_bracket_access(&mut self, base: Expression) -> Result<Expression, String> {
-        let index = self.parse_binary(0)?;
+        let key = self.parse_binary(0)?;
         if !self.eat(&TokenType::Symbol("]".to_string())) {
             return Err(format!(
                 "Expected ']' after list member access at {}:{}",
                 self.peek().line, self.peek().column
             ));
         }
-        Ok(Expression::ListMemberAccess {
-            list: Box::new(base),
-            index: Box::new(index),
+        Ok(Expression::MemberAccess {
+            object: Box::new(base),
+            key: Box::new(key),
         })
     }
 
     fn parse_dot_access(&mut self, base: Expression) -> Result<Expression, String> {
-        let index = self.parse_primary()?;
-        match index {
-            Expression::Identifier(index_name) => Ok(Expression::ListMemberAccess {
-                list: Box::new(base),
-                index: Box::new(Expression::Value(Value::String(index_name))),
+        let key = self.parse_primary()?;
+        match key {
+            Expression::Identifier(key_name) => Ok(Expression::MemberAccess {
+                object: Box::new(base),
+                key: Box::new(Expression::Value(Value::String(key_name))),
             }),
-            Expression::Value(Value::Number(num)) => Ok(Expression::ListMemberAccess {
-                list: Box::new(base),
-                index: Box::new(Expression::Value(Value::Number(num))),
+            Expression::Value(Value::Number(num)) => Ok(Expression::MemberAccess {
+                object: Box::new(base),
+                key: Box::new(Expression::Value(Value::Number(num))),
             }),
             _ => Err(format!(
                 "Expected identifier or number after '.' but got {:?} at {}:{}",
-                index, self.peek().line, self.peek().column
+                key, self.peek().line, self.peek().column
             )),
         }
     }

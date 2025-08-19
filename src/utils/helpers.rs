@@ -36,21 +36,21 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
             };
             Value::Closure(Box::new(Callable::Function(closure)))
         }
-        Expression::ListMemberAccess { list, index } => {
-            let index = resolve_expression(index, state);
-            let list = resolve_expression(list, state);
-            if let Value::List(list) = list {
-                if let Value::Number(index) = index {
-                    if index >= 0.0 && index < list.len() as f32 {
-                        return list[index as usize].clone();
+        Expression::MemberAccess { object, key } => {
+            let key = resolve_expression(key, state);
+            let object = resolve_expression(object, state);
+            if let Value::List(list) = object {
+                if let Value::Number(key) = key {
+                    if key >= 0.0 && key < list.len() as f32 {
+                        return list[key as usize].clone();
                     } else {
                         return Value::Null;
                     }
                 } else {
                     return Value::Null;
                 }
-            } else if let Value::Object(object) = list {
-                if let Value::String(ref key) = index {
+            } else if let Value::Object(object) = object {
+                if let Value::String(ref key) = key {
                     if let Some(value) = object.get(key) {
                         return value.clone();
                     } else {
@@ -209,10 +209,10 @@ pub fn assign_expression(expr: &Expression, value: Value, state: &mut State, is_
             }
             Ok(())
         }
-        Expression::ListMemberAccess { list, index } => {
-            let index_val = resolve_expression(index, state);
-            let list = get_mut_container(list, state, is_global)?;
-            match (list, index_val) {
+        Expression::MemberAccess { object, key } => {
+            let key_val = resolve_expression(key, state);
+            let object = get_mut_container(object, state, is_global)?;
+            match (object, key_val) {
                 (Value::List(list), Value::Number(idx)) => { list[idx as usize] = value; Ok(()) }
                 (Value::Object(obj), Value::String(s)) => {
                     obj.insert(s.clone(), value);
@@ -635,10 +635,10 @@ fn get_mut_container<'a>(
             }
         }
 
-        Expression::ListMemberAccess { list, index } => {
-            let index_val = crate::utils::resolve_expression(index, state); // resolve key first
-            let container = get_mut_container(list, state, is_global)?; // now borrow mutable
-            match (container, index_val) {
+        Expression::MemberAccess { object, key } => {
+            let key_val = crate::utils::resolve_expression(key, state); // resolve key first
+            let container = get_mut_container(object, state, is_global)?; // now borrow mutable
+            match (container, key_val) {
                 (Value::List(list), Value::Number(idx)) => {
                     let idx = idx as usize;
                     if idx >= list.len() {
