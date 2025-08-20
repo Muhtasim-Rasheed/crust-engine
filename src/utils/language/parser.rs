@@ -541,10 +541,7 @@ impl Parser {
                         object.insert(key.clone(), Expression::Identifier(key));
                     }
                     _ => {
-                        return Err(format!(
-                            "Expected ':' or ',' after key '{}' in object but got {:?} at {}:{}",
-                            key, self.peek().token_type, self.peek().line, self.peek().column
-                        ));
+                        object.insert(key.clone(), Expression::Identifier(key));
                     }
                 }
             } else {
