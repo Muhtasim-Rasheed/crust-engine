@@ -831,7 +831,7 @@ impl Parser {
         if let TokenType::Identifier(ref id) = self.peek().token_type {
             let identifier = id.clone();
             self.advance();
-            if !self.eat(&TokenType::Operator("in".to_string())) {
+            if !self.eat(&TokenType::Keyword("in".to_string())) {
                 return Err(format!(
                     "Expected 'in' after for loop identifier at {}:{}",
                     self.peek().line, self.peek().column
