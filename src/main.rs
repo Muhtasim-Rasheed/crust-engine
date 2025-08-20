@@ -79,7 +79,15 @@ async fn main() {
     window.set_cursor_pos_polling(true);
     window.make_current();
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const std::os::raw::c_void);
-    glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
+
+    let mut runtime = utils::Runtime::new(&project_file, args.additional_args, &window);
+    println!("Loaded project: {}", project_file);
+
+    glfw.set_swap_interval(if runtime.vsync {
+        glfw::SwapInterval::Sync(1)
+    } else {
+        glfw::SwapInterval::None
+    });
     unsafe {
         gl::Enable(gl::CULL_FACE);
         gl::CullFace(gl::BACK);
@@ -111,8 +119,6 @@ async fn main() {
         }]);
     }
 
-    let mut runtime = utils::Runtime::new(&project_file, args.additional_args, &window);
-    println!("Loaded project: {}", project_file);
     let shader_program = ShaderProgram::new(VERT_SHADER, FRAG_SHADER);
     runtime
         .run(&mut window, &events, &shader_program, &mut glfw)

@@ -56,6 +56,7 @@ struct TagConfig {
 #[derive(Deserialize, Debug)]
 struct ProjectConfig {
     debug_options: Option<Vec<String>>,
+    vsync: Option<bool>,
     font: Option<FontConfig>,
     stage: Option<StageConfig>,
     sprites: Vec<SpriteConfig>,
@@ -175,6 +176,7 @@ pub struct Runtime {
     pub project: Project,
     pub audio_manager: AudioManager<DefaultBackend>,
     pub font: BitmapFont,
+    pub vsync: bool,
     debug_options: Vec<String>,
 }
 
@@ -349,6 +351,7 @@ impl Runtime {
             project,
             audio_manager,
             font,
+            vsync: config.vsync.unwrap_or(true),
             debug_options: config.debug_options.unwrap_or(vec![]),
         }
     }

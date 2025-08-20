@@ -49,6 +49,7 @@ All paths mentioned are relative to the `project.toml` file.
 - `debug_options`: A list of debug options to enable. Only available options are `show_fps` and `show_mouse_pos`
     - `show_fps`: Shows the current frames per second (FPS)
     - `show_mouse_pos`: Shows the current mouse position on the screen (World coordinates, not screen coordinates)
+- `vsync`: Whether to enable vertical synchronization (VSync). Defaults to `true`. If set to `false`, the game will run as fast as possible, which may cause screen tearing.
 - `[font]`: The font configuration. Defaults to the default Crust font.
     - `file`: The path to the bitmap font file. The file must be an image file.
     - `first_char`: The first character in the font.
