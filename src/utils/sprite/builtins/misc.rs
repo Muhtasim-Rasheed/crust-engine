@@ -665,14 +665,14 @@ pub fn trim(args: &[Value]) -> Result {
 pub fn range(args: &[Value]) -> Result {
     match args {
         [Value::Number(end)] => {
-            let range: Vec<Value> = (0..=*end as i32).map(|n| Value::Number(n as f32)).collect();
+            let range: Vec<Value> = (0..*end as i32).map(|n| Value::Number(n as f32)).collect();
             Ok(Value::List(range))
         }
         [Value::Number(start), Value::Number(end)] => {
             if start > end {
                 return Err("range() expects start <= end".to_string());
             }
-            let range: Vec<Value> = (*start as i32..=*end as i32)
+            let range: Vec<Value> = (*start as i32..*end as i32)
                 .map(|n| Value::Number(n as f32))
                 .collect();
             Ok(Value::List(range))
@@ -688,7 +688,7 @@ pub fn range(args: &[Value]) -> Result {
             if *step == 0.0 {
                 return Err("range() step cannot be zero".to_string());
             }
-            let range: Vec<Value> = (0..=((end - start) / step).ceil() as i32)
+            let range: Vec<Value> = (0..((end - start) / step).ceil() as i32)
                 .map(|n| Value::Number(start + n as f32 * step))
                 .collect();
             Ok(Value::List(range))
