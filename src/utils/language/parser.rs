@@ -527,16 +527,25 @@ impl Parser {
             let peeked = self.peek().clone();
             if let TokenType::Identifier(key) | TokenType::Value(Value::String(key)) = peeked.token_type {
                 self.advance();
-                if !self.eat(&TokenType::Symbol(":".to_string())) {
-                    return Err(format!(
-                        "Expected ':' after key in object but got {:?} at {}:{}",
-                        self.peek().token_type, self.peek().line, self.peek().column
-                    ));
-                }
-                let value = self.parse_binary(0)?;
-                object.insert(key.clone(), value);
-                if !self.eat(&TokenType::Symbol(",".to_string())) {
-                    break;
+                match self.peek().token_type {
+                    TokenType::Symbol(ref s) if s == ":" => {
+                        self.advance();
+                        let value = self.parse_binary(0)?;
+                        object.insert(key, value);
+                        if !self.eat(&TokenType::Symbol(",".to_string())) {
+                            break;
+                        }
+                    }
+                    TokenType::Symbol(ref s) if s == "," => {
+                        self.advance();
+                        object.insert(key.clone(), Expression::Identifier(key));
+                    }
+                    _ => {
+                        return Err(format!(
+                            "Expected ':' or ',' after key '{}' in object but got {:?} at {}:{}",
+                            key, self.peek().token_type, self.peek().line, self.peek().column
+                        ));
+                    }
                 }
             } else {
                 return Err(format!(
@@ -902,13 +911,7 @@ impl Parser {
         if let TokenType::Value(Value::String(ref path)) = self.peek().token_type {
             let path = path.clone();
             self.advance();
-            if !self.eat(&TokenType::Newline) {
-                return Err(format!(
-                    "Expected newline after import path at {}:{}",
-                    self.peek().line, self.peek().column
-                ));
-            }
-            Ok(Statement::Import { path: path.clone() })
+            Ok(Statement::Import { path })
         } else {
             Err(format!(
                 "Expected string path after 'import' at {}:{}",
