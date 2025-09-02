@@ -1,16 +1,16 @@
 use crate::utils::{sprite::Dialogue, *};
 
-pub fn hide(state: &mut State) -> Result {
+pub fn hide(state: &mut State) -> IntermediateResult {
     state.sprite.visible = false;
     Ok(Value::Null)
 }
 
-pub fn show(state: &mut State) -> Result {
+pub fn show(state: &mut State) -> IntermediateResult {
     state.sprite.visible = true;
     Ok(Value::Null)
 }
 
-pub fn say(state: &mut State, args: &[Value]) -> Result {
+pub fn say(state: &mut State, args: &[Value]) -> IntermediateResult {
     match args {
         [text] => {
             state.sprite.dialogue = Some(Dialogue {
@@ -32,7 +32,7 @@ pub fn say(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn think(state: &mut State, args: &[Value]) -> Result {
+pub fn think(state: &mut State, args: &[Value]) -> IntermediateResult {
     match args {
         [text] => {
             state.sprite.dialogue = Some(Dialogue {
@@ -54,7 +54,7 @@ pub fn think(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn switch_costume(state: &mut State, args: &[Value]) -> Result {
+pub fn switch_costume(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(index)] = args {
         state.sprite.set_costume(*index as usize);
         Ok(Value::Null)
@@ -63,17 +63,17 @@ pub fn switch_costume(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn next_costume(state: &mut State) -> Result {
+pub fn next_costume(state: &mut State) -> IntermediateResult {
     state.sprite.next_costume();
     Ok(Value::Null)
 }
 
-pub fn previous_costume(state: &mut State) -> Result {
+pub fn previous_costume(state: &mut State) -> IntermediateResult {
     state.sprite.prev_costume();
     Ok(Value::Null)
 }
 
-pub fn switch_backdrop(state: &mut State, args: &[Value]) -> Result {
+pub fn switch_backdrop(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(index)] = args {
         state.project.stage.set_backdrop(*index as usize);
         Ok(Value::Null)
@@ -82,17 +82,17 @@ pub fn switch_backdrop(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn next_backdrop(state: &mut State) -> Result {
+pub fn next_backdrop(state: &mut State) -> IntermediateResult {
     state.project.stage.next_backdrop();
     Ok(Value::Null)
 }
 
-pub fn previous_backdrop(state: &mut State) -> Result {
+pub fn previous_backdrop(state: &mut State) -> IntermediateResult {
     state.project.stage.prev_backdrop();
     Ok(Value::Null)
 }
 
-pub fn set_scale(state: &mut State, args: &[Value]) -> Result {
+pub fn set_scale(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(scale)] = args {
         state.sprite.scale = *scale / 100.0;
         Ok(Value::Null)
@@ -101,7 +101,7 @@ pub fn set_scale(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn change_scale(state: &mut State, args: &[Value]) -> Result {
+pub fn change_scale(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(scale)] = args {
         state.sprite.scale += *scale / 100.0;
         Ok(Value::Null)
@@ -110,7 +110,7 @@ pub fn change_scale(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn set_effect(state: &mut State, args: &[Value]) -> Result {
+pub fn set_effect(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(effect), Value::Number(value)] = args {
         state.sprite.effects.insert(effect.to_string(), *value);
         Ok(Value::Null)
@@ -119,7 +119,7 @@ pub fn set_effect(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn change_effect(state: &mut State, args: &[Value]) -> Result {
+pub fn change_effect(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(effect), Value::Number(value)] = args {
         state
             .sprite
@@ -133,12 +133,12 @@ pub fn change_effect(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn clear_effects(state: &mut State) -> Result {
+pub fn clear_effects(state: &mut State) -> IntermediateResult {
     state.sprite.effects.clear();
     Ok(Value::Null)
 }
 
-pub fn clear_effect(state: &mut State, args: &[Value]) -> Result {
+pub fn clear_effect(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(effect)] = args {
         state.sprite.effects.shift_remove(effect);
         Ok(Value::Null)
@@ -147,7 +147,7 @@ pub fn clear_effect(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn go_to_layer(state: &mut State, args: &[Value]) -> Result {
+pub fn go_to_layer(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(layer)] = args {
         state.sprite.layer = *layer as isize;
         Ok(Value::Null)
@@ -156,7 +156,7 @@ pub fn go_to_layer(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn go_by_layers(state: &mut State, args: &[Value]) -> Result {
+pub fn go_by_layers(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(direction), Value::Number(steps)] = args {
         if direction == "forwards" {
             state.sprite.layer += *steps as isize;
@@ -175,27 +175,27 @@ pub fn go_by_layers(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn costume(state: &State) -> Result {
+pub fn costume(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.sprite.costume() as f32))
 }
 
-pub fn backdrop(state: &State) -> Result {
+pub fn backdrop(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.project.stage.backdrop() as f32))
 }
 
-pub fn size(state: &State) -> Result {
-    Ok(Value::List(vec![
+pub fn size(state: &State) -> IntermediateResult {
+    Ok(Value::list(vec![
         Value::Number(state.sprite.size.x),
         Value::Number(state.sprite.size.y),
     ]))
 }
 
-pub fn scale(state: &State) -> Result {
+pub fn scale(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.sprite.scale * 100.0))
 }
 
-pub fn bounds(state: &State) -> Result {
-    Ok(Value::List(vec![
+pub fn bounds(state: &State) -> IntermediateResult {
+    Ok(Value::list(vec![
         Value::Number(state.sprite.center.x - state.sprite.size.x * state.sprite.scale),
         Value::Number(state.sprite.center.y - state.sprite.size.y * state.sprite.scale),
         Value::Number(state.sprite.center.x + state.sprite.size.x * state.sprite.scale),
@@ -203,14 +203,14 @@ pub fn bounds(state: &State) -> Result {
     ]))
 }
 
-pub fn layer(state: &State) -> Result {
+pub fn layer(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.sprite.layer as f32))
 }
 
-pub fn effect(state: &State, args: &[Value]) -> Result {
+pub fn effect(state: &State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(effect)] = args {
         Ok(Value::Number(
-            *state.sprite.effects.get(effect).unwrap_or(&0.0) as f32,
+            *state.sprite.effects.get(effect).unwrap_or(&0.0),
         ))
     } else {
         Err("effect() requires a single string argument".to_string())

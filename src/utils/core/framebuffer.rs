@@ -44,7 +44,7 @@ impl Framebuffer {
                 gl::BindRenderbuffer(gl::RENDERBUFFER, depth_buf);
                 gl::RenderbufferStorage(
                     gl::RENDERBUFFER,
-                    gl::DEPTH_COMPONENT24 as u32,
+                    gl::DEPTH_COMPONENT24,
                     width as i32,
                     height as i32,
                 );

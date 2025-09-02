@@ -1,19 +1,21 @@
+use std::{cell::RefCell, rc::Rc};
+
 use glam::*;
 use glfw::{Key, MouseButton};
 
-use crate::utils::{core::*, Callable, Expression, Function, State, Value};
+use crate::utils::{Callable, Expression, Function, State, Value, core::*};
 
 // Helper functions!
 
-pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
+pub fn resolve_expression(expr: &Expression, state: &mut State) -> Rc<RefCell<Value>> {
     match expr {
-        Expression::Value(v) => v.clone(),
+        Expression::Value(v) => Rc::new(RefCell::new(v.clone())),
         Expression::List(l) => {
             let mut list = vec![];
             for element in l {
                 list.push(resolve_expression(element, state));
             }
-            Value::List(list)
+            Rc::new(RefCell::new(Value::List(Rc::new(RefCell::new(list)))))
         }
         Expression::Object(o) => {
             let mut object = std::collections::HashMap::new();
@@ -21,7 +23,7 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
                 let resolved_value = resolve_expression(value, state);
                 object.insert(key.clone(), resolved_value);
             }
-            Value::Object(object)
+            Rc::new(RefCell::new(Value::Object(Rc::new(RefCell::new(object)))))
         }
         Expression::Closure {
             args,
@@ -32,112 +34,113 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
                 args: args.clone(),
                 body: body.clone(),
                 returns: *returns.clone(),
-                captured_vars: state.local_vars.to_vec(),
+                captured_vars: state.local_vars.clone(),
             };
-            Value::Closure(Box::new(Callable::Function(closure)))
+            Rc::new(RefCell::new(Value::Closure(Rc::new(Callable::Function(
+                closure,
+            )))))
         }
         Expression::MemberAccess { object, key } => {
             let key = resolve_expression(key, state);
             let object = resolve_expression(object, state);
-            if let Value::List(list) = object {
-                if let Value::Number(key) = key {
-                    if key >= 0.0 && key < list.len() as f32 {
-                        return list[key as usize].clone();
+
+            match (&*object.borrow(), &*key.borrow()) {
+                (Value::List(list), Value::Number(idx)) => {
+                    let list_ref = list.borrow();
+                    if *idx >= 0.0 && (*idx as usize) < list_ref.len() {
+                        list_ref[*idx as usize].clone()
                     } else {
-                        return Value::Null;
+                        Rc::new(RefCell::new(Value::Null))
                     }
-                } else {
-                    return Value::Null;
                 }
-            } else if let Value::Object(object) = object {
-                if let Value::String(ref key) = key {
-                    if let Some(value) = object.get(key) {
-                        return value.clone();
-                    } else {
-                        return Value::Null;
-                    }
-                } else {
-                    return Value::Null;
+                (Value::Object(obj), Value::String(key_str)) => {
+                    let obj_ref = obj.borrow();
+                    obj_ref
+                        .get(key_str)
+                        .cloned()
+                        .unwrap_or_else(|| Rc::new(RefCell::new(Value::Null)))
                 }
-            } else {
-                return Value::Null;
+                _ => Rc::new(RefCell::new(Value::Null)),
             }
         }
-        Expression::Identifier(id) => state
-            .sprite
-            .variable(id, state.project, state.local_vars)
-            .clone(),
+        Expression::Identifier(id) => state.sprite.variable(id, state.project, state.local_vars),
         Expression::PostIncrement(id) => {
-            let value = state
-                .sprite
-                .variable(id, state.project, state.local_vars)
-                .clone();
-            if let Value::Number(num) = value {
-                let new_value = Value::Number(num + 1.0);
-                state.sprite.set_variable(id, new_value);
-                return value;
+            let var_rc = state.sprite.variable(id, state.project, state.local_vars);
+            let current_value = var_rc.borrow().clone();
+            if let Value::Number(num) = current_value {
+                *var_rc.borrow_mut() = Value::Number(num + 1.0);
+                return Rc::new(RefCell::new(current_value));
             }
-            Value::Null
+            Rc::new(RefCell::new(Value::Null))
         }
         Expression::PreIncrement(id) => {
-            let value = state
-                .sprite
-                .variable(id, state.project, state.local_vars)
-                .clone();
-            if let Value::Number(num) = value {
-                let new_value = Value::Number(num + 1.0);
-                state.sprite.set_variable(id, new_value.clone());
-                return new_value;
+            let var_rc = state.sprite.variable(id, state.project, state.local_vars);
+            let mut var_ref = var_rc.borrow_mut();
+            if let Value::Number(num) = *var_ref {
+                *var_ref = Value::Number(num + 1.0);
+                return Rc::new(RefCell::new(Value::Number(num + 1.0)));
             }
-            Value::Null
+            Rc::new(RefCell::new(Value::Null))
         }
+
         Expression::PostDecrement(id) => {
-            let value = state
-                .sprite
-                .variable(id, state.project, state.local_vars)
-                .clone();
-            if let Value::Number(num) = value {
-                let new_value = Value::Number(num - 1.0);
-                state.sprite.set_variable(id, new_value);
-                return value;
+            let var_rc = state.sprite.variable(id, state.project, state.local_vars);
+            let current_value = var_rc.borrow().clone();
+            if let Value::Number(num) = current_value {
+                *var_rc.borrow_mut() = Value::Number(num - 1.0);
+                return Rc::new(RefCell::new(current_value));
             }
-            Value::Null
+            Rc::new(RefCell::new(Value::Null))
         }
+
         Expression::PreDecrement(id) => {
-            let value = state
-                .sprite
-                .variable(id, state.project, state.local_vars)
-                .clone();
-            if let Value::Number(num) = value {
-                let new_value = Value::Number(num - 1.0);
-                state.sprite.set_variable(id, new_value.clone());
-                return new_value;
+            let var_rc = state.sprite.variable(id, state.project, state.local_vars);
+            let mut var_ref = var_rc.borrow_mut();
+            if let Value::Number(num) = *var_ref {
+                *var_ref = Value::Number(num - 1.0);
+                return Rc::new(RefCell::new(Value::Number(num - 1.0)));
             }
-            Value::Null
+            Rc::new(RefCell::new(Value::Null))
         }
         Expression::Binary {
             left,
             right,
             operator,
         } => {
-            let left_value = resolve_expression(left, state);
-            let right_value = resolve_expression(right, state);
-            match operator.as_str() {
+            let left_rc = resolve_expression(left, state);
+            let right_rc = resolve_expression(right, state);
+            let left_value = left_rc.borrow();
+            let right_value = right_rc.borrow();
+            Rc::new(RefCell::new(match operator.as_str() {
                 "+" => Value::Number(left_value.to_number() + right_value.to_number()),
                 "-" => Value::Number(left_value.to_number() - right_value.to_number()),
                 "*" => Value::Number(left_value.to_number() * right_value.to_number()),
                 "/" => Value::Number(left_value.to_number() / right_value.to_number()),
                 "%" => Value::Number(left_value.to_number() % right_value.to_number()),
                 "**" => Value::Number(left_value.to_number().powf(right_value.to_number())),
-                "==" => Value::Boolean(left_value == right_value),
-                "!=" => Value::Boolean(left_value != right_value),
+                "==" => Value::Boolean(*left_value == *right_value),
+                "!=" => Value::Boolean(*left_value != *right_value),
                 "<" => Value::Boolean(left_value.to_number() < right_value.to_number()),
                 ">" => Value::Boolean(left_value.to_number() > right_value.to_number()),
                 "<=" => Value::Boolean(left_value.to_number() <= right_value.to_number()),
                 ">=" => Value::Boolean(left_value.to_number() >= right_value.to_number()),
                 "&&" => Value::Boolean(left_value.to_boolean() && right_value.to_boolean()),
                 "||" => Value::Boolean(left_value.to_boolean() || right_value.to_boolean()),
-                "in" => Value::Boolean(right_value.to_list().contains(&left_value)),
+                "in" => {
+                    if let Value::List(list) = &*right_value {
+                        let list_ref = list.borrow();
+                        Value::Boolean(list_ref.iter().any(|item| *item.borrow() == *left_value))
+                    } else if let Value::Object(obj) = &*right_value {
+                        if let Value::String(key_str) = &*left_value {
+                            let obj_ref = obj.borrow();
+                            Value::Boolean(obj_ref.contains_key(key_str))
+                        } else {
+                            Value::Boolean(false)
+                        }
+                    } else {
+                        Value::Boolean(false)
+                    }
+                }
                 ".." => Value::String(format!(
                     "{}{}",
                     left_value.to_string(),
@@ -159,15 +162,16 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
                     (left_value.to_number() as u32 >> right_value.to_number() as u32) as f32,
                 ),
                 _ => panic!("Unknown operator: {}", operator),
-            }
+            }))
         }
         Expression::Unary { operator, operand } => {
-            let operand_value = resolve_expression(operand, state);
-            match operator.as_str() {
+            let operand_rc = resolve_expression(operand, state);
+            let operand_value = operand_rc.borrow();
+            Rc::new(RefCell::new(match operator.as_str() {
                 "-" => Value::Number(-operand_value.to_number()),
                 "!" => Value::Boolean(!operand_value.to_boolean()),
                 _ => panic!("Unknown operator: {}", operator),
-            }
+            }))
         }
         Expression::Call { function, args } => {
             // evaluate the function expression
@@ -179,43 +183,48 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
                 .map(|arg| resolve_expression(arg, state))
                 .collect::<Vec<_>>();
 
-            match func_val {
-                Value::Closure(callable) => {
-                    callable.call(state, &args).unwrap_or_else(|e| {
-                        println!("Error calling function: {}", e);
-                        Value::Null
-                    })
-                }
+            match &*func_val.borrow() {
+                Value::Closure(callable) => callable.call(state, &args).unwrap_or_else(|e| {
+                    println!("Error calling function: {}", e);
+                    Rc::new(RefCell::new(Value::Null))
+                }),
                 _ => {
                     println!("Attempted to call non-function: {:?}", func_val);
-                    Value::Null
+                    Rc::new(RefCell::new(Value::Null))
                 }
             }
         }
     }
 }
 
-pub fn assign_expression(expr: &Expression, value: Value, state: &mut State, is_global: bool) -> Result<(), String> {
+pub fn assign_expression(
+    expr: &Expression,
+    value: Rc<RefCell<Value>>,
+    state: &mut State,
+    is_global: bool,
+) -> Result<(), String> {
     match expr {
         Expression::Identifier(id) => {
             if is_global {
                 state.project.global_variables.insert(id.clone(), value);
+            } else if state.sprite.variables.get(id).is_some() {
+                state.sprite.set_variable(id, value);
             } else {
-                if state.sprite.variables.get(id).is_some() {
-                    state.sprite.set_variable(id, value);
-                } else {
-                    state.sprite.new_variable(id, value);
-                }
+                state.sprite.new_variable(id, value);
             }
             Ok(())
         }
         Expression::MemberAccess { object, key } => {
-            let key_val = resolve_expression(key, state);
+            let key_rc = resolve_expression(key, state);
+            let key_val = &*key_rc.borrow();
             let object = get_mut_container(object, state, is_global)?;
-            match (object, key_val) {
-                (Value::List(list), Value::Number(idx)) => { list[idx as usize] = value; Ok(()) }
+            match (&mut *object.borrow_mut(), key_val) {
+                (Value::List(list), Value::Number(idx)) => {
+                    list.borrow_mut()[*idx as usize] = value;
+                    Ok(())
+                }
                 (Value::Object(obj), Value::String(s)) => {
-                    obj.insert(s.clone(), value);
+                    obj.borrow_mut().insert(s.clone(), value);
                     Ok(())
                 }
                 _ => Err("Invalid assignment target".into()),
@@ -253,7 +262,7 @@ pub fn format_radix(mut x: u32, radix: u32) -> String {
 
     loop {
         let m = x % radix;
-        x = x / radix;
+        x /= radix;
 
         result.push(std::char::from_digit(m, radix).unwrap());
         if x == 0 {
@@ -525,7 +534,7 @@ pub fn draw_line(start: Vec2, end: Vec2, thickness: f32, shader: &ShaderProgram,
     let indices = [0, 1, 2, 0, 2, 3];
     let mesh = Mesh::new(&vertices, &indices, DrawMode::Triangles);
     let mut m = Mat4::from_translation(start.extend(0.0));
-    m = m * Mat4::from_rotation_z(angle);
+    m *= Mat4::from_rotation_z(angle);
     let texture = CPUTexture::new_filled(1, 1, [255; 4]).upload_to_gpu();
     shader.use_program();
     shader.set_uniform("u_color", color);
@@ -623,32 +632,40 @@ fn get_mut_container<'a>(
     expr: &'a Expression,
     state: &'a mut State,
     is_global: bool,
-) -> Result<&'a mut Value, String> {
+) -> Result<Rc<RefCell<Value>>, String> {
     match expr {
         Expression::Identifier(id) => {
             if is_global {
-                state.project.global_variables.get_mut(id)
+                state
+                    .project
+                    .global_variables
+                    .get(id)
+                    .cloned()
                     .ok_or_else(|| format!("Global variable '{}' not found", id))
             } else {
-                state.sprite.variable_mut(id, state.project, state.local_vars)
-                    .ok_or_else(|| format!("Variable '{}' not found", id))
+                Ok(state.sprite.variable(id, state.project, state.local_vars))
             }
         }
 
         Expression::MemberAccess { object, key } => {
-            let key_val = crate::utils::resolve_expression(key, state); // resolve key first
-            let container = get_mut_container(object, state, is_global)?; // now borrow mutable
+            let key_rc = resolve_expression(key, state);
+            let key_val = &*key_rc.borrow();
+            let container_rc = get_mut_container(object, state, is_global)?;
+            let container = &*container_rc.borrow();
             match (container, key_val) {
                 (Value::List(list), Value::Number(idx)) => {
-                    let idx = idx as usize;
-                    if idx >= list.len() {
-                        list.resize(idx + 1, Value::Null);
+                    let idx = *idx as usize;
+                    if idx >= list.borrow().len() {
+                        list.borrow_mut()
+                            .resize(idx + 1, Rc::new(RefCell::new(Value::Null)));
                     }
-                    Ok(&mut list[idx])
+                    Ok(list.borrow()[idx].clone())
                 }
-                (Value::Object(obj), Value::String(s)) => {
-                    Ok(obj.entry(s).or_insert(Value::Null))
-                }
+                (Value::Object(obj), Value::String(s)) => Ok(obj
+                    .borrow()
+                    .get(s)
+                    .cloned()
+                    .unwrap_or(Rc::new(RefCell::new(Value::Null)))),
                 _ => Err("Invalid member access target".into()),
             }
         }

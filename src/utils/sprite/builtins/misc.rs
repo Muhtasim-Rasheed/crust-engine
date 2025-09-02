@@ -1,9 +1,9 @@
 use crate::utils::*;
 use glam::*;
-use std::{fs::File, io::Write, path::Path};
+use std::{cell::RefCell, fs::File, io::Write, path::Path, rc::Rc};
 
-pub fn args(state: &State) -> Result {
-    Ok(Value::List(
+pub fn args(state: &State) -> IntermediateResult {
+    Ok(Value::list(
         state
             .project
             .args
@@ -13,7 +13,7 @@ pub fn args(state: &State) -> Result {
     ))
 }
 
-pub fn print(state: &State, args: &[Value], raw: bool) -> Result {
+pub fn print(state: &State, args: &[Value], raw: bool) -> IntermediateResult {
     println!(
         "{}{}",
         if !raw {
@@ -29,8 +29,8 @@ pub fn print(state: &State, args: &[Value], raw: bool) -> Result {
     Ok(Value::Null)
 }
 
-pub fn input(state: &State, args: &[Value]) -> Result {
-    if let Some(prompt) = args.get(0) {
+pub fn input(state: &State, args: &[Value]) -> IntermediateResult {
+    if let Some(prompt) = args.first() {
         if let Value::String(prompt) = prompt {
             let mut input = String::new();
             print!("{} => {} ", state.sprite.name, prompt);
@@ -48,11 +48,11 @@ pub fn input(state: &State, args: &[Value]) -> Result {
     }
 }
 
-pub fn time(state: &State) -> Result {
+pub fn time(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.start.elapsed().as_secs_f32()))
 }
 
-pub fn math(args: &[Value], operation: &str) -> Result {
+pub fn math(args: &[Value], operation: &str) -> IntermediateResult {
     if let [Value::Number(n)] = args {
         let result = match operation {
             "abs" => n.abs(),
@@ -71,7 +71,7 @@ pub fn math(args: &[Value], operation: &str) -> Result {
     }
 }
 
-pub fn lerp(args: &[Value]) -> Result {
+pub fn lerp(args: &[Value]) -> IntermediateResult {
     if let [Value::Number(a), Value::Number(b), Value::Number(t)] = args {
         Ok(Value::Number(crate::utils::lerp(*a, *b, *t)))
     } else {
@@ -79,7 +79,7 @@ pub fn lerp(args: &[Value]) -> Result {
     }
 }
 
-pub fn property_of(state: &mut State, args: &[Value]) -> Result {
+pub fn property_of(state: &mut State, args: &[Value]) -> IntermediateResult {
     if args.len() != 2 {
         return Err("property_of() expects two arguments: sprite name and property".to_string());
     }
@@ -105,7 +105,7 @@ pub fn property_of(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn to_rad(args: &[Value]) -> Result {
+pub fn to_rad(args: &[Value]) -> IntermediateResult {
     if let [Value::Number(n)] = args {
         Ok(Value::Number(n.to_radians()))
     } else {
@@ -113,7 +113,7 @@ pub fn to_rad(args: &[Value]) -> Result {
     }
 }
 
-pub fn to_deg(args: &[Value]) -> Result {
+pub fn to_deg(args: &[Value]) -> IntermediateResult {
     if let [Value::Number(n)] = args {
         Ok(Value::Number(n.to_degrees()))
     } else {
@@ -121,7 +121,7 @@ pub fn to_deg(args: &[Value]) -> Result {
     }
 }
 
-pub fn set_cam(state: &mut State, args: &[Value]) -> Result {
+pub fn set_cam(state: &mut State, args: &[Value]) -> IntermediateResult {
     match args {
         [] => {
             let (width, height) = state.window.get_size();
@@ -185,7 +185,7 @@ pub fn set_cam(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn clamp(args: &[Value]) -> Result {
+pub fn clamp(args: &[Value]) -> IntermediateResult {
     if let [Value::Number(value), Value::Number(min), Value::Number(max)] = args {
         let clamped_value = value.clamp(*min, *max);
         Ok(Value::Number(clamped_value))
@@ -194,7 +194,7 @@ pub fn clamp(args: &[Value]) -> Result {
     }
 }
 
-pub fn len(args: &[Value]) -> Result {
+pub fn len(args: &[Value]) -> IntermediateResult {
     if args.len() != 1 {
         return Err("len() expects one argument".to_string());
     }
@@ -202,16 +202,20 @@ pub fn len(args: &[Value]) -> Result {
     Ok(Value::Number(list.len() as f32))
 }
 
-pub fn key_value(args: &[Value], which: &str) -> Result {
+pub fn key_value(args: &[Value], which: &str) -> IntermediateResult {
     if let [Value::Object(o)] = args {
         match which {
             "keys" => {
-                let keys = o.keys().cloned().collect::<Vec<_>>();
-                Ok(Value::List(keys.into_iter().map(Value::String).collect()))
+                let keys = o.borrow().keys().cloned().collect::<Vec<_>>();
+                Ok(Value::list(
+                    keys.into_iter()
+                        .map(|k| Value::String(k))
+                        .collect(),
+                ))
             }
             "values" => {
-                let values = o.values().cloned().collect::<Vec<_>>();
-                Ok(Value::List(values))
+                let values = o.borrow().values().cloned().collect::<Vec<_>>();
+                Ok(Value::List(Rc::new(RefCell::new(values))))
             }
             _ => unreachable!(),
         }
@@ -220,7 +224,7 @@ pub fn key_value(args: &[Value], which: &str) -> Result {
     }
 }
 
-pub fn random(args: &[Value]) -> Result {
+pub fn random(args: &[Value]) -> IntermediateResult {
     if let [Value::Number(min), Value::Number(max)] = args {
         if *min >= *max {
             return Err("random() expects two numbers where min < max".to_string());
@@ -232,7 +236,7 @@ pub fn random(args: &[Value]) -> Result {
     }
 }
 
-pub fn distance(state: &State, args: &[Value], to: bool) -> Result {
+pub fn distance(state: &State, args: &[Value], to: bool) -> IntermediateResult {
     match !to {
         true => {
             if let [
@@ -277,7 +281,7 @@ pub fn distance(state: &State, args: &[Value], to: bool) -> Result {
     }
 }
 
-pub fn write(state: &State, args: &[Value]) -> Result {
+pub fn write(state: &State, args: &[Value]) -> IntermediateResult {
     match args {
         [Value::String(content)] => {
             let time = chrono::Local::now();
@@ -305,7 +309,7 @@ pub fn write(state: &State, args: &[Value]) -> Result {
     Ok(Value::Null)
 }
 
-pub fn read(state: &State, args: &[Value], bin: bool) -> Result {
+pub fn read(state: &State, args: &[Value], bin: bool) -> IntermediateResult {
     let which = if bin { "read_binary" } else { "read" };
 
     if args.len() != 1 {
@@ -326,7 +330,7 @@ pub fn read(state: &State, args: &[Value], bin: bool) -> Result {
     }
 
     Ok(if bin {
-        Value::List(
+        Value::list(
             std::fs::read(full_path)
                 .map_err(|e| e.to_string())?
                 .into_iter()
@@ -338,33 +342,34 @@ pub fn read(state: &State, args: &[Value], bin: bool) -> Result {
     })
 }
 
-pub fn parse_image(args: &[Value]) -> Result {
+pub fn parse_image(args: &[Value]) -> IntermediateResult {
     if let [Value::List(contents)] = args {
         let image = image::load_from_memory(
             contents
+                .borrow()
                 .iter()
-                .map(|v| v.to_number() as u8)
+                .map(|v| v.borrow().to_number() as u8)
                 .collect::<Vec<u8>>()
                 .as_slice(),
         )
         .map_err(|e| e.to_string())?;
-        let pixels: Vec<Value> = image
+        let pixels: Vec<_> = image
             .to_rgba8()
             .into_raw()
             .iter()
             .map(|&b| Value::Number(b as f32))
             .collect();
-        Ok(Value::List(vec![
+        Ok(Value::list(vec![
             Value::Number(image.width() as f32),
             Value::Number(image.height() as f32),
-            Value::List(pixels),
+            Value::list(pixels),
         ]))
     } else {
         Err("parse_image() expects one list argument".to_string())
     }
 }
 
-pub fn set_uv(state: &mut State, args: &[Value]) -> Result {
+pub fn set_uv(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [
         Value::Number(u),
         Value::Number(v),
@@ -379,7 +384,7 @@ pub fn set_uv(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn screenshot(state: &State, args: &[Value]) -> Result {
+pub fn screenshot(state: &State, args: &[Value]) -> IntermediateResult {
     if args.len() != 1 {
         return Err("screenshot() expects one string argument".to_string());
     }
@@ -426,7 +431,7 @@ pub fn screenshot(state: &State, args: &[Value]) -> Result {
     Ok(Value::Null)
 }
 
-pub fn r#typeof(args: &[Value]) -> Result {
+pub fn r#typeof(args: &[Value]) -> IntermediateResult {
     if args.len() != 1 {
         return Err("typeof() expects one argument".to_string());
     }
@@ -444,101 +449,104 @@ pub fn r#typeof(args: &[Value]) -> Result {
     Ok(Value::String(value_type.to_string()))
 }
 
-pub fn push(args: &[Value]) -> Result {
+pub fn push(args: &[Value]) -> IntermediateResult {
     if let [Value::List(list), value] = args {
-        let mut new_list = list.clone();
-        new_list.push(value.clone());
-        Ok(Value::List(new_list))
+        let mut borrowed = list.borrow_mut();
+        borrowed.push(Rc::new(RefCell::new(value.clone())));
+        Ok(Value::List(list.clone()))
     } else {
         Err("push() expects a list and a value".to_string())
     }
 }
 
-pub fn pop(args: &[Value]) -> Result {
+pub fn pop(args: &[Value]) -> IntermediateResult {
     if let [Value::List(list)] = args {
-        if list.is_empty() {
+        if list.borrow().is_empty() {
             return Err("pop() called on an empty list".to_string());
         }
-        let mut new_list = list.clone();
-        let value = new_list.pop().ok_or("pop() called on an empty list")?;
-        Ok(Value::List(vec![Value::List(new_list), value]))
+        let value = list
+            .borrow_mut()
+            .pop()
+            .ok_or("pop() called on an empty list")?;
+        Ok(Value::List(Rc::new(RefCell::new(vec![
+            Rc::new(RefCell::new(Value::List(list.clone()))),
+            value.clone(),
+        ]))))
     } else {
         Err("pop() expects a list".to_string())
     }
 }
 
-pub fn insert(args: &[Value]) -> Result {
+pub fn insert(args: &[Value]) -> IntermediateResult {
     if let [Value::Object(obj), Value::String(key), value] = args {
-        let mut obj = obj.clone();
-        obj.insert(key.clone(), value.clone());
-        Ok(Value::Object(obj))
+        obj.borrow_mut()
+            .insert(key.clone(), Rc::new(RefCell::new(value.clone())));
+        Ok(Value::Object(obj.clone()))
     } else if let [Value::List(list), Value::Number(index), value] = args {
         let index = *index as usize;
-        if index > list.len() {
+        if index > list.borrow().len() {
             return Err("insert() index out of bounds".to_string());
         }
-        let mut list = list.clone();
-        list.insert(index, value.clone());
-        Ok(Value::List(list))
+        list.borrow_mut()
+            .insert(index, Rc::new(RefCell::new(value.clone())));
+        Ok(Value::List(list.clone()))
     } else {
         Err("insert() expects a list or an object, a key, and a value".to_string())
     }
 }
 
-pub fn remove(args: &[Value]) -> Result {
+pub fn remove(args: &[Value]) -> IntermediateResult {
     if let [Value::Object(obj), Value::String(key)] = args {
-        let mut obj = obj.clone();
-        obj.remove(key);
-        Ok(Value::Object(obj))
+        obj.borrow_mut().remove(key);
+        Ok(Value::Object(obj.clone()))
     } else if let [Value::List(list), Value::Number(index)] = args {
         let index = *index as usize;
-        if index >= list.len() {
+        if index >= list.borrow().len() {
             return Err("remove() index out of bounds".to_string());
         }
-        let mut list = list.clone();
-        list.remove(index);
-        Ok(Value::List(list))
+        list.borrow_mut().remove(index);
+        Ok(Value::List(list.clone()))
     } else {
         Err("remove() expects a list or an object, and a key or index".to_string())
     }
 }
 
-pub fn extend(args: &[Value]) -> Result {
+pub fn extend(args: &[Value]) -> IntermediateResult {
     if let [Value::List(list1), Value::List(list2)] = args {
-        let mut new_list = list1.clone();
-        new_list.extend(list2.clone());
-        Ok(Value::List(new_list))
+        list1.borrow_mut().extend(list2.borrow().iter().cloned());
+        Ok(Value::List(list1.clone()))
     } else {
         Err("extend() expects two lists".to_string())
     }
 }
 
-pub fn contains(args: &[Value]) -> Result {
+pub fn contains(args: &[Value]) -> IntermediateResult {
     if let [Value::List(list), value] = args {
-        Ok(Value::Boolean(list.contains(value)))
+        Ok(Value::Boolean(
+            list.borrow().iter().any(|v| v.borrow().eq(value)),
+        ))
     } else if let [Value::Object(obj), Value::String(key)] = args {
-        Ok(Value::Boolean(obj.contains_key(key)))
+        Ok(Value::Boolean(obj.borrow().contains_key(key)))
     } else {
         Err("contains() expects a list or an object and a value or key".to_string())
     }
 }
 
-pub fn sort(state: &mut State, args: &[Value]) -> Result {
+pub fn sort(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::List(list), Value::Closure(closure)] = args {
-        let mut new_list = list.clone();
         let function_struct = &**closure;
         let mut error: Option<String> = None;
-        new_list.sort_by(|a, b| {
+        list.borrow_mut().sort_by(|a, b| {
             let args_ = [a.clone(), b.clone()];
             let result = function_struct
                 .clone()
                 .call(state, &args_)
                 .unwrap_or_else(|e| {
                     error = Some(format!("Error calling closure in sort(): {}", e,));
-                    return Value::Null;
+                    Rc::new(RefCell::new(Value::Null))
                 });
-            if let Value::Boolean(b) = result {
-                if b {
+            if let Value::Boolean(b) = &*result.borrow() {
+                if *b {
                     std::cmp::Ordering::Less
                 } else {
                     std::cmp::Ordering::Greater
@@ -550,17 +558,18 @@ pub fn sort(state: &mut State, args: &[Value]) -> Result {
         if let Some(err) = error {
             return Err(err);
         }
-        Ok(Value::List(new_list))
+        Ok(Value::List(list.clone()))
     } else {
         Err("sort() expects a list and a closure".to_string())
     }
 }
 
-pub fn filter(state: &mut State, args: &[Value]) -> Result {
+pub fn filter(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::List(list), Value::Closure(closure)] = args {
         let function_struct = &**closure;
         let mut error: Option<String> = None;
-        let filtered: Vec<Value> = list
+        let filtered: Vec<_> = list
+            .borrow()
             .iter()
             .filter_map(|item| {
                 let args_ = [item.clone()];
@@ -569,9 +578,9 @@ pub fn filter(state: &mut State, args: &[Value]) -> Result {
                     .call(state, &args_)
                     .unwrap_or_else(|e| {
                         error = Some(format!("Error calling closure in filter(): {}", e));
-                        Value::Null
+                        Rc::new(RefCell::new(Value::Null))
                     });
-                if let Value::Boolean(true) = result {
+                if let Value::Boolean(true) = &*result.borrow() {
                     Some(item.clone())
                 } else {
                     None
@@ -581,17 +590,18 @@ pub fn filter(state: &mut State, args: &[Value]) -> Result {
         if let Some(err) = error {
             return Err(err);
         }
-        Ok(Value::List(filtered))
+        Ok(Value::List(Rc::new(RefCell::new(filtered))))
     } else {
         Err("filter() expects a list and a closure".to_string())
     }
 }
 
-pub fn map(state: &mut State, args: &[Value]) -> Result {
+pub fn map(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::List(list), Value::Closure(closure)] = args {
         let function_struct = &**closure;
         let mut error: Option<String> = None;
-        let mapped: Vec<Value> = list
+        let mapped: Vec<_> = list
+            .borrow()
             .iter()
             .map(|item| {
                 let args_ = [item.clone()];
@@ -600,36 +610,37 @@ pub fn map(state: &mut State, args: &[Value]) -> Result {
                     .call(state, &args_)
                     .unwrap_or_else(|e| {
                         error = Some(format!("Error calling closure in map(): {}", e));
-                        Value::Null
+                        Rc::new(RefCell::new(Value::Null))
                     })
             })
             .collect();
         if let Some(err) = error {
             return Err(err);
         }
-        Ok(Value::List(mapped))
+        Ok(Value::List(Rc::new(RefCell::new(mapped))))
     } else {
         Err("map() expects a list and a closure".to_string())
     }
 }
 
-pub fn split(args: &[Value]) -> Result {
+pub fn split(args: &[Value]) -> IntermediateResult {
     if let [Value::String(s), Value::String(delimiter)] = args {
-        let parts: Vec<Value> = s
+        let parts: Vec<_> = s
             .split(delimiter)
             .map(|part| Value::String(part.to_string()))
             .collect();
-        Ok(Value::List(parts))
+        Ok(Value::list(parts))
     } else {
         Err("split() expects two string arguments".to_string())
     }
 }
 
-pub fn join(args: &[Value]) -> Result {
+pub fn join(args: &[Value]) -> IntermediateResult {
     if let [Value::List(list), Value::String(delimiter)] = args {
         let joined = list
+            .borrow()
             .iter()
-            .map(|v| v.to_string())
+            .map(|v| v.borrow().to_string())
             .collect::<Vec<_>>()
             .join(delimiter);
         Ok(Value::String(joined))
@@ -638,7 +649,7 @@ pub fn join(args: &[Value]) -> Result {
     }
 }
 
-pub fn starts_with(args: &[Value]) -> Result {
+pub fn starts_with(args: &[Value]) -> IntermediateResult {
     if let [Value::String(s), Value::String(prefix)] = args {
         Ok(Value::Boolean(s.starts_with(prefix)))
     } else {
@@ -646,7 +657,7 @@ pub fn starts_with(args: &[Value]) -> Result {
     }
 }
 
-pub fn ends_with(args: &[Value]) -> Result {
+pub fn ends_with(args: &[Value]) -> IntermediateResult {
     if let [Value::String(s), Value::String(suffix)] = args {
         Ok(Value::Boolean(s.ends_with(suffix)))
     } else {
@@ -654,7 +665,7 @@ pub fn ends_with(args: &[Value]) -> Result {
     }
 }
 
-pub fn trim(args: &[Value]) -> Result {
+pub fn trim(args: &[Value]) -> IntermediateResult {
     if let [Value::String(s)] = args {
         Ok(Value::String(s.trim().to_string()))
     } else {
@@ -662,20 +673,22 @@ pub fn trim(args: &[Value]) -> Result {
     }
 }
 
-pub fn range(args: &[Value]) -> Result {
+pub fn range(args: &[Value]) -> IntermediateResult {
     match args {
         [Value::Number(end)] => {
-            let range: Vec<Value> = (0..*end as i32).map(|n| Value::Number(n as f32)).collect();
-            Ok(Value::List(range))
+            let range: Vec<_> = (0..*end as i32)
+                .map(|n| Value::Number(n as f32))
+                .collect();
+            Ok(Value::list(range))
         }
         [Value::Number(start), Value::Number(end)] => {
             if start > end {
                 return Err("range() expects start <= end".to_string());
             }
-            let range: Vec<Value> = (*start as i32..*end as i32)
+            let range: Vec<_> = (*start as i32..*end as i32)
                 .map(|n| Value::Number(n as f32))
                 .collect();
-            Ok(Value::List(range))
+            Ok(Value::list(range))
         }
         [
             Value::Number(start),
@@ -688,16 +701,16 @@ pub fn range(args: &[Value]) -> Result {
             if *step == 0.0 {
                 return Err("range() step cannot be zero".to_string());
             }
-            let range: Vec<Value> = (0..((end - start) / step).ceil() as i32)
+            let range: Vec<_> = (0..((end - start) / step).ceil() as i32)
                 .map(|n| Value::Number(start + n as f32 * step))
                 .collect();
-            Ok(Value::List(range))
+            Ok(Value::list(range))
         }
         _ => Err("range() expects two number arguments".to_string()),
     }
 }
 
-pub fn to(args: &[Value], to: &str) -> Result {
+pub fn to(args: &[Value], to: &str) -> IntermediateResult {
     match to {
         "string" => match args {
             [value] => Ok(Value::String(value.to_string())),
@@ -715,29 +728,29 @@ pub fn to(args: &[Value], to: &str) -> Result {
             _ => Err("to_boolean() expects one argument".to_string()),
         },
         "list" => match args {
-            [value] => Ok(Value::List(value.to_list())),
+            [value] => Ok(Value::List(Rc::new(RefCell::new(value.to_list())))),
             _ => Err("to_list() expects one argument".to_string()),
         },
         "object" => match args {
-            [value] => Ok(Value::Object(value.to_object())),
+            [value] => Ok(Value::Object(Rc::new(RefCell::new(value.to_object())))),
             _ => Err("to_object() expects one argument".to_string()),
         },
         _ => unreachable!(),
     }
 }
 
-pub fn whoami(state: &State) -> Result {
+pub fn whoami(state: &State) -> IntermediateResult {
     Ok(Value::String(state.sprite.name.clone()))
 }
 
-pub fn cloneid(state: &State) -> Result {
+pub fn cloneid(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.sprite.clone_id.unwrap_or(0) as f32))
 }
 
-pub fn frame(state: &State) -> Result {
+pub fn frame(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.start.elapsed().as_secs_f32() * 60.0))
 }
 
-pub fn delta_time(state: &State) -> Result {
+pub fn delta_time(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.dt))
 }

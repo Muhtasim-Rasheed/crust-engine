@@ -59,7 +59,7 @@ impl CPUTexture {
     }
 
     pub fn upload_to_gpu(self) -> GPUTexture {
-        let texture = GPUTexture::new(
+        GPUTexture::new(
             self.width,
             self.height,
             self.data
@@ -67,7 +67,6 @@ impl CPUTexture {
                 .flat_map(|c| [c.x, c.y, c.z, c.w])
                 .collect::<Vec<_>>()
                 .as_slice(),
-        );
-        texture
+        )
     }
 }

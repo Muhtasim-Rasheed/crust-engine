@@ -1,6 +1,6 @@
 use crate::utils::*;
 
-pub fn wait(state: &mut State, args: &[Value]) -> Result {
+pub fn wait(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(seconds)] = args {
         state.sprite.time_waiting = (*seconds * 60.0) as u32;
         Ok(Value::Null)
@@ -9,7 +9,7 @@ pub fn wait(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn stop(state: &mut State, args: &[Value]) -> Result {
+pub fn stop(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(action)] = args {
         match action.as_str() {
             "all" => {
@@ -43,12 +43,12 @@ pub fn stop(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn clone(state: &mut State) -> Result {
+pub fn clone(state: &mut State) -> IntermediateResult {
     state.sprite.clones.push(state.sprite.new_clone());
     Ok(Value::Null)
 }
 
-pub fn delete_clone(state: &mut State, args: &[Value]) -> Result {
+pub fn delete_clone(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(cloneid)] = args {
         if let Some(index) = state
             .sprite
@@ -64,7 +64,7 @@ pub fn delete_clone(state: &mut State, args: &[Value]) -> Result {
     Ok(Value::Null)
 }
 
-pub fn skip_further_execution_if(state: &mut State, args: &[Value]) -> Result {
+pub fn skip_further_execution_if(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Boolean(condition)] = args {
         state.sprite.skip_further_execution_of_frame = *condition;
         Ok(Value::Null)

@@ -46,16 +46,16 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `screenshot()`: Takes a screenshot of the current screen and saves it to the `exports` directory in the project root.
 - `screenshot(path)`: Takes a screenshot of the current screen and saves it to the specified path. The path is relative to the project root.
 - `typeof(value)`: Returns the type of the given value as a string.
-- `push(list, value)`: Pushes the given value to the end of the list and returns the new list.
-- `pop(list)`: Pops the last value from the list and returns a list containing the new list and the popped value.
-- `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.
-- `insert(object, key, value)`: Inserts the given key-value pair into the object and returns the new object.
-- `remove(list, index)`: Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
-- `extend(list1, list2)`: Extends the first list with the second list and returns the new list.
+- `push(list, value)`: Pushes the given value to the end of the list mutably and returns the new list for compatibility.
+- `pop(list)`: Pops the last value from the list mutably and returns a list containing the new list and the popped value for compatibility.
+- `insert(list, index, value)`: Inserts the given value at the specified index in the list mutably and returns the new list for compatibility.
+- `insert(object, key, value)`: Inserts the given key-value pair into the object mutably and returns the new object for compatibility.
+- `remove(list, index)`: Removes the value at the specified index from the list mutably and returns a list containing the new list and the removed value for compatibility.
+- `extend(list1, list2)`: Extends the first list mutably with the second list and returns the new list for compatibility.
 - `contains(list, value)`: Returns true if the list contains the given value, false otherwise.
 - `contains(object, key)`: Returns true if the object contains the given key, false otherwise.
-- `sort(list, closure)`: Sorts the list using the given closure as the comparison function. The closure should take two arguments and return a boolean.
-- `filter(list, closure)`: Filters the list using the given closure. The closure should take one argument and return a boolean.
+- `sort(list, closure)`: Sorts the list mutably using the given closure as the comparison function. The closure should take two arguments and return a boolean for compatibility.
+- `filter(list, closure)`: Filters the list using the given closure, returning a new list with the results. The closure should take one argument and return a boolean.
 - `map(list, closure)`: Iterates over the list and applies the given closure to each element, returning a new list with the results. The closure should take one argument and return a value.
 - `split(string, delimiter)`: Splits the given string by the specified delimiter and returns a list of substrings.
 - `join(list, delimiter)`: Joins the elements of the list into a single string, separated by the specified delimiter.

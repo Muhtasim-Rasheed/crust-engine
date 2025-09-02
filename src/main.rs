@@ -80,7 +80,7 @@ async fn main() {
     window.make_current();
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const std::os::raw::c_void);
 
-    let mut runtime = utils::Runtime::new(&project_file, args.additional_args, &window);
+    let mut runtime = utils::Runtime::new(project_file, args.additional_args, &window);
     println!("Loaded project: {}", project_file);
 
     glfw.set_swap_interval(if runtime.vsync {

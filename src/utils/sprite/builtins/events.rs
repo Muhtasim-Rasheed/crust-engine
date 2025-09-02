@@ -2,7 +2,7 @@ use glam::*;
 
 use crate::utils::{State, Value, function, keycode_to_string, string_to_keycode, string_to_mouse};
 
-pub fn key_down(state: &State, args: &[Value]) -> function::Result {
+pub fn key_down(state: &State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::String(key)] = args {
         let key_code = string_to_keycode(key).ok_or(format!("Invalid key code: '{}'", key))?;
         Ok(Value::Boolean(state.input_manager.is_key_down(key_code)))
@@ -11,7 +11,7 @@ pub fn key_down(state: &State, args: &[Value]) -> function::Result {
     }
 }
 
-pub fn key_pressed(state: &State, args: &[Value]) -> function::Result {
+pub fn key_pressed(state: &State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::String(key)] = args {
         let key_code = string_to_keycode(key).ok_or(format!("Invalid key code: '{}'", key))?;
         Ok(Value::Boolean(state.input_manager.is_key_pressed(key_code)))
@@ -20,7 +20,7 @@ pub fn key_pressed(state: &State, args: &[Value]) -> function::Result {
     }
 }
 
-pub fn key_released(state: &State, args: &[Value]) -> function::Result {
+pub fn key_released(state: &State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::String(key)] = args {
         let key_code = string_to_keycode(key).ok_or(format!("Invalid key code: '{}'", key))?;
         Ok(Value::Boolean(
@@ -31,7 +31,7 @@ pub fn key_released(state: &State, args: &[Value]) -> function::Result {
     }
 }
 
-pub fn last_key(state: &State) -> function::Result {
+pub fn last_key(state: &State) -> function::IntermediateResult {
     let key_history = state.input_manager.key_history();
     if let Some(key) = key_history.last() {
         Ok(Value::String(keycode_to_string(*key)))
@@ -40,7 +40,7 @@ pub fn last_key(state: &State) -> function::Result {
     }
 }
 
-pub fn combination_pressed(state: &mut State, args: &[Value]) -> function::Result {
+pub fn combination_pressed(state: &mut State, args: &[Value]) -> function::IntermediateResult {
     let key_codes: Result<Vec<glfw::Key>, _> = args
         .iter()
         .map(|arg| match arg {
@@ -58,7 +58,7 @@ pub fn combination_pressed(state: &mut State, args: &[Value]) -> function::Resul
     Ok(Value::Boolean(matches))
 }
 
-pub fn mouse_button_down(state: &State, args: &[Value]) -> function::Result {
+pub fn mouse_button_down(state: &State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::String(button)] = args {
         let button_code =
             string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
@@ -70,7 +70,7 @@ pub fn mouse_button_down(state: &State, args: &[Value]) -> function::Result {
     }
 }
 
-pub fn mouse_button_pressed(state: &State, args: &[Value]) -> function::Result {
+pub fn mouse_button_pressed(state: &State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::String(button)] = args {
         let button_code =
             string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
@@ -82,7 +82,7 @@ pub fn mouse_button_pressed(state: &State, args: &[Value]) -> function::Result {
     }
 }
 
-pub fn mouse_button_released(state: &State, args: &[Value]) -> function::Result {
+pub fn mouse_button_released(state: &State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::String(button)] = args {
         let button_code =
             string_to_mouse(button).ok_or(format!("Invalid mouse button: '{}'", button))?;
@@ -94,19 +94,19 @@ pub fn mouse_button_released(state: &State, args: &[Value]) -> function::Result 
     }
 }
 
-pub fn mouse_x(state: &State) -> function::Result {
+pub fn mouse_x(state: &State) -> function::IntermediateResult {
     Ok(Value::Number(
         state.window.get_cursor_pos().0 as f32 * 2.0 - state.window.get_size().0 as f32,
     ))
 }
 
-pub fn mouse_y(state: &State) -> function::Result {
+pub fn mouse_y(state: &State) -> function::IntermediateResult {
     Ok(Value::Number(
         -(state.window.get_cursor_pos().1 as f32 * 2.0 - state.window.get_size().1 as f32),
     ))
 }
 
-pub fn sprite_clicked(state: &State) -> function::Result {
+pub fn sprite_clicked(state: &State) -> function::IntermediateResult {
     if !state
         .input_manager
         .is_mouse_button_pressed(glfw::MouseButton::Left)
@@ -128,18 +128,19 @@ pub fn sprite_clicked(state: &State) -> function::Result {
             state.sprite.size.x * state.sprite.scale,
             state.sprite.size.y * state.sprite.scale,
         );
-    if {
+    let res = {
         let collide_x = xy.x >= top_left.x && xy.x <= bottom_right.x;
         let collide_y = xy.y >= top_left.y && xy.y <= bottom_right.y;
         collide_x && collide_y
-    } {
+    };
+    if res {
         Ok(Value::Boolean(true))
     } else {
         Ok(Value::Boolean(false))
     }
 }
 
-pub fn is_backdrop(state: &State, args: &[Value]) -> function::Result {
+pub fn is_backdrop(state: &State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::Number(index)] = args {
         let backdrop = state.project.stage.backdrop();
         if backdrop == *index as usize {
@@ -152,7 +153,7 @@ pub fn is_backdrop(state: &State, args: &[Value]) -> function::Result {
     }
 }
 
-pub fn broadcast_id_of(state: &State, args: &[Value]) -> function::Result {
+pub fn broadcast_id_of(state: &State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::String(message)] = args {
         if let Some(broadcast) = state.project.get_broadcast(message) {
             Ok(Value::Number(broadcast.id as f32))
@@ -164,7 +165,7 @@ pub fn broadcast_id_of(state: &State, args: &[Value]) -> function::Result {
     }
 }
 
-pub fn broadcast(state: &mut State, args: &[Value]) -> function::Result {
+pub fn broadcast(state: &mut State, args: &[Value]) -> function::IntermediateResult {
     if let [Value::String(message)] = args {
         state.project.broadcast(message.clone());
         Ok(Value::Null)

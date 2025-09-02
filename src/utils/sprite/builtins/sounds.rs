@@ -1,7 +1,7 @@
 use indexmap::IndexMap;
 use kira::{Tween, sound::static_sound::StaticSoundHandle};
 
-use crate::utils::{sprite::function::Result, *};
+use crate::utils::*;
 
 fn update_sound_handle(sound_filters: &IndexMap<String, f32>, handle: &mut StaticSoundHandle) {
     for (effect, value) in sound_filters {
@@ -14,8 +14,8 @@ fn update_sound_handle(sound_filters: &IndexMap<String, f32>, handle: &mut Stati
     }
 }
 
-pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
-    fn play_sound_inner(state: &mut State, name: &str) -> Result {
+pub fn play_sound(state: &mut State, args: &[Value]) -> IntermediateResult {
+    fn play_sound_inner(state: &mut State, name: &str) -> IntermediateResult {
         if let Some(sound) = state.sprite.sounds.get(name) {
             let mut handle = state
                 .audio_manager
@@ -40,14 +40,14 @@ pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn stop_all_sounds(state: &mut State) -> Result {
+pub fn stop_all_sounds(state: &mut State) -> IntermediateResult {
     for sound_handle in state.sprite.sound_handles.values_mut() {
         sound_handle.stop(Tween::default());
     }
     Ok(Value::Null)
 }
 
-pub fn stop_sound(state: &mut State, args: &[Value]) -> Result {
+pub fn stop_sound(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(name)] = args {
         if let Some(sound_handle) = state.sprite.sound_handles.get_mut(name) {
             sound_handle.stop(Tween::default());
@@ -60,7 +60,7 @@ pub fn stop_sound(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn change_sound_filter(state: &mut State, args: &[Value]) -> Result {
+pub fn change_sound_filter(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(effect), Value::Number(value)] = args {
         state
             .sprite
@@ -77,7 +77,7 @@ pub fn change_sound_filter(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn set_sound_filter(state: &mut State, args: &[Value]) -> Result {
+pub fn set_sound_filter(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(effect), Value::Number(value)] = args {
         state.sprite.sound_filters.insert(effect.clone(), *value);
         for sound_handle in state.sprite.sound_handles.values_mut() {
@@ -89,7 +89,7 @@ pub fn set_sound_filter(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn sound_filter(state: &State, args: &[Value]) -> Result {
+pub fn sound_filter(state: &State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(effect)] = args {
         if let Some(value) = state.sprite.sound_filters.get(effect) {
             Ok(Value::Number(*value))

@@ -1,7 +1,7 @@
 use crate::utils::{sprite::Glide, *};
 use glam::*;
 
-pub fn r#move(state: &mut State, args: &[Value]) -> Result {
+pub fn r#move(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(step)] = args {
         state.sprite.move_by(*step, state.window);
         Ok(Value::Null)
@@ -10,7 +10,7 @@ pub fn r#move(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn turn_cw(state: &mut State, args: &[Value]) -> Result {
+pub fn turn_cw(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(angle)] = args {
         state.sprite.direction += *angle;
         Ok(Value::Null)
@@ -19,7 +19,7 @@ pub fn turn_cw(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn turn_ccw(state: &mut State, args: &[Value]) -> Result {
+pub fn turn_ccw(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::Number(angle)] = args {
         state.sprite.direction -= *angle;
         Ok(Value::Null)
@@ -28,7 +28,7 @@ pub fn turn_ccw(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn goto(state: &mut State, args: &[Value]) -> Result {
+pub fn goto(state: &mut State, args: &[Value]) -> IntermediateResult {
     match args {
         [Value::Number(x), Value::Number(y)] => {
             state.sprite.goto(*x, *y);
@@ -59,7 +59,7 @@ pub fn goto(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn glide(state: &mut State, args: &[Value]) -> Result {
+pub fn glide(state: &mut State, args: &[Value]) -> IntermediateResult {
     match args {
         [Value::Number(x), Value::Number(y), Value::Number(duration)] => {
             let duration = *duration * 60.0;
@@ -110,7 +110,7 @@ pub fn glide(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn point(state: &mut State, args: &[Value]) -> Result {
+pub fn point(state: &mut State, args: &[Value]) -> IntermediateResult {
     match args {
         [Value::Number(angle)] => {
             state.sprite.direction = *angle;
@@ -138,7 +138,7 @@ pub fn point(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn set_pos(state: &mut State, args: &[Value], which: &str) -> Result {
+pub fn set_pos(state: &mut State, args: &[Value], which: &str) -> IntermediateResult {
     if let [Value::Number(value)] = args {
         match which {
             "x" => {
@@ -156,7 +156,7 @@ pub fn set_pos(state: &mut State, args: &[Value], which: &str) -> Result {
     }
 }
 
-pub fn change_pos(state: &mut State, args: &[Value], which: &str) -> Result {
+pub fn change_pos(state: &mut State, args: &[Value], which: &str) -> IntermediateResult {
     if let [Value::Number(value)] = args {
         match which {
             "x" => {
@@ -174,7 +174,7 @@ pub fn change_pos(state: &mut State, args: &[Value], which: &str) -> Result {
     }
 }
 
-pub fn edge_bounce(state: &mut State, args: &[Value]) -> Result {
+pub fn edge_bounce(state: &mut State, args: &[Value]) -> IntermediateResult {
     match args {
         [Value::Boolean(enabled)] => {
             state.sprite.edge_bounce = *enabled;
@@ -188,7 +188,7 @@ pub fn edge_bounce(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn rotation_style(state: &mut State, args: &[Value]) -> Result {
+pub fn rotation_style(state: &mut State, args: &[Value]) -> IntermediateResult {
     if let [Value::String(style)] = args {
         match style.to_lowercase().as_str() {
             "all-around" => state.sprite.rotation_style = RotationStyle::AllAround,
@@ -202,11 +202,11 @@ pub fn rotation_style(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn direction(state: &State) -> Result {
+pub fn direction(state: &State) -> IntermediateResult {
     Ok(Value::Number(state.sprite.direction))
 }
 
-pub fn position(state: &State, which: &str) -> Result {
+pub fn position(state: &State, which: &str) -> IntermediateResult {
     match which {
         "x" => Ok(Value::Number(state.sprite.center.x)),
         "y" => Ok(Value::Number(state.sprite.center.y)),

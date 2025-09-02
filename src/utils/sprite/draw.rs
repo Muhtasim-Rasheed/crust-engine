@@ -85,7 +85,7 @@ pub fn draw_sprite(sprite: &Sprite, shader: &ShaderProgram, projection: Mat4, fo
         sprite
             .effects
             .values()
-            .map(|v| *v)
+            .copied()
             .collect::<Vec<f32>>()
             .as_slice(),
     );

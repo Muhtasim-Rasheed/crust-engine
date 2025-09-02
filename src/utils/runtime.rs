@@ -143,7 +143,7 @@ impl InputManager {
 
     pub fn combination_pressed(&mut self, key_codes: &[glfw::Key]) -> bool {
         let previous_key_combination_used = self.key_combination_used;
-        self.key_combination_used = self.key_history().ends_with(&key_codes);
+        self.key_combination_used = self.key_history().ends_with(key_codes);
         self.key_combination_used && !previous_key_combination_used
     }
 
@@ -352,7 +352,7 @@ impl Runtime {
             audio_manager,
             font,
             vsync: config.vsync.unwrap_or(true),
-            debug_options: config.debug_options.unwrap_or(vec![]),
+            debug_options: config.debug_options.unwrap_or_default(),
         }
     }
 

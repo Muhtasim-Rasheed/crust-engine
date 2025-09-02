@@ -76,7 +76,7 @@ impl<T: VertexFormat> Mesh<T> {
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (vertices.len() * std::mem::size_of::<T>()) as isize,
+                std::mem::size_of_val(vertices) as isize,
                 vertices.as_ptr() as *const _,
                 gl::STATIC_DRAW,
             );
@@ -85,7 +85,7 @@ impl<T: VertexFormat> Mesh<T> {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
-                (indices.len() * std::mem::size_of::<u32>()) as isize,
+                std::mem::size_of_val(indices) as isize,
                 indices.as_ptr() as *const _,
                 gl::STATIC_DRAW,
             );

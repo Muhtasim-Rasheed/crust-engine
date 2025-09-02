@@ -5,7 +5,12 @@ macro_rules! builtin {
     ($map:ident, $name:literal, $func:expr) => {
         $map.insert(
             $name.to_string(),
-            Callable::Builtin(BuiltinFunction { inner: $func }),
+            Callable::Builtin(BuiltinFunction {
+                inner: |state, args| {
+                    let plain_args: Vec<Value> = args.iter().map(|v| v.borrow().clone()).collect();
+                    $func(state, &plain_args)
+                },
+            }),
         );
     };
 }
