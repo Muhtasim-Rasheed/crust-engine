@@ -654,6 +654,25 @@ impl Parser {
                 object: Box::new(base),
                 key: Box::new(Expression::Value(Value::Number(num))),
             }),
+            Expression::Call { ref function, ref args } => match **function {
+                Expression::Identifier(ref key_name) => Ok(Expression::Call {
+                    function: Box::new(Expression::MemberAccess {
+                        object: Box::new(base),
+                        key: Box::new(Expression::Value(Value::String(key_name.clone()))),
+                    }),
+                    args: args.clone(),
+                }),
+                Expression::Value(Value::Number(num)) => Ok(Expression::Call {
+                    function: Box::new(Expression::MemberAccess {
+                        object: Box::new(base),
+                        key: Box::new(Expression::Value(Value::Number(num))),
+                    }),
+                    args: args.clone(),
+                }),
+                _ => Err(format!(
+                    "Expected identifier or number after '.' but got {:?} at {}:{}", key, self.peek().line, self.peek().column
+                )),
+            },
             _ => Err(format!(
                 "Expected identifier or number after '.' but got {:?} at {}:{}",
                 key, self.peek().line, self.peek().column
@@ -979,7 +998,7 @@ impl Parser {
             if self.eat(&TokenType::Operator("=".to_string())) {
                 let value = self.parse_binary(0)?;
                 Ok(Statement::Assignment {
-                    is_global: false,
+                    is_global: true,
                     identifier: target_expr,
                     value,
                 })
@@ -997,7 +1016,7 @@ impl Parser {
                     right: Box::new(right),
                 };
                 Ok(Statement::Assignment {
-                    is_global: false,
+                    is_global: true,
                     identifier: target_expr,
                     value: combined_expr,
                 })
