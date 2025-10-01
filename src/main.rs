@@ -40,8 +40,7 @@ struct Args {
     additional_args: Vec<String>,
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let args = Args::parse();
 
     if let Some(new_project_name) = args.new {
@@ -121,6 +120,5 @@ async fn main() {
 
     let shader_program = ShaderProgram::new(VERT_SHADER, FRAG_SHADER);
     runtime
-        .run(&mut window, &events, &shader_program, &mut glfw)
-        .await;
+        .run(&mut window, &events, &shader_program, &mut glfw);
 }

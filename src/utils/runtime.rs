@@ -356,7 +356,7 @@ impl Runtime {
         }
     }
 
-    pub async fn run(
+    pub fn run(
         &mut self,
         window: &mut Window,
         events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,

@@ -280,12 +280,11 @@ pub fn distance(state: &State, args: &[Value], to: bool) -> Result {
 pub fn write(state: &State, args: &[Value]) -> Result {
     match args {
         [Value::String(content)] => {
-            let time = chrono::Local::now();
-            let filename = format!(
-                "{}-{}.png",
-                state.sprite.name,
-                time.format("%Y-%m-%d_%H-%M-%S")
-            );
+            let time = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_err(|e| e.to_string())?
+                .as_secs();
+            let filename = format!("{}-{}.txt", state.sprite.name, time);
             let path = Path::new(&state.project.export_path).join(filename);
             let mut file = File::create(path).map_err(|e| e.to_string())?;
             file.write_all(content.as_bytes())
