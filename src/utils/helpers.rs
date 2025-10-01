@@ -530,8 +530,8 @@ pub fn draw_line(start: Vec2, end: Vec2, thickness: f32, shader: &ShaderProgram,
     shader.use_program();
     shader.set_uniform("u_color", color);
     shader.set_uniform("u_model", m);
-    shader.set_uniform_ref("u_effects", &[] as &[i32]);
-    shader.set_uniform_ref("u_effect_values", &[] as &[f32]);
+    shader.set_uniform("u_effects", &[] as &[i32]);
+    shader.set_uniform("u_effect_values", &[] as &[f32]);
     shader.set_uniform("u_effects_count", 0);
     texture.bind();
     mesh.draw();
@@ -562,8 +562,8 @@ pub fn draw_rectangle(start: Vec2, end: Vec2, shader: &ShaderProgram, color: Vec
     shader.use_program();
     shader.set_uniform("u_color", color);
     shader.set_uniform("u_model", Mat4::IDENTITY);
-    shader.set_uniform_ref("u_effects", &[] as &[i32]);
-    shader.set_uniform_ref("u_effect_values", &[] as &[f32]);
+    shader.set_uniform("u_effects", &[] as &[i32]);
+    shader.set_uniform("u_effect_values", &[] as &[f32]);
     shader.set_uniform("u_effects_count", 0);
     texture.bind();
     mesh.draw();
@@ -587,8 +587,8 @@ pub fn draw_convex_polygon(xs: &Vec<f32>, ys: &Vec<f32>, shader: &ShaderProgram,
     shader.use_program();
     shader.set_uniform("u_color", color);
     shader.set_uniform("u_model", Mat4::IDENTITY);
-    shader.set_uniform_ref("u_effects", &[] as &[i32]);
-    shader.set_uniform_ref("u_effect_values", &[] as &[f32]);
+    shader.set_uniform("u_effects", &[] as &[i32]);
+    shader.set_uniform("u_effect_values", &[] as &[f32]);
     shader.set_uniform("u_effects_count", 0);
     texture.bind();
     mesh.draw();

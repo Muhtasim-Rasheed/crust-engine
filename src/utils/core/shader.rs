@@ -90,6 +90,12 @@ impl UniformValue for [f32] {
     }
 }
 
+impl<T: UniformValue + ?Sized> UniformValue for &T {
+    fn set(&self, program: u32, name: &str) {
+        (*self).set(program, name);
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ShaderProgram(u32);
 
@@ -112,10 +118,6 @@ impl ShaderProgram {
     }
 
     pub fn set_uniform<T: UniformValue>(&self, name: &str, value: T) {
-        value.set(self.0, name);
-    }
-
-    pub fn set_uniform_ref<T: UniformValue + ?Sized>(&self, name: &str, value: &T) {
         value.set(self.0, name);
     }
 

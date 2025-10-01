@@ -436,14 +436,14 @@ pub fn textured_tri(state: &State, args: &[Value]) -> Result {
                 .set_uniform("u_color", Vec4::splat(1.0));
             state
                 .shader_program
-                .set_uniform_ref("u_projection", state.projection);
+                .set_uniform("u_projection", *state.projection);
             state.shader_program.set_uniform("u_model", Mat4::IDENTITY);
             state
                 .shader_program
-                .set_uniform_ref("u_effects", &[] as &[i32]);
+                .set_uniform("u_effects", &[] as &[i32]);
             state
                 .shader_program
-                .set_uniform_ref("u_effect_values", &[] as &[f32]);
+                .set_uniform("u_effect_values", &[] as &[f32]);
             state.shader_program.set_uniform("u_effects_count", 0);
             gpu_texture.bind();
             mesh.draw();

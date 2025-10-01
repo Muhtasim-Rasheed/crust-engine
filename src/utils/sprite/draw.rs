@@ -76,11 +76,11 @@ pub fn draw_sprite(sprite: &Sprite, shader: &ShaderProgram, projection: Mat4, fo
                 1.0,
             )),
     );
-    shader.set_uniform_ref(
+    shader.set_uniform(
         "u_effects",
         effects_to_ints(sprite.effects.keys().map(String::clone).collect()).as_slice(),
     );
-    shader.set_uniform_ref(
+    shader.set_uniform(
         "u_effect_values",
         sprite
             .effects

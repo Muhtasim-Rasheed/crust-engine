@@ -515,7 +515,7 @@ h = 200"#;
     let default_sprite_code = r#"// Default Sprite Code
 
 setup {
-    print("Hello, World!");
+    print("Hello, World!")
 }
 
 update {}
