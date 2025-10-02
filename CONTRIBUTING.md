@@ -26,7 +26,7 @@ Thank you for your interest in contributing to Crust! We appreciate your time an
 - Improve features
 - Fix bugs
 - Tweak/Improve the documentation
-- Help split the big monolithic file `crust-engine/src/utils/sprite.rs` into smaller files
+- Help split the still big monolithic file `crust-engine/src/utils/sprite/sprite.rs` into smaller files
 - Pick a [good first issue](https://github.com/Muhtasim-Rasheed/crust-engine/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) or any other issue that interests you
 
 Even tiny changes are welcome (Seriously)!
