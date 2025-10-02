@@ -67,8 +67,18 @@ impl std::fmt::Display for Expression {
             Expression::PostDecrement(id) => write!(f, "{}--", id),
             Expression::PreIncrement(id) => write!(f, "++{}", id),
             Expression::PreDecrement(id) => write!(f, "--{}", id),
-            Expression::Binary { left, operator, right } => {
-                write!(f, "({} {} {})", left.to_string(), operator, right.to_string())
+            Expression::Binary {
+                left,
+                operator,
+                right,
+            } => {
+                write!(
+                    f,
+                    "({} {} {})",
+                    left.to_string(),
+                    operator,
+                    right.to_string()
+                )
             }
             Expression::Unary { operator, operand } => {
                 write!(f, "({}{})", operator, operand.to_string())
@@ -395,7 +405,9 @@ impl Parser {
             TokenType::Identifier(_) => self.parse_assignment_or_call(),
             _ => Err(format!(
                 "Unexpected token: {:?} at {}:{}",
-                self.peek().token_type, self.peek().line, self.peek().column
+                self.peek().token_type,
+                self.peek().line,
+                self.peek().column
             )),
         }
     }
@@ -406,7 +418,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol("{".to_string())) {
             return Err(format!(
                 "Expected '{{' at the start of block at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
 
@@ -421,7 +434,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol("}".to_string())) {
             return Err(format!(
                 "Expected '}}' at the end of block at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
 
@@ -472,7 +486,9 @@ impl Parser {
                     return Err(format!(
                         "Expected identifier for post-{} but got {:?} at {}:{}",
                         if op == "++" { "increment" } else { "decrement" },
-                        left, self.peek().line, self.peek().column
+                        left,
+                        self.peek().line,
+                        self.peek().column
                     ));
                 }
                 continue;
@@ -511,7 +527,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol("]".to_string())) {
             return Err(format!(
                 "Expected ']' at the end of list at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
 
@@ -525,7 +542,9 @@ impl Parser {
                 continue;
             }
             let peeked = self.peek().clone();
-            if let TokenType::Identifier(key) | TokenType::Value(Value::String(key)) = peeked.token_type {
+            if let TokenType::Identifier(key) | TokenType::Value(Value::String(key)) =
+                peeked.token_type
+            {
                 self.advance();
                 match self.peek().token_type {
                     TokenType::Symbol(ref s) if s == ":" => {
@@ -547,7 +566,9 @@ impl Parser {
             } else {
                 return Err(format!(
                     "Expected identifier or string as key in object but got {:?} at {}:{}",
-                    peeked, self.peek().line, self.peek().column
+                    peeked,
+                    self.peek().line,
+                    self.peek().column
                 ));
             }
         }
@@ -557,7 +578,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol("}".to_string())) {
             return Err(format!(
                 "Expected '}}' at the end of object at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
 
@@ -568,7 +590,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol("(".to_string())) {
             return Err(format!(
                 "Expected '(' after 'fn' at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
         let mut args = vec![];
@@ -582,7 +605,9 @@ impl Parser {
             } else {
                 return Err(format!(
                     "Expected identifier in closure arguments but got {:?} at {}:{}",
-                    self.peek().token_type, self.peek().line, self.peek().column
+                    self.peek().token_type,
+                    self.peek().line,
+                    self.peek().column
                 ));
             }
             if !self.eat(&TokenType::Symbol(",".to_string())) {
@@ -593,7 +618,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol(")".to_string())) {
             return Err(format!(
                 "Expected ')' after closure arguments at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
         let returns = self.parse_binary(0)?;
@@ -620,7 +646,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol(")".to_string())) {
             return Err(format!(
                 "Expected ')' after function call at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
         Ok(Expression::Call {
@@ -634,7 +661,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol("]".to_string())) {
             return Err(format!(
                 "Expected ']' after list member access at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
         Ok(Expression::MemberAccess {
@@ -654,7 +682,10 @@ impl Parser {
                 object: Box::new(base),
                 key: Box::new(Expression::Value(Value::Number(num))),
             }),
-            Expression::Call { ref function, ref args } => match **function {
+            Expression::Call {
+                ref function,
+                ref args,
+            } => match **function {
                 Expression::Identifier(ref key_name) => Ok(Expression::Call {
                     function: Box::new(Expression::MemberAccess {
                         object: Box::new(base),
@@ -670,12 +701,17 @@ impl Parser {
                     args: args.clone(),
                 }),
                 _ => Err(format!(
-                    "Expected identifier or number after '.' but got {:?} at {}:{}", key, self.peek().line, self.peek().column
+                    "Expected identifier or number after '.' but got {:?} at {}:{}",
+                    key,
+                    self.peek().line,
+                    self.peek().column
                 )),
             },
             _ => Err(format!(
                 "Expected identifier or number after '.' but got {:?} at {}:{}",
-                key, self.peek().line, self.peek().column
+                key,
+                self.peek().line,
+                self.peek().column
             )),
         }
     }
@@ -709,7 +745,10 @@ impl Parser {
         } else {
             Err(format!(
                 "Expected identifier after '{}' but got {:?} at {}:{}",
-                op, self.peek().token_type, self.peek().line, self.peek().column
+                op,
+                self.peek().token_type,
+                self.peek().line,
+                self.peek().column
             ))
         }
     }
@@ -744,7 +783,8 @@ impl Parser {
                 if !self.eat(&TokenType::Symbol(")".to_string())) {
                     return Err(format!(
                         "Expected ')' at the end of expression at {}:{}",
-                        self.peek().line, self.peek().column
+                        self.peek().line,
+                        self.peek().column
                     ));
                 }
                 Ok(expr)
@@ -776,7 +816,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol("{".to_string())) {
             return Err(format!(
                 "Expected '{{' after 'match' at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
         let mut cases = vec![];
@@ -788,7 +829,8 @@ impl Parser {
             if !self.eat(&TokenType::Symbol(":".to_string())) {
                 return Err(format!(
                     "Expected ':' after case value at {}:{}",
-                    self.peek().line, self.peek().column
+                    self.peek().line,
+                    self.peek().column
                 ));
             }
             let body = self.parse_block()?;
@@ -797,7 +839,8 @@ impl Parser {
         if !self.eat(&TokenType::Symbol("}".to_string())) {
             return Err(format!(
                 "Expected '}}' at the end of match at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ));
         }
         let default = if self.eat(&TokenType::Keyword("else".to_string())) {
@@ -853,7 +896,8 @@ impl Parser {
             if !self.eat(&TokenType::Keyword("in".to_string())) {
                 return Err(format!(
                     "Expected 'in' after for loop identifier at {}:{}",
-                    self.peek().line, self.peek().column
+                    self.peek().line,
+                    self.peek().column
                 ));
             }
             let iterable = self.parse_binary(0)?;
@@ -866,7 +910,8 @@ impl Parser {
         } else {
             Err(format!(
                 "Expected identifier after 'for' at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ))
         }
     }
@@ -879,7 +924,8 @@ impl Parser {
             if !self.eat(&TokenType::Symbol("(".to_string())) {
                 return Err(format!(
                     "Expected '(' after function name at {}:{}",
-                    self.peek().line, self.peek().column
+                    self.peek().line,
+                    self.peek().column
                 ));
             }
             let mut args = vec![];
@@ -893,7 +939,9 @@ impl Parser {
                 } else {
                     return Err(format!(
                         "Expected identifier in function arguments but got {:?} at {}:{}",
-                        self.peek().token_type, self.peek().line, self.peek().column
+                        self.peek().token_type,
+                        self.peek().line,
+                        self.peek().column
                     ));
                 }
                 if !self.eat(&TokenType::Symbol(",".to_string())) {
@@ -903,7 +951,8 @@ impl Parser {
             if !self.eat(&TokenType::Symbol(")".to_string())) {
                 return Err(format!(
                     "Expected ')' after function arguments at {}:{}",
-                    self.peek().line, self.peek().column
+                    self.peek().line,
+                    self.peek().column
                 ));
             }
             let returns = self.parse_binary(0)?;
@@ -917,7 +966,8 @@ impl Parser {
         } else {
             Err(format!(
                 "Expected identifier after 'fn' at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ))
         }
     }
@@ -931,7 +981,8 @@ impl Parser {
         } else {
             Err(format!(
                 "Expected string path after 'import' at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ))
         }
     }
@@ -942,7 +993,9 @@ impl Parser {
         } else {
             return Err(format!(
                 "Expected identifier but got {:?} at {}:{}",
-                self.peek().token_type, self.peek().line, self.peek().column
+                self.peek().token_type,
+                self.peek().line,
+                self.peek().column
             ));
         };
         self.advance();
@@ -979,7 +1032,8 @@ impl Parser {
         } else {
             Err(format!(
                 "Unexpected token after identifier expression at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ))
         }
     }
@@ -1025,13 +1079,15 @@ impl Parser {
             } else {
                 Err(format!(
                     "Unexpected token after identifier expression at {}:{}",
-                    self.peek().line, self.peek().column
+                    self.peek().line,
+                    self.peek().column
                 ))
             }
         } else {
             Err(format!(
                 "Expected 'global' keyword at {}:{}",
-                self.peek().line, self.peek().column
+                self.peek().line,
+                self.peek().column
             ))
         }
     }

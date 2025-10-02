@@ -5,7 +5,7 @@ use kira::{AudioManager, AudioManagerSettings, DefaultBackend};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 
-use crate::utils::core::*;
+use crate::utils::{core::*, rasterize_svg};
 use crate::utils::draw_sprite;
 
 use super::sprite::StopRequest;
@@ -236,21 +236,28 @@ impl Runtime {
             .backdrops
         {
             let path = dir.join(path);
-            let tex = CPUTexture::load_from_file(&path.to_string_lossy())
-                .or_else(|_| {
-                    CPUTexture::load_from_bytes(
-                        include_bytes!("../../assets/missing.png"),
-                        100,
-                        100,
-                    )
-                })
-                .unwrap_or_else(|e| {
-                    panic!(
-                        "Failed to load backdrop texture: {}. Error: {}",
-                        path.to_string_lossy(),
-                        e
-                    );
-                });
+            let tex = if path.extension().unwrap() != "svg" {
+                CPUTexture::load_from_file(&path.to_string_lossy())
+                    .or_else(|_| {
+                        CPUTexture::load_from_bytes(
+                            include_bytes!("../../assets/missing.png"),
+                            100,
+                            100,
+                        )
+                    })
+                    .unwrap()
+            } else {
+                let content = std::fs::read_to_string(path).unwrap_or_default();
+                rasterize_svg(&content)
+                    .or_else(|_| {
+                        CPUTexture::load_from_bytes(
+                            include_bytes!("../../assets/missing.png"),
+                            100,
+                            100,
+                        )
+                    })
+                    .unwrap()
+            };
             let tex = tex.upload_to_gpu();
             project.stage.backdrops.push(tex);
         }

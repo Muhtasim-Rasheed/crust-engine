@@ -524,7 +524,12 @@ impl Sprite {
         }
     }
 
-    pub fn variable_mut<'a>(&'a mut self, name: &str, project: &'a mut Project, local_vars: &'a mut [(String, Value)]) -> Option<&'a mut Value> {
+    pub fn variable_mut<'a>(
+        &'a mut self,
+        name: &str,
+        project: &'a mut Project,
+        local_vars: &'a mut [(String, Value)],
+    ) -> Option<&'a mut Value> {
         if let Some(var) = local_vars.iter_mut().find(|(n, _)| n == name) {
             return Some(&mut var.1);
         } else if let Some(var) = self.variables.get_mut(name) {
@@ -543,9 +548,10 @@ impl Sprite {
                 value,
             } => {
                 let value = crate::utils::resolve_expression(value, state);
-                crate::utils::assign_expression(identifier, value, state, *is_global).unwrap_or_else(|e| {
-                    println!("Error assigning variable '{}': {}", identifier, e);
-                });
+                crate::utils::assign_expression(identifier, value, state, *is_global)
+                    .unwrap_or_else(|e| {
+                        println!("Error assigning variable '{}': {}", identifier, e);
+                    });
             }
             Statement::Nop => {}
             Statement::Assert { condition } => {

@@ -438,9 +438,7 @@ pub fn textured_tri(state: &State, args: &[Value]) -> Result {
                 .shader_program
                 .set_uniform("u_projection", *state.projection);
             state.shader_program.set_uniform("u_model", Mat4::IDENTITY);
-            state
-                .shader_program
-                .set_uniform("u_effects", &[] as &[i32]);
+            state.shader_program.set_uniform("u_effects", &[] as &[i32]);
             state
                 .shader_program
                 .set_uniform("u_effect_values", &[] as &[f32]);

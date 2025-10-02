@@ -64,7 +64,7 @@ impl Tokenizer {
         let start = self.pointer;
         while self.pointer < self.code.len()
             && self.code[self.pointer..].starts_with(char::is_numeric)
-                || self.code[self.pointer..].starts_with('.')
+            || self.code[self.pointer..].starts_with('.')
         {
             self.pointer += 1;
         }
@@ -107,7 +107,8 @@ impl Tokenizer {
         let line = self.code[..self.pointer].lines().count();
         let column = self.code[..self.pointer]
             .rfind('\n')
-            .map_or(self.pointer, |pos| self.pointer - pos - 1) + 1;
+            .map_or(self.pointer, |pos| self.pointer - pos - 1)
+            + 1;
 
         if self.pointer >= self.code.len() {
             return None;
@@ -116,11 +117,7 @@ impl Tokenizer {
         // Newline
         if self.code[self.pointer..].starts_with('\n') {
             self.pointer += 1;
-            return Some(Token::new(
-                TokenType::Newline,
-                line,
-                column,
-            ));
+            return Some(Token::new(TokenType::Newline, line, column));
         }
 
         if self.pointer >= self.code.len() {
@@ -134,11 +131,7 @@ impl Tokenizer {
             while self.pointer < self.code.len() && !self.code[self.pointer..].starts_with('\n') {
                 self.pointer += 1;
             }
-            return Some(Token::new(
-                TokenType::Newline,
-                line,
-                column,
-            ));
+            return Some(Token::new(TokenType::Newline, line, column));
         }
 
         if c.starts_with("/*") {
@@ -149,21 +142,13 @@ impl Tokenizer {
             if self.pointer < self.code.len() {
                 self.pointer += 2; // Skip */
             }
-            return Some(Token::new(
-                TokenType::Newline,
-                line,
-                column,
-            ));
+            return Some(Token::new(TokenType::Newline, line, column));
         }
 
         // Null
         if c.starts_with("null") {
             self.pointer += 4;
-            return Some(Token::new(
-                TokenType::Value(Value::Null),
-                line,
-                column,
-            ));
+            return Some(Token::new(TokenType::Value(Value::Null), line, column));
         }
 
         // Booleans
@@ -234,11 +219,7 @@ impl Tokenizer {
         // Symbols
         if ["(", ")", "[", "]", "{", "}", ",", ":", "."].contains(&one) {
             self.pointer += 1;
-            return Some(Token::new(
-                TokenType::Symbol(one.to_string()),
-                line,
-                column,
-            ));
+            return Some(Token::new(TokenType::Symbol(one.to_string()), line, column));
         }
 
         // Numbers
@@ -261,7 +242,7 @@ impl Tokenizer {
             let number = &self.code[start..self.pointer];
             return Some(Token::new(
                 TokenType::Value(Value::Number(
-                    i64::from_str_radix(number, base).unwrap() as f32,
+                    i64::from_str_radix(number, base).unwrap() as f32
                 )),
                 line,
                 column,
@@ -291,17 +272,9 @@ impl Tokenizer {
         if c.chars().next().unwrap().is_alphabetic() || c.starts_with('_') {
             let ident = self.get_identifier();
             if keyword_list.contains(&ident.as_str()) {
-                return Some(Token::new(
-                    TokenType::Keyword(ident),
-                    line,
-                    column,
-                ));
+                return Some(Token::new(TokenType::Keyword(ident), line, column));
             } else {
-                return Some(Token::new(
-                    TokenType::Identifier(ident),
-                    line,
-                    column,
-                ));
+                return Some(Token::new(TokenType::Identifier(ident), line, column));
             }
         }
 
@@ -323,4 +296,3 @@ impl Tokenizer {
         tokens
     }
 }
-

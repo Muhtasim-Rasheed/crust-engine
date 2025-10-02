@@ -1,7 +1,7 @@
 use glam::*;
 use glfw::{Key, MouseButton};
 
-use crate::utils::{core::*, Callable, Expression, Function, State, Value};
+use crate::utils::{Callable, Expression, Function, State, Value, core::*};
 
 // Helper functions!
 
@@ -180,12 +180,10 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
                 .collect::<Vec<_>>();
 
             match func_val {
-                Value::Closure(callable) => {
-                    callable.call(state, &args).unwrap_or_else(|e| {
-                        println!("Error calling function: {}", e);
-                        Value::Null
-                    })
-                }
+                Value::Closure(callable) => callable.call(state, &args).unwrap_or_else(|e| {
+                    println!("Error calling function: {}", e);
+                    Value::Null
+                }),
                 _ => {
                     println!("Attempted to call non-function: {:?}", func_val);
                     Value::Null
@@ -195,7 +193,12 @@ pub fn resolve_expression(expr: &Expression, state: &mut State) -> Value {
     }
 }
 
-pub fn assign_expression(expr: &Expression, value: Value, state: &mut State, is_global: bool) -> Result<(), String> {
+pub fn assign_expression(
+    expr: &Expression,
+    value: Value,
+    state: &mut State,
+    is_global: bool,
+) -> Result<(), String> {
     match expr {
         Expression::Identifier(id) => {
             if is_global {
@@ -213,7 +216,10 @@ pub fn assign_expression(expr: &Expression, value: Value, state: &mut State, is_
             let key_val = resolve_expression(key, state);
             let object = get_mut_container(object, state, is_global)?;
             match (object, key_val) {
-                (Value::List(list), Value::Number(idx)) => { list[idx as usize] = value; Ok(()) }
+                (Value::List(list), Value::Number(idx)) => {
+                    list[idx as usize] = value;
+                    Ok(())
+                }
                 (Value::Object(obj), Value::String(s)) => {
                     obj.insert(s.clone(), value);
                     Ok(())
@@ -618,7 +624,41 @@ pub fn percentage_to_decibels(percentage: f32) -> f32 {
     20.0 * percentage.log10()
 }
 
+pub fn rasterize_svg(content: &str) -> Result<CPUTexture, String> {
+    let svg_tree = resvg::usvg::Tree::from_str(content, &resvg::usvg::Options::default())
+        .map_err(|e| format!("Failed to parse SVG: {}", e))?;
+    let width = svg_tree.size().width() as u32;
+    let height = svg_tree.size().width() as u32;
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(width, height)
+        .ok_or_else(|| "Failed to create pixmap".to_string())?;
+    resvg::render(
+        &svg_tree,
+        resvg::tiny_skia::Transform::default(),
+        &mut pixmap.as_mut(),
+    );
+    Ok(pixmap_to_cpu_texture(&pixmap)?)
+}
+
 // Helper functions that help other helper functions!!
+fn pixmap_to_cpu_texture(pixmap: &resvg::tiny_skia::Pixmap) -> Result<CPUTexture, String> {
+    let mut buf = Vec::with_capacity(pixmap.data().len());
+    for chunk in pixmap.data().chunks_exact(4) {
+        let (r, g, b, a) = (chunk[0], chunk[1], chunk[2], chunk[3]);
+        if a > 0 {
+            let alpha = a as f32 / 255.0;
+            buf.push(((r as f32 / alpha).min(255.0)) as u8);
+            buf.push(((g as f32 / alpha).min(255.0)) as u8);
+            buf.push(((b as f32 / alpha).min(255.0)) as u8);
+            buf.push(a);
+        } else {
+            buf.extend_from_slice(&[0, 0, 0, 0]);
+        }
+    }
+    Ok(
+        CPUTexture::load_from_bytes(buf.as_slice(), pixmap.width(), pixmap.height())?
+    )
+}
+
 fn get_mut_container<'a>(
     expr: &'a Expression,
     state: &'a mut State,
@@ -627,10 +667,15 @@ fn get_mut_container<'a>(
     match expr {
         Expression::Identifier(id) => {
             if is_global {
-                state.project.global_variables.get_mut(id)
+                state
+                    .project
+                    .global_variables
+                    .get_mut(id)
                     .ok_or_else(|| format!("Global variable '{}' not found", id))
             } else {
-                state.sprite.variable_mut(id, state.project, state.local_vars)
+                state
+                    .sprite
+                    .variable_mut(id, state.project, state.local_vars)
                     .ok_or_else(|| format!("Variable '{}' not found", id))
             }
         }
@@ -646,9 +691,7 @@ fn get_mut_container<'a>(
                     }
                     Ok(&mut list[idx])
                 }
-                (Value::Object(obj), Value::String(s)) => {
-                    Ok(obj.entry(s).or_insert(Value::Null))
-                }
+                (Value::Object(obj), Value::String(s)) => Ok(obj.entry(s).or_insert(Value::Null)),
                 _ => Err("Invalid member access target".into()),
             }
         }

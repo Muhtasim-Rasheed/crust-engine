@@ -47,8 +47,9 @@ fn main() {
         let toml_path = utils::create_new_project(&new_project_name);
         println!("Created new project: {}", new_project_name);
         println!(
-            "run `crust --project {}` to run the project.",
-            toml_path.display()
+            "run `{} --project {}` to run the project.",
+            std::env::args().nth(0).unwrap(),
+            toml_path.display(),
         );
         return;
     }
@@ -119,6 +120,5 @@ fn main() {
     }
 
     let shader_program = ShaderProgram::new(VERT_SHADER, FRAG_SHADER);
-    runtime
-        .run(&mut window, &events, &shader_program, &mut glfw);
+    runtime.run(&mut window, &events, &shader_program, &mut glfw);
 }
