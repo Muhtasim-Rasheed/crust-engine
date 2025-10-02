@@ -47,6 +47,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "set_uv", |st, ar| misc::set_uv(st, ar));
     builtin!(builtins, "screenshot", |st, ar| misc::screenshot(st, ar));
     builtin!(builtins, "typeof", |_, ar| misc::r#typeof(ar));
+    builtin!(builtins, "list_with_capacity", |_, ar| misc::list_with_capacity(ar));
     builtin!(builtins, "push", |_, ar| misc::push(ar));
     builtin!(builtins, "pop", |_, ar| misc::pop(ar));
     builtin!(builtins, "insert", |_, ar| misc::insert(ar));

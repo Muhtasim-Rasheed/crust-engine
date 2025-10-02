@@ -46,6 +46,7 @@ The miscellaneous functions do not fit into any other category. They are used fo
 - `screenshot()`: Takes a screenshot of the current screen and saves it to the `exports` directory in the project root.
 - `screenshot(path)`: Takes a screenshot of the current screen and saves it to the specified path. The path is relative to the project root.
 - `typeof(value)`: Returns the type of the given value as a string.
+- `list_with_capacity(capacity)`: Returns a list with capacity for values.
 - `push(list, value)`: Pushes the given value to the end of the list and returns the new list.
 - `pop(list)`: Pops the last value from the list and returns a list containing the new list and the popped value.
 - `insert(list, index, value)`: Inserts the given value at the specified index in the list and returns the new list.

@@ -443,6 +443,15 @@ pub fn r#typeof(args: &[Value]) -> Result {
     Ok(Value::String(value_type.to_string()))
 }
 
+pub fn list_with_capacity(args: &[Value]) -> Result {
+    if let [Value::Number(capacity)] = args {
+        let capacity = *capacity as usize;
+        Ok(Value::List(Vec::with_capacity(capacity)))
+    } else {
+        Err("list_with_capacity() expects a capacity integer".to_string())
+    }
+}
+
 pub fn push(args: &[Value]) -> Result {
     if let [Value::List(list), value] = args {
         let mut new_list = list.clone();
