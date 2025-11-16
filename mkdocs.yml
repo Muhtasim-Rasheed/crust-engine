@@ -8,7 +8,9 @@ theme:
   favicon: assets/logo.png
   palette:
     scheme: slate
-    primary: orange
+    primary: custom
+extra_css:
+  - stylesheets/extra.css
 nav:
   - Home: index.md
   - Getting Started:
