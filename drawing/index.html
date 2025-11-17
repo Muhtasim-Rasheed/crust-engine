@@ -1,0 +1,1686 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../control/">
+      
+      
+        <link rel="next" href="../window/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Drawing - Crust</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Comic+Sans+MS:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Comic Sans MS";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#set_colorr-g-b-a" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Crust" class="md-header__button md-logo" aria-label="Crust" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Crust
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Drawing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Crust" class="md-nav__button md-logo" aria-label="Crust" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    Crust
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../project-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../crust-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crust (The Programming Language)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Functions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3_1" id="__nav_2_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Miscellaneous
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Miscellaneous
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../misc/io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Input and Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../misc/math/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time and Math
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../misc/sprite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../misc/datatypes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datatypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../misc/other/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Other
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../motion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Motion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../looks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Looks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sound
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drawing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drawing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#set_colorr-g-b-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_color(r, g, b, a)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change_rincrement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change_r(increment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change_gincrement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change_g(increment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change_bincrement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change_b(increment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change_aincrement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change_a(increment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linex1-y1-x2-y2-thickness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        line(x1, y1, x2, y2, thickness)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rectx1-y1-x2-y2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rect(x1, y1, x2, y2)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hrectx1-y1-x2-y2-thickness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hrect(x1, y1, x2, y2, thickness)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#circlex-y-radius" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        circle(x, y, radius)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hcirclex-y-radius-thickness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hcircle(x, y, radius, thickness)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ellipsex-y-width-height-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ellipse(x, y, width, height, rotation?)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hellipsex-y-width-height-rotation-thickness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hellipse(x, y, width, height, rotation?, thickness)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polygonxs-ys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        polygon(xs, ys)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hpolygonthickness-xs-ys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hpolygon(thickness, xs, ys)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#textx-y-text-font_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        text(x, y, text, font_size)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#textured_triparse_image_result-xs-ys-us-vs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        textured_tri(parse_image_result, xs, ys, us, vs)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stamp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stamp()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clear_all_stamps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear_all_stamps()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#r" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        r()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#g" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        g()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        b()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a()
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../window/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Window
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running your Crust Project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Screen
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#set_colorr-g-b-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_color(r, g, b, a)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change_rincrement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change_r(increment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change_gincrement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change_g(increment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change_bincrement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change_b(increment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change_aincrement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        change_a(increment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linex1-y1-x2-y2-thickness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        line(x1, y1, x2, y2, thickness)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rectx1-y1-x2-y2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rect(x1, y1, x2, y2)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hrectx1-y1-x2-y2-thickness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hrect(x1, y1, x2, y2, thickness)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#circlex-y-radius" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        circle(x, y, radius)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hcirclex-y-radius-thickness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hcircle(x, y, radius, thickness)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ellipsex-y-width-height-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ellipse(x, y, width, height, rotation?)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hellipsex-y-width-height-rotation-thickness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hellipse(x, y, width, height, rotation?, thickness)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#polygonxs-ys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        polygon(xs, ys)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hpolygonthickness-xs-ys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hpolygon(thickness, xs, ys)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#textx-y-text-font_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        text(x, y, text, font_size)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#textured_triparse_image_result-xs-ys-us-vs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        textured_tri(parse_image_result, xs, ys, us, vs)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stamp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stamp()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clear_all_stamps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear_all_stamps()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#r" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        r()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#g" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        g()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        b()
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        a()
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Drawing</h1>
+
+<h2 id="set_colorr-g-b-a"><code>set_color(r, g, b, a)</code></h2>
+<p>Sets the drawing color to the specified RGBA values. The values are in the range of 0 to 255.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>r</code> (Number): The red component of the color (0-255).</li>
+<li><code>g</code> (Number): The green component of the color (0-255).</li>
+<li><code>b</code> (Number): The blue component of the color (0-255).</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="change_rincrement"><code>change_r(increment)</code></h2>
+<p>Changes the red component of the drawing color by the specified increment. The increment can be positive or negative.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>increment</code> (Number): The amount to change the red component by.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="change_gincrement"><code>change_g(increment)</code></h2>
+<p>Changes the green component of the drawing color by the specified increment. The increment can be positive or negative.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>increment</code> (Number): The amount to change the green component by.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="change_bincrement"><code>change_b(increment)</code></h2>
+<p>Changes the blue component of the drawing color by the specified increment. The increment can be positive or negative.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>increment</code> (Number): The amount to change the blue component by.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="change_aincrement"><code>change_a(increment)</code></h2>
+<p>Changes the alpha (transparency) component of the drawing color by the specified increment. The increment can be positive or negative.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>increment</code> (Number): The amount to change the alpha component by.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="linex1-y1-x2-y2-thickness"><code>line(x1, y1, x2, y2, thickness)</code></h2>
+<p>Draws a line from the point <code>(x1, y1)</code> to the point <code>(x2, y2)</code> with the specified thickness.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>x1</code> (Number): The x-coordinate of the starting point.</li>
+<li><code>y1</code> (Number): The y-coordinate of the starting point.</li>
+<li><code>x2</code> (Number): The x-coordinate of the ending point.</li>
+<li><code>y2</code> (Number): The y-coordinate of the ending point.</li>
+<li><code>thickness</code> (Number): The thickness of the line.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="rectx1-y1-x2-y2"><code>rect(x1, y1, x2, y2)</code></h2>
+<p>Draws a rectangle with the top-left corner at <code>(x1, y1)</code> and the bottom-right corner at <code>(x2, y2)</code>.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>x1</code> (Number): The x-coordinate of the top-left corner.</li>
+<li><code>y1</code> (Number): The y-coordinate of the top-left corner.</li>
+<li><code>x2</code> (Number): The x-coordinate of the bottom-right corner.</li>
+<li><code>y2</code> (Number): The y-coordinate of the bottom-right corner.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="hrectx1-y1-x2-y2-thickness"><code>hrect(x1, y1, x2, y2, thickness)</code></h2>
+<p>Draws a hollow rectangle with the top-left corner at <code>(x1, y1)</code> and the bottom-right corner at <code>(x2, y2)</code> with the specified thickness.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>x1</code> (Number): The x-coordinate of the top-left corner.</li>
+<li><code>y1</code> (Number): The y-coordinate of the top-left corner.</li>
+<li><code>x2</code> (Number): The x-coordinate of the bottom-right corner.</li>
+<li><code>y2</code> (Number): The y-coordinate of the bottom-right corner.</li>
+<li><code>thickness</code> (Number): The thickness of the rectangle outline.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="circlex-y-radius"><code>circle(x, y, radius)</code></h2>
+<p>Draws a filled circle with the center at <code>(x, y)</code> and the specified radius.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>x</code> (Number): The x-coordinate of the center of the circle.</li>
+<li><code>y</code> (Number): The y-coordinate of the center of the circle.</li>
+<li><code>radius</code> (Number): The radius of the circle.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="hcirclex-y-radius-thickness"><code>hcircle(x, y, radius, thickness)</code></h2>
+<p>Draws a hollow circle with the center at <code>(x, y)</code> and the specified radius with the specified thickness.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>x</code> (Number): The x-coordinate of the center of the circle.</li>
+<li><code>y</code> (Number): The y-coordinate of the center of the circle.</li>
+<li><code>radius</code> (Number): The radius of the circle.</li>
+<li><code>thickness</code> (Number): The thickness of the circle outline.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="ellipsex-y-width-height-rotation"><code>ellipse(x, y, width, height, rotation?)</code></h2>
+<p>Draws a filled ellipse with the center at <code>(x, y)</code> and the specified width and height. Optionally, a rotation in degrees can be specified.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>x</code> (Number): The x-coordinate of the center of the ellipse.</li>
+<li><code>y</code> (Number): The y-coordinate of the center of the ellipse.</li>
+<li><code>width</code> (Number): The width of the ellipse.</li>
+<li><code>height</code> (Number): The height of the ellipse.</li>
+<li><code>rotation</code> (Number, optional): The rotation of the ellipse in degrees.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="hellipsex-y-width-height-rotation-thickness"><code>hellipse(x, y, width, height, rotation?, thickness)</code></h2>
+<p>Draws a hollow ellipse with the center at <code>(x, y)</code>, the specified width and height, and the specified thickness. Optionally, a rotation in degrees can be specified.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>x</code> (Number): The x-coordinate of the center of the ellipse.</li>
+<li><code>y</code> (Number): The y-coordinate of the center of the ellipse.</li>
+<li><code>width</code> (Number): The width of the ellipse.</li>
+<li><code>height</code> (Number): The height of the ellipse.</li>
+<li><code>rotation</code> (Number, optional): The rotation of the ellipse in degrees.</li>
+<li><code>thickness</code> (Number): The thickness of the ellipse outline.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="polygonxs-ys"><code>polygon(xs, ys)</code></h2>
+<p>Draws a filled polygon with the specified vertices.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The polygon can only be convex (no inward dents) and should be wounded counter-clockwise.</p>
+</div>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>xs</code> (List of Numbers): The x-coordinates of the vertices.</li>
+<li><code>ys</code> (List of Numbers): The y-coordinates of the vertices.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="hpolygonthickness-xs-ys"><code>hpolygon(thickness, xs, ys)</code></h2>
+<p>Draws a hollow polygon with the specified vertices and thickness.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The polygon can only be convex (no inward dents) and should be wounded counter-clockwise.</p>
+</div>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>thickness</code> (Number): The thickness of the polygon outline.</li>
+<li><code>xs</code> (List of Numbers): The x-coordinates of the vertices.</li>
+<li><code>ys</code> (List of Numbers): The y-coordinates of the vertices.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="textx-y-text-font_size"><code>text(x, y, text, font_size)</code></h2>
+<p>Draws the specified text at the position <code>(x, y)</code> with the specified font size.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>x</code> (Number): The x-coordinate of the position to draw the text.</li>
+<li><code>y</code> (Number): The y-coordinate of the position to draw the text.</li>
+<li><code>text</code> (String): The text to draw.</li>
+<li><code>font_size</code> (Number): The font size of the text.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="textured_triparse_image_result-xs-ys-us-vs"><code>textured_tri(parse_image_result, xs, ys, us, vs)</code></h2>
+<p>Draws a textured triangle using the specified vertices and texture coordinates.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>parse_image_result</code> (List): The result from the <code>parse_image()</code> function. Alternatively, you can construct this manually by creating a list like:
+    <div class="highlight"><pre><span></span><code>[
+    image_width,
+    image_height,
+    [R, G, B, A, R, G, B, A, ...], // Pixel data as a flat list
+]
+</code></pre></div></li>
+<li><code>xs</code> (List of Numbers): The x-coordinates of the triangle vertices.</li>
+<li><code>ys</code> (List of Numbers): The y-coordinates of the triangle vertices.</li>
+<li><code>us</code> (List of Numbers): The u texture coordinates of the triangle vertices.</li>
+<li><code>vs</code> (List of Numbers): The v texture coordinates of the triangle vertices.</li>
+</ul>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="stamp"><code>stamp()</code></h2>
+<p>Stamps the sprite onto the stage at its current position. The stamp is a copy of the sprite's current appearance, effects included.</p>
+<p><strong>Properties:</strong> none</p>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="clear_all_stamps"><code>clear_all_stamps()</code></h2>
+<p>Clears all the stamps on the stage.</p>
+<p><strong>Properties:</strong> none</p>
+<p><strong>Returns:</strong> <code>null</code></p>
+<h2 id="r"><code>r()</code></h2>
+<p>Returns the current red component of the drawing color.</p>
+<p><strong>Properties:</strong> none</p>
+<p><strong>Returns:</strong> <code>Number</code> - The red component of the drawing color (0-255).</p>
+<h2 id="g"><code>g()</code></h2>
+<p>Returns the current green component of the drawing color.</p>
+<p><strong>Properties:</strong> none</p>
+<p><strong>Returns:</strong> <code>Number</code> - The green component of the drawing color (0-255).</p>
+<h2 id="b"><code>b()</code></h2>
+<p>Returns the current blue component of the drawing color.</p>
+<p><strong>Properties:</strong> none</p>
+<p><strong>Returns:</strong> <code>Number</code> - The blue component of the drawing color (0-255).</p>
+<h2 id="a"><code>a()</code></h2>
+<p>Returns the current alpha (transparency) component of the drawing color.</p>
+<p><strong>Properties:</strong> none</p>
+<p><strong>Returns:</strong> <code>Number</code> - The alpha component of the drawing color (0-255).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The drawing functions draw in world coordinates, not screen coordinates. The origin <code>(0, 0)</code> is at the center of the screen, with positive x values to the right and positive y values upwards.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
