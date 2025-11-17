@@ -8,37 +8,7 @@
     ```
     This creates a new project with the name `my_project` in the current directory, and initializes it with a default `project.toml` with an empty stage and a single sprite named "default-sprite".
 
-Projects are defined by a `project.toml` file in the root directory. This file contains metadata about the project, such as allowing debug features, the stages, the sprites and their costumes, etc. Here is an example of a `project.toml` file:
-
-```toml
-debug_options = [ "show_fps", "show_mouse_pos" ]
-
-[stage]
-backdrops = [ "backdrop_0.png" ]
-
-[[sprites]]
-name = "title"
-code = "title/title.crst"
-costumes = [ "title/title.png" ]
-sounds = []
-x = 0
-y = 200
-w = 1200
-h = 300
-
-[[sprites]]
-name = "player"
-code = "player/player.crst"
-costumes = [ "player/player.png" ]
-x = 0
-y = 0
-w = 150
-h = 150
-
-    [[sprites.sounds]]
-    name = "jump"
-    file = "player/jump.wav"
-```
+Projects are defined by a `project.toml` file in the root directory. This file contains metadata about the project, such as allowing debug features, the stages, the sprites and their costumes, etc.
 
 The `project.toml` file is written in TOML format, which is a simple and human-readable configuration file format. You can read more about TOML [here](https://toml.io/en/).
 
@@ -79,6 +49,37 @@ All paths mentioned are relative to the `project.toml` file.
         - `name`: The name of the tag. Can have spaces and special characters. Case-sensitive. If the name is `*`, it is a special tag that applies to all sprites in the project, in which case the `sprites` list is ignored.
         - `code`: The path to the tag's code file. This file will be executed for all sprites in the tag after their own code.
         - `sprites`: A list of sprite names that are in the tag.
+
+!!! example
+    ```toml
+    debug_options = [ "show_fps", "show_mouse_pos" ]
+
+    [stage]
+    backdrops = [ "backdrop_0.png" ]
+
+    [[sprites]]
+    name = "title"
+    code = "title/title.crst"
+    costumes = [ "title/title.png" ]
+    sounds = []
+    x = 0
+    y = 200
+    w = 1200
+    h = 300
+
+    [[sprites]]
+    name = "player"
+    code = "player/player.crst"
+    costumes = [ "player/player.png" ]
+    x = 0
+    y = 0
+    w = 150
+    h = 150
+
+        [[sprites.sounds]]
+        name = "jump"
+        file = "player/jump.wav"
+    ```
 
 ## Recommended Project Structure
 

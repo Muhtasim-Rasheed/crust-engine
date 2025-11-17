@@ -1,15 +1,103 @@
-Most of the control functions are block statements and explained in the [Crust Language](crust-language.md) page. Here is a list of all the control functions in Crust:
+## `wait(time)`
+Waits for a duration.
 
-- `wait(time)`: Waits for the specified time in seconds before continuing to the next block.
-- `stop(option)`: Stops the current script. The `option` can be `all`, `this`, `script`, `other-scripts`, or `other-sprites-and-scripts`:
-    - `all`: Stops all scripts in all sprites.
-    - `this`: Stops all scripts in the current sprite.
-    - `script`: Stops the current script.
-    - `other-scripts`: Stops all scripts in the current sprite.
-    - `other-sprites-and-scripts`: Stops all scripts in all sprites and all scripts in the current sprite except the current script.
-- `clone()`: Creates a clone of the sprite. The clone will execute the `clone_setup` and `clone_update` blocks.
-- `delete_clone()`: Deletes the current clone. This function is typically called within the `clone_update` block to remove the clone when it is no longer needed.
-- `delete_clone(cloneid)`: Deletes the specified clone. The `cloneid` is the ID of the clone to delete, which starts from 1 and increments for each clone created.
-- `skip_further_execution_if(bool)`: Skips the execution of the current script if the condition is true.
+**Properties:**
 
-This page is so short unlike others...
+- `time` (Number): Time to wait in seconds.
+
+**Returns:** `null`
+
+## `stop(option)`
+Stops the specified script(s).
+
+**Properties:**
+
+- `option` (String): What to stop. Available options:
+    - `"all"`: Stops all scripts in all sprites.
+    - `"this"`: Stops all scripts in the current sprite.
+    - `"script"`: Stops the current script.
+    - `"other-scripts"`: Stops all other scripts in the current sprite.
+    - `"other-sprites-and-scripts"`: Stops all other scripts in all sprites.
+
+**Returns:** `null` 
+!!! example
+    ```
+    setup { // A setup script
+        // Something
+        stop("this") // Stop this script
+        // Stuff here will not be executed
+    }
+    ```
+
+## `clone()`
+Clones the sprite. The clone will execute the `clone_setup` and `clone_update` scripts.
+!!! warning
+    Clones are also sprites. Excessive cloning can and will lead to performance issues.
+
+**Properties:** none
+
+**Returns:** `null` 
+!!! example
+    ```
+    setup {
+        clone()
+    }
+    update {}
+    clone_setup {
+        // This will not be printed by the original sprite, but by the clone
+        print("Hello, I'm a clone!")
+    }
+    clone_update {}
+    ```
+
+## `delete_clone()` / `delete_clone(cloneid)`
+Deletes a clone.
+
+=== "`delete_clone()`"
+    Deletes the current clone that is running the function. If called on a non-clone sprite, does nothing.
+
+    **Properties:** none
+
+    **Returns:** `null` 
+    !!! example
+        ```
+        clone_update {
+            // Some code
+            if dont_want_to_exist_anymore {
+                delete_clone() // Delete this clone
+            }
+        }
+        ```
+
+=== "`delete_clone(cloneid)`"
+    Deletes the specified clone by its ID from its parent sprite.
+
+    **Properties:**
+
+    - `cloneid` (Number): The ID of the clone to delete. Clone IDs start from 1 and increment for each clone created.
+
+    **Returns:** `null` 
+    !!! example
+        ```
+        setup {
+            clone() // Create a clone
+            clone() // Create another clone
+            delete_clone(1) // Delete the first clone created
+        }
+        ```
+
+## `skip_further_execution_if(bool)`
+Skips further execution of the current script if the condition is true.
+
+**Properties:**
+
+- `bool` (Boolean): Condition to check.
+
+**Returns:** `null` 
+!!! example
+    ```
+    update {
+        skip_further_execution_if(score < 10)
+        print("Score is 10 or more!")
+    }
+    ```

@@ -17,14 +17,19 @@ nav:
     - Project Setup: project-setup.md
     - Crust (The Programming Language): crust-language.md
     - Functions:
-      - Miscellaneous Functions: misc.md
-      - Motion Functions: motion.md
-      - Looks Functions: looks.md
-      - Sound Functions: sound.md
-      - Event Functions: events.md
-      - Control Functions: control.md
-      - Drawing Functions: drawing.md
-      - Window Functions: window.md
+      - Miscellaneous:
+        - misc/io.md
+        - misc/math.md
+        - misc/sprite.md
+        - misc/datatypes.md
+        - misc/other.md
+      - Motion: motion.md
+      - Looks: looks.md
+      - Sound: sound.md
+      - Event: events.md
+      - Control: control.md
+      - Drawing: drawing.md
+      - Window: window.md
     - Running your Crust Project: run.md
   - The Screen: screen.md
   - License: license.md
