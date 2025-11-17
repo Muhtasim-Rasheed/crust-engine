@@ -654,9 +654,11 @@ fn pixmap_to_cpu_texture(pixmap: &resvg::tiny_skia::Pixmap) -> Result<CPUTexture
             buf.extend_from_slice(&[0, 0, 0, 0]);
         }
     }
-    Ok(
-        CPUTexture::load_from_bytes(buf.as_slice(), pixmap.width(), pixmap.height())?
-    )
+    Ok(CPUTexture::load_from_bytes(
+        buf.as_slice(),
+        pixmap.width(),
+        pixmap.height(),
+    )?)
 }
 
 fn get_mut_container<'a>(

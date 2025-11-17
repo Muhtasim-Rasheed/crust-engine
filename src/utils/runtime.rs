@@ -5,8 +5,8 @@ use kira::{AudioManager, AudioManagerSettings, DefaultBackend};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 
-use crate::utils::{core::*, rasterize_svg};
 use crate::utils::draw_sprite;
+use crate::utils::{core::*, rasterize_svg};
 
 use super::sprite::StopRequest;
 use super::{Parser, Project, Tokenizer, sprite::Sprite, sprite::SpriteSnapshot};

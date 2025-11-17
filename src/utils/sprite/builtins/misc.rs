@@ -495,17 +495,23 @@ pub fn insert(args: &[Value]) -> Result {
 
 pub fn remove(args: &[Value]) -> Result {
     if let [Value::Object(obj), Value::String(key)] = args {
+        if !obj.contains_key(key) {
+            return Err("remove() key not found in object".to_string());
+        }
         let mut obj = obj.clone();
-        obj.remove(key);
-        Ok(Value::Object(obj))
+        let val = obj.remove(key);
+        Ok(Value::List(vec![
+            Value::Object(obj),
+            val.unwrap_or(Value::Null),
+        ]))
     } else if let [Value::List(list), Value::Number(index)] = args {
         let index = *index as usize;
         if index >= list.len() {
             return Err("remove() index out of bounds".to_string());
         }
         let mut list = list.clone();
-        list.remove(index);
-        Ok(Value::List(list))
+        let val = list.remove(index);
+        Ok(Value::List(vec![Value::List(list), val]))
     } else {
         Err("remove() expects a list or an object, and a key or index".to_string())
     }
