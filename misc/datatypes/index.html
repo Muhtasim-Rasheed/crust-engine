@@ -1,0 +1,2042 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../sprite/">
+      
+      
+        <link rel="next" href="../other/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Datatypes - Crust</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Comic+Sans+MS:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Comic Sans MS";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lenvalue" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Crust" class="md-header__button md-logo" aria-label="Crust" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Crust
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Datatypes
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Crust" class="md-nav__button md-logo" aria-label="Crust" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    Crust
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../project-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../crust-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crust (The Programming Language)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Functions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_3_1" id="__nav_2_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Miscellaneous
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_3_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Miscellaneous
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Input and Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../math/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time and Math
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datatypes
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datatypes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#lenvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        len(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keysobject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        keys(object)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#valuesobject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        values(object)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typeofvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        typeof(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list_with_capacitycapacity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_with_capacity(capacity)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pushlist-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        push(list, value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poplist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pop(list)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#insertlist-index-value-insertobject-key-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        insert(list, index, value) / insert(object, key, value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removelist-index-removeobject-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remove(list, index) / remove(object, key)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extendlist1-list2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extend(list1, list2)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#containslist-value-containsobject-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        contains(list, value) / contains(object, key)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sortlist-closure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sort(list, closure)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filterlist-closure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        filter(list, closure)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maplist-closure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        map(list, closure)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#splitstring-delimiter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        split(string, delimiter)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#joinlist-delimiter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        join(list, delimiter)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starts_withstring-prefix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        starts_with(string, prefix)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ends_withstring-suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ends_with(string, suffix)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trimstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        trim(string)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rangeend-rangestart-end-rangestart-end-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        range(end) / range(start, end) / range(start, end, step)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_stringvalue-to_stringnumber-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_string(value) / to_string(number, base)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_numbervalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_number(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_booleanvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_boolean(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_listvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_list(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_objectvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_object(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../other/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Other
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../motion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Motion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../looks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Looks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sound/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sound
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../drawing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drawing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../window/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Window
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running your Crust Project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../screen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Screen
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#lenvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        len(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keysobject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        keys(object)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#valuesobject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        values(object)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typeofvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        typeof(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list_with_capacitycapacity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_with_capacity(capacity)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pushlist-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        push(list, value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poplist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pop(list)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#insertlist-index-value-insertobject-key-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        insert(list, index, value) / insert(object, key, value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removelist-index-removeobject-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remove(list, index) / remove(object, key)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extendlist1-list2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extend(list1, list2)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#containslist-value-containsobject-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        contains(list, value) / contains(object, key)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sortlist-closure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sort(list, closure)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filterlist-closure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        filter(list, closure)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maplist-closure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        map(list, closure)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#splitstring-delimiter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        split(string, delimiter)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#joinlist-delimiter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        join(list, delimiter)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starts_withstring-prefix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        starts_with(string, prefix)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ends_withstring-suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ends_with(string, suffix)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trimstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        trim(string)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rangeend-rangestart-end-rangestart-end-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        range(end) / range(start, end) / range(start, end, step)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_stringvalue-to_stringnumber-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_string(value) / to_string(number, base)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_numbervalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_number(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_booleanvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_boolean(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_listvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_list(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to_objectvalue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_object(value)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Datatypes</h1>
+
+<h2 id="lenvalue"><code>len(value)</code></h2>
+<p>Returns the length of the given value.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>value</code> (List | String | Object): The value to get the length of. The value is coerced to a list at first.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Number</code> - The length of the given value.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>assert len([1, 2, 3, 4, 5]) == 5
+assert len(&quot;Hello, World!&quot;) == 13
+obj = { &quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 30, &quot;city&quot;: &quot;New York&quot; }
+assert len(obj) == 3
+</code></pre></div>
+</div>
+<h2 id="keysobject"><code>keys(object)</code></h2>
+<p>Returns a list of keys in the given object.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>object</code> (Object): The object to get the keys from.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list of keys in the given object.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>obj = { &quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 30, &quot;city&quot;: &quot;New York&quot; }
+assert keys(obj) == [&quot;name&quot;, &quot;age&quot;, &quot;city&quot;]
+</code></pre></div>
+</div>
+<h2 id="valuesobject"><code>values(object)</code></h2>
+<p>Returns a list of values in the given object.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>object</code> (Object): The object to get the values from.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list of values in the given object.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>obj = { &quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 30, &quot;city&quot;: &quot;New York&quot; }
+assert values(obj) == [&quot;Alice&quot;, 30, &quot;New York&quot;]
+</code></pre></div>
+</div>
+<h2 id="typeofvalue"><code>typeof(value)</code></h2>
+<p>Returns the type of the given value as a string.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>value</code> (Any): The value to get the type of.</li>
+</ul>
+<p><strong>Returns:</strong> <code>String</code> - The type of the given value.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>assert typeof(42) == &quot;number&quot;
+assert typeof(&quot;Hello&quot;) == &quot;string&quot;
+assert typeof(true) == &quot;boolean&quot;
+</code></pre></div>
+</div>
+<h2 id="list_with_capacitycapacity"><code>list_with_capacity(capacity)</code></h2>
+<p>Returns a list with capacity for values.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>capacity</code> (Number): The initial capacity of the list.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list with capacity for values.</p>
+<h2 id="pushlist-value"><code>push(list, value)</code></h2>
+<p>Pushes the given value to the end of the list and returns the new list.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list to push the value to.</li>
+<li><code>value</code> (Any): The value to push to the list.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - The new list with the value pushed to the end.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = [1, 2, 3]
+my_list = push(my_list, 4)
+assert my_list == [1, 2, 3, 4]
+</code></pre></div>
+</div>
+<h2 id="poplist"><code>pop(list)</code></h2>
+<p>Pops the last value from the list and returns a list containing the new list and the popped value.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list to pop the value from.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list containing the new list and the popped value.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = [1, 2, 3, 4]
+result = pop(my_list)
+new_list = result[0]
+popped_value = result[1]
+assert new_list == [1, 2, 3]
+assert popped_value == 4
+</code></pre></div>
+</div>
+<h2 id="insertlist-index-value-insertobject-key-value"><code>insert(list, index, value)</code> / <code>insert(object, key, value)</code></h2>
+<p>Inserts a value into a list or an object.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1"><code>insert(list, index, value)</code></label><label for="__tabbed_1_2"><code>insert(object, key, value)</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Inserts the given value at the specified index in the list and returns the new list.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list to insert the value into.</li>
+<li><code>index</code> (Number): The index to insert the value at.</li>
+<li><code>value</code> (Any): The value to insert into the list.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - The new list with the value inserted at the specified index.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = [1, 2, 4]
+my_list = insert(my_list, 2, 3)
+assert my_list == [1, 2, 3, 4]
+</code></pre></div>
+</div>
+</div>
+<div class="tabbed-block">
+<p>Inserts the given key-value pair into the object and returns the new object.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>object</code> (Object): The object to insert the key-value pair into.</li>
+<li><code>key</code> (String): The key to insert into the object.</li>
+<li><code>value</code> (Any): The value to insert into the object.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Object</code> - The new object with the key-value pair inserted.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_object = { &quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 30 }
+my_object = insert(my_object, &quot;city&quot;, &quot;New York&quot;)
+assert my_object == { &quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 30, &quot;city&quot;: &quot;New York&quot; }
+</code></pre></div>
+</div>
+</div>
+</div>
+</div>
+<!-- ## `remove(list, index)` -->
+<!-- Removes the value at the specified index from the list and returns a list containing the new list and the removed value. -->
+
+<!-- **Properties:** -->
+
+<!-- - `list` (List): The list to remove the value from. -->
+<!-- - `index` (Number): The index of the value to remove. -->
+
+<!-- **Returns:** `List` - A list containing the new list and the removed value. -->
+<!-- !!! example -->
+<!--     ``` -->
+<!--     my_list = [1, 2, 3, 4] -->
+<!--     result = remove(my_list, 2) -->
+<!--     new_list = result[0] -->
+<!--     removed_value = result[1] -->
+<!--     assert new_list == [1, 2, 4] -->
+<!--     assert removed_value == 3 -->
+<!--     ``` -->
+
+<h2 id="removelist-index-removeobject-key"><code>remove(list, index)</code> / <code>remove(object, key)</code></h2>
+<p>Removes a value from a container.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1"><code>remove(list, index)</code></label><label for="__tabbed_2_2"><code>remove(object, key)</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Removes the value at the specified index from the list and returns a list containing the new list and the removed value.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list to remove the value from.</li>
+<li><code>index</code> (Number): The index of the value to remove.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list containing the new list and the removed value.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = [1, 2, 3, 4]
+result = remove(my_list, 2)
+new_list = result[0]
+removed_value = result[1]
+assert new_list == [1, 2, 4]
+assert removed_value == 3
+</code></pre></div>
+</div>
+</div>
+<div class="tabbed-block">
+<p>Removes the value with the specified key from the object and returns a list containing the new object and the removed value.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>object</code> (Object): The object to remove the value from.</li>
+<li><code>key</code> (String): The key of the value to remove.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list containing the new object and the removed value.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_object = { &quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 30, &quot;city&quot;: &quot;New York&quot; }
+result = remove(my_object, &quot;age&quot;)
+new_object = result[0]
+removed_value = result[1]
+assert new_object == { &quot;name&quot;: &quot;Alice&quot;, &quot;city&quot;: &quot;New York&quot; }
+assert removed_value == 30
+</code></pre></div>
+</div>
+</div>
+</div>
+</div>
+<h2 id="extendlist1-list2"><code>extend(list1, list2)</code></h2>
+<p>Extends the first list with the second list and returns the new list.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list1</code> (List): The first list to extend.</li>
+<li><code>list2</code> (List): The second list to extend the first list with.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - The new list with the elements of the second list appended to the first list.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>list1 = [1, 2, 3]
+list2 = [4, 5, 6]
+new_list = extend(list1, list2)
+assert new_list == [1, 2, 3, 4, 5, 6]
+</code></pre></div>
+</div>
+<h2 id="containslist-value-containsobject-key"><code>contains(list, value)</code> / <code>contains(object, key)</code></h2>
+<p>Checks if a container contains a value or key.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1"><code>contains(list, value)</code></label><label for="__tabbed_3_2"><code>contains(object, key)</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Returns true if the list contains the given value, false otherwise.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list to check.</li>
+<li><code>value</code> (Any): The value to check for.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Boolean</code> - <code>true</code> if the list contains the given value, <code>false</code> otherwise.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = [1, 2, 3, 4, 5]
+assert contains(my_list, 3) == true
+assert contains(my_list, 6) == false
+</code></pre></div>
+</div>
+</div>
+<div class="tabbed-block">
+<p>Returns true if the object contains the given key, false otherwise.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>object</code> (Object): The object to check.</li>
+<li><code>key</code> (String): The key to check for.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Boolean</code> - <code>true</code> if the object contains the given key, <code>false</code> otherwise.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_object = { &quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 30 }
+assert contains(my_object, &quot;name&quot;) == true
+assert contains(my_object, &quot;city&quot;) == false
+</code></pre></div>
+</div>
+</div>
+</div>
+</div>
+<h2 id="sortlist-closure"><code>sort(list, closure)</code></h2>
+<p>Sorts the list using the given closure as the comparison function. The closure should take two arguments and return a boolean.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list to sort.</li>
+<li><code>closure</code> (Closure): The comparison function to use for sorting.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - The sorted list.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = [5, 2, 4, 1, 3]
+my_list = sort(my_list, fn (a, b) result { result = a &lt; b })
+assert my_list == [1, 2, 3, 4, 5]
+</code></pre></div>
+</div>
+<h2 id="filterlist-closure"><code>filter(list, closure)</code></h2>
+<p>Filters the list using the given closure. The closure should take one argument and return a boolean.
+If the closure returns <code>true</code>, the element is included in the filtered list; otherwise, it is excluded.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list to filter.</li>
+<li><code>closure</code> (Closure): The filtering function to use.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - The filtered list.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = range(1, 6)
+my_list = filter(my_list, fn (x) result { result = x % 2 == 0 })
+assert my_list == [2, 4]
+</code></pre></div>
+</div>
+<h2 id="maplist-closure"><code>map(list, closure)</code></h2>
+<p>Iterates over the list and applies the given closure to each element, returning a new list with the results. The closure should take one argument and return a value.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list to map over.</li>
+<li><code>closure</code> (Closure): The mapping function to apply to each element.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A new list with the results of applying the closure to each element.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = range(1, 6)
+my_list = map(my_list, fn (x) result { result = x * x })
+assert my_list == [1, 4, 9, 16, 25]
+</code></pre></div>
+</div>
+<h2 id="splitstring-delimiter"><code>split(string, delimiter)</code></h2>
+<p>Splits the given string by the specified delimiter and returns a list of substrings.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>string</code> (String): The string to split.</li>
+<li><code>delimiter</code> (String): The delimiter to split the string by.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list of substrings.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_string = &quot;apple,banana,cherry&quot;
+my_list = split(my_string, &quot;,&quot;)
+assert my_list == [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;]
+</code></pre></div>
+</div>
+<h2 id="joinlist-delimiter"><code>join(list, delimiter)</code></h2>
+<p>Joins the elements of the list into a single string, separated by the specified delimiter.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>list</code> (List): The list of strings to join.</li>
+<li><code>delimiter</code> (String): The delimiter to separate the strings.</li>
+</ul>
+<p><strong>Returns:</strong> <code>String</code> - The joined string.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;]
+my_string = join(my_list, &quot;, &quot;)
+assert my_string == &quot;apple, banana, cherry&quot;
+</code></pre></div>
+</div>
+<h2 id="starts_withstring-prefix"><code>starts_with(string, prefix)</code></h2>
+<p>Returns true if the given string starts with the specified prefix, false otherwise.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>string</code> (String): The string to check.</li>
+<li><code>prefix</code> (String): The prefix to check for.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Boolean</code> - <code>true</code> if the string starts with the prefix, <code>false</code> otherwise.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_string = &quot;Hello, World!&quot;
+assert starts_with(my_string, &quot;Hello&quot;) == true
+assert starts_with(my_string, &quot;World&quot;) == false
+</code></pre></div>
+</div>
+<h2 id="ends_withstring-suffix"><code>ends_with(string, suffix)</code></h2>
+<p>Returns true if the given string ends with the specified suffix, false otherwise.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>string</code> (String): The string to check.</li>
+<li><code>suffix</code> (String): The suffix to check for.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Boolean</code> - <code>true</code> if the string ends with the suffix, <code>false</code> otherwise.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_string = &quot;Hello, World!&quot;
+assert ends_with(my_string, &quot;World!&quot;) == true
+assert ends_with(my_string, &quot;Hello&quot;) == false
+</code></pre></div>
+</div>
+<h2 id="trimstring"><code>trim(string)</code></h2>
+<p>Trims the whitespace from the beginning and end of the given string and returns the trimmed string.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>string</code> (String): The string to trim.</li>
+</ul>
+<p><strong>Returns:</strong> <code>String</code> - The trimmed string.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_string = &quot;   Hello, World!   &quot;
+trimmed_string = trim(my_string)
+assert trimmed_string == &quot;Hello, World!&quot;
+</code></pre></div>
+</div>
+<h2 id="rangeend-rangestart-end-rangestart-end-step"><code>range(end)</code> / <code>range(start, end)</code> / <code>range(start, end, step)</code></h2>
+<p>Returns a list of numbers in a specified range.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1"><code>range(end)</code></label><label for="__tabbed_4_2"><code>range(start, end)</code></label><label for="__tabbed_4_3"><code>range(start, end, step)</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Returns a list of numbers from 0 to <code>end - 1</code>.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>end</code> (Number): The end of the range (exclusive).</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list of numbers from 0 to <code>end - 1</code>.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = range(5)
+assert my_list == [0, 1, 2, 3, 4]
+</code></pre></div>
+</div>
+</div>
+<div class="tabbed-block">
+<p>Returns a list of numbers from <code>start</code> to <code>end - 1</code>.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>start</code> (Number): The start of the range (inclusive).</li>
+<li><code>end</code> (Number): The end of the range (exclusive).</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list of numbers from <code>start</code> to <code>end - 1</code>.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = range(3, 8)
+assert my_list == [3, 4, 5, 6, 7]
+</code></pre></div>
+</div>
+</div>
+<div class="tabbed-block">
+<p>Returns a list of numbers from <code>start</code> to <code>end - step</code>, incrementing by <code>step</code>.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>start</code> (Number): The start of the range (inclusive).</li>
+<li><code>end</code> (Number): The end of the range (exclusive).</li>
+<li><code>step</code> (Number): The increment between each number in the range.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - A list of numbers from <code>start</code> to <code>end - 1</code>, incrementing by <code>step</code>.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>my_list = range(2, 10, 2)
+assert my_list == [2, 4, 6, 8]
+</code></pre></div>
+</div>
+</div>
+</div>
+</div>
+<h2 id="to_stringvalue-to_stringnumber-base"><code>to_string(value)</code> / <code>to_string(number, base)</code></h2>
+<p>Converts a value to a string.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1"><code>to_string(value)</code></label><label for="__tabbed_5_2"><code>to_string(number, base)</code></label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Converts the given value to a string.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>value</code> (Any): The value to convert to a string.</li>
+</ul>
+<p><strong>Returns:</strong> <code>String</code> - The string representation of the given value.</p>
+</div>
+<div class="tabbed-block">
+<p>Converts the given number to a string in the specified base (2 to 36).</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>number</code> (Number): The decimal number to convert.</li>
+<li><code>base</code> (Number): The base to convert the number to (between 2 and 36).</li>
+</ul>
+<p><strong>Returns:</strong> <code>String</code> - The string representation of the number in the specified base.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code>assert to_string(255, 16) == &quot;FF&quot;
+assert to_string(10, 2) == &quot;1010&quot;
+</code></pre></div>
+</div>
+</div>
+</div>
+</div>
+<h2 id="to_numbervalue"><code>to_number(value)</code></h2>
+<p>Converts the given value to a number.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>value</code> (Any): The value to convert to a number.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Number</code> - The numeric representation of the given value.</p>
+<h2 id="to_booleanvalue"><code>to_boolean(value)</code></h2>
+<p>Converts the given value to a boolean.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>value</code> (Any): The value to convert to a boolean.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Boolean</code> - The boolean representation of the given value.</p>
+<h2 id="to_listvalue"><code>to_list(value)</code></h2>
+<p>Converts the given value to a list.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>value</code> (Any): The value to convert to a list.</li>
+</ul>
+<p><strong>Returns:</strong> <code>List</code> - The list representation of the given value.</p>
+<h2 id="to_objectvalue"><code>to_object(value)</code></h2>
+<p>Converts the given value to an object.</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>value</code> (Any): The value to convert to an object.</li>
+</ul>
+<p><strong>Returns:</strong> <code>Object</code> - The object representation of the given value.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
