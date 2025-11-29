@@ -52,9 +52,9 @@ Returns the type of the given value as a string.
 **Returns:** `String` - The type of the given value.
 !!! example
     ```
-    assert typeof(42) == "Number"
-    assert typeof("Hello") == "String"
-    assert typeof(true) == "Boolean"
+    assert typeof(42) == "number"
+    assert typeof("Hello") == "string"
+    assert typeof(true) == "boolean"
     ```
 
 ## `list_with_capacity(capacity)`
