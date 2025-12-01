@@ -14,9 +14,11 @@ use glam::*;
 use indexmap::IndexMap;
 use kira::sound::static_sound::{StaticSoundData, StaticSoundHandle};
 use kira::{AudioManager, DefaultBackend};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::f32::consts::*;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 use crate::utils::core::*;
 use crate::utils::*;
@@ -34,7 +36,7 @@ pub struct State<'a> {
     pub shader_program: &'a ShaderProgram,
     pub projection: &'a mut Mat4,
     pub font: &'a BitmapFont,
-    pub local_vars: &'a mut [(String, Value)],
+    pub local_vars: &'a mut [(String, Rc<RefCell<Value>>)],
     pub script_id: usize,
 }
 
@@ -56,19 +58,22 @@ impl SpriteSnapshot {
             "x" => Some(Value::Number(self.center.x)),
             "y" => Some(Value::Number(self.center.y)),
             "size" => Some(Value::List(vec![
-                Value::Number(self.size.x),
-                Value::Number(self.size.y),
+                Rc::new(RefCell::new(Value::Number(self.size.x))),
+                Rc::new(RefCell::new(Value::Number(self.size.y))),
             ])),
             "scale" => Some(Value::Number(self.scale)),
             "direction" => Some(Value::Number(self.direction)),
             "completed_broadcasts" => Some(Value::List(
                 self.completed_broadcasts
                     .iter()
-                    .map(|id| Value::Number(*id as f32))
+                    .map(|id| Rc::new(RefCell::new(Value::Number(*id as f32))))
                     .collect(),
             )),
             "tags" => Some(Value::List(
-                self.tags.iter().map(|t| Value::String(t.clone())).collect(),
+                self.tags
+                    .iter()
+                    .map(|t| Rc::new(RefCell::new(Value::String(t.clone()))))
+                    .collect(),
             )),
             _ => None,
         }
@@ -135,7 +140,7 @@ pub struct Sprite {
     pub rotation_style: RotationStyle,
     pub scale: f32,
     pub layer: isize,
-    pub variables: HashMap<String, Value>,
+    pub variables: HashMap<String, Rc<RefCell<Value>>>,
     pub effects: IndexMap<String, f32>,
     pub sound_filters: IndexMap<String, f32>,
     pub draw_color: Vec4,
@@ -489,11 +494,11 @@ impl Sprite {
         self.current_costume
     }
 
-    pub fn new_variable(&mut self, name: &str, value: Value) {
+    pub fn new_variable(&mut self, name: &str, value: Rc<RefCell<Value>>) {
         self.variables.insert(name.to_string(), value);
     }
 
-    pub fn set_variable(&mut self, name: &str, value: Value) {
+    pub fn set_variable(&mut self, name: &str, value: Rc<RefCell<Value>>) {
         if let Some(var) = self.variables.get_mut(name) {
             *var = value;
         } else {
@@ -501,7 +506,12 @@ impl Sprite {
         }
     }
 
-    pub fn variable(&self, name: &str, project: &Project, local_vars: &[(String, Value)]) -> Value {
+    pub fn variable(
+        &self,
+        name: &str,
+        project: &Project,
+        local_vars: &[(String, Rc<RefCell<Value>>)],
+    ) -> Rc<RefCell<Value>> {
         if let Some(var) = local_vars.iter().find(|(n, _)| n == name) {
             return var.1.clone();
         } else if let Some(var) = self.variables.get(name) {
@@ -509,35 +519,19 @@ impl Sprite {
         } else if let Some(var) = project.global_variables.get(name) {
             var.clone()
         } else if let Some(function) = self.functions.get(name) {
-            Value::Closure(Box::new(function.clone()))
+            Rc::new(RefCell::new(Value::Closure(Box::new(function.clone()))))
         } else if let Some(function) = project.builtins.get(name) {
-            Value::Closure(Box::new(function.clone()))
+            Rc::new(RefCell::new(Value::Closure(Box::new(function.clone()))))
         } else {
             match name {
-                "PI" => Value::Number(PI),
-                "E" => Value::Number(E),
+                "PI" => Rc::new(RefCell::new(Value::Number(PI))),
+                "E" => Rc::new(RefCell::new(Value::Number(E))),
                 _ => {
                     println!("Variable '{}' not found", name);
-                    Value::Null
+                    Rc::new(RefCell::new(Value::Null))
                 }
             }
         }
-    }
-
-    pub fn variable_mut<'a>(
-        &'a mut self,
-        name: &str,
-        project: &'a mut Project,
-        local_vars: &'a mut [(String, Value)],
-    ) -> Option<&'a mut Value> {
-        if let Some(var) = local_vars.iter_mut().find(|(n, _)| n == name) {
-            return Some(&mut var.1);
-        } else if let Some(var) = self.variables.get_mut(name) {
-            return Some(var);
-        } else if let Some(var) = project.global_variables.get_mut(name) {
-            return Some(var);
-        }
-        None
     }
 
     pub fn execute_statement(statement: &Statement, state: &mut State<'_>) {
@@ -555,8 +549,11 @@ impl Sprite {
             }
             Statement::Nop => {}
             Statement::Assert { condition } => {
-                if !crate::utils::resolve_expression(condition, state).to_boolean() {
-                    println!("assert {:?}: Failed", condition);
+                if !crate::utils::resolve_expression(condition, state)
+                    .borrow()
+                    .to_boolean()
+                {
+                    eprintln!("assert {:?}: Failed", condition);
                 } else {
                     println!("assert {:?}: Passed", condition);
                 }
@@ -587,13 +584,19 @@ impl Sprite {
                 else_if_bodies,
                 else_body,
             } => {
-                if crate::utils::resolve_expression(condition, state).to_boolean() {
+                if crate::utils::resolve_expression(condition, state)
+                    .borrow()
+                    .to_boolean()
+                {
                     for statement in body {
                         Sprite::execute_statement(statement, state);
                     }
                 } else {
                     for (else_if_condition, else_if_body) in else_if_bodies {
-                        if crate::utils::resolve_expression(else_if_condition, state).to_boolean() {
+                        if crate::utils::resolve_expression(else_if_condition, state)
+                            .borrow()
+                            .to_boolean()
+                        {
                             for statement in else_if_body {
                                 Sprite::execute_statement(statement, state);
                             }
@@ -608,7 +611,10 @@ impl Sprite {
                 }
             }
             Statement::While { condition, body } => {
-                while crate::utils::resolve_expression(condition, state).to_boolean() {
+                while crate::utils::resolve_expression(condition, state)
+                    .borrow()
+                    .to_boolean()
+                {
                     for statement in body {
                         Sprite::execute_statement(statement, state);
                     }
@@ -619,7 +625,10 @@ impl Sprite {
                 iterable,
                 body,
             } => {
-                for value in crate::utils::resolve_expression(iterable, state).to_list() {
+                for value in crate::utils::resolve_expression(iterable, state)
+                    .borrow()
+                    .to_list()
+                {
                     let mut new_local_vars = state.local_vars.to_vec();
                     new_local_vars.push((identifier.clone(), value));
                     let mut new_state = State {
@@ -646,7 +655,8 @@ impl Sprite {
             Statement::Call(c) => {
                 if let Expression::Call { function, args } = c {
                     // evaluate the function expression
-                    let func_val = resolve_expression(function, state);
+                    let func_rc = resolve_expression(function, state);
+                    let func_val = &*func_rc.borrow();
 
                     // evaluate args
                     let args = args
@@ -658,7 +668,7 @@ impl Sprite {
                         Value::Closure(callable) => {
                             let _ = callable.call(state, &args).unwrap_or_else(|e| {
                                 println!("Error calling function: {}", e);
-                                Value::Null
+                                Rc::new(RefCell::new(Value::Null))
                             });
                         }
                         _ => {
@@ -974,7 +984,7 @@ impl Sprite {
                     script_id: i + update_broadcast_len + 1,
                 },
             );
-            if value.to_boolean() {
+            if value.borrow().to_boolean() {
                 for statement in body {
                     if self.time_waiting > 0 {
                         self.time_waiting -= 1;

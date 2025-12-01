@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use indexmap::IndexMap;
 use kira::{Tween, sound::static_sound::StaticSoundHandle};
 
@@ -14,7 +16,7 @@ fn update_sound_handle(sound_filters: &IndexMap<String, f32>, handle: &mut Stati
     }
 }
 
-pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
+pub fn play_sound(state: &mut State, args: &[&mut Value]) -> Result {
     fn play_sound_inner(state: &mut State, name: &str) -> Result {
         if let Some(sound) = state.sprite.sounds.get(name) {
             let mut handle = state
@@ -23,7 +25,7 @@ pub fn play_sound(state: &mut State, args: &[Value]) -> Result {
                 .map_err(|e| e.to_string())?;
             update_sound_handle(&state.sprite.sound_filters, &mut handle);
             state.sprite.sound_handles.insert(name.to_string(), handle);
-            Ok(Value::Null)
+            Ok(Rc::new(RefCell::new(Value::Null)))
         } else {
             Err(format!("Sound '{}' not found", name))
         }
@@ -44,14 +46,14 @@ pub fn stop_all_sounds(state: &mut State) -> Result {
     for sound_handle in state.sprite.sound_handles.values_mut() {
         sound_handle.stop(Tween::default());
     }
-    Ok(Value::Null)
+    Ok(Rc::new(RefCell::new(Value::Null)))
 }
 
-pub fn stop_sound(state: &mut State, args: &[Value]) -> Result {
+pub fn stop_sound(state: &mut State, args: &[&mut Value]) -> Result {
     if let [Value::String(name)] = args {
         if let Some(sound_handle) = state.sprite.sound_handles.get_mut(name) {
             sound_handle.stop(Tween::default());
-            Ok(Value::Null)
+            Ok(Rc::new(RefCell::new(Value::Null)))
         } else {
             Err(format!("Sound '{}' not found", name))
         }
@@ -60,7 +62,7 @@ pub fn stop_sound(state: &mut State, args: &[Value]) -> Result {
     }
 }
 
-pub fn change_sound_filter(state: &mut State, args: &[Value]) -> Result {
+pub fn change_sound_filter(state: &mut State, args: &[&mut Value]) -> Result {
     if let [Value::String(effect), Value::Number(value)] = args {
         state
             .sprite
@@ -71,28 +73,28 @@ pub fn change_sound_filter(state: &mut State, args: &[Value]) -> Result {
         for sound_handle in state.sprite.sound_handles.values_mut() {
             update_sound_handle(&state.sprite.sound_filters, sound_handle);
         }
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("change_sound_filter() requires a string and a numeric argument".to_string())
     }
 }
 
-pub fn set_sound_filter(state: &mut State, args: &[Value]) -> Result {
+pub fn set_sound_filter(state: &mut State, args: &[&mut Value]) -> Result {
     if let [Value::String(effect), Value::Number(value)] = args {
         state.sprite.sound_filters.insert(effect.clone(), *value);
         for sound_handle in state.sprite.sound_handles.values_mut() {
             update_sound_handle(&state.sprite.sound_filters, sound_handle);
         }
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("set_sound_filter() requires a string and a numeric argument".to_string())
     }
 }
 
-pub fn sound_filter(state: &State, args: &[Value]) -> Result {
+pub fn sound_filter(state: &State, args: &[&mut Value]) -> Result {
     if let [Value::String(effect)] = args {
         if let Some(value) = state.sprite.sound_filters.get(effect) {
-            Ok(Value::Number(*value))
+            Ok(Rc::new(RefCell::new(Value::Number(*value))))
         } else {
             Err(format!("Sound effect '{}' not found", effect))
         }

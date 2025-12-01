@@ -1,7 +1,9 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::utils::{core::*, *};
 use glam::*;
 
-pub fn set_color(state: &mut State, args: &[Value]) -> Result {
+pub fn set_color(state: &mut State, args: &[&mut Value]) -> Result {
     if let [
         Value::Number(r),
         Value::Number(g),
@@ -11,49 +13,49 @@ pub fn set_color(state: &mut State, args: &[Value]) -> Result {
     {
         let color = Vec4::new(*r / 255.0, *g / 255.0, *b / 255.0, *a / 255.0);
         state.sprite.draw_color = color;
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("set_color() requires four number arguments: r, g, b, a".to_string())
     }
 }
 
-pub fn change_r(state: &mut State, args: &[Value]) -> Result {
+pub fn change_r(state: &mut State, args: &[&mut Value]) -> Result {
     if let [Value::Number(amount)] = args {
         state.sprite.draw_color.x = (state.sprite.draw_color.x + *amount / 255.0).clamp(0.0, 1.0);
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("change_r() requires a single number argument".to_string())
     }
 }
 
-pub fn change_g(state: &mut State, args: &[Value]) -> Result {
+pub fn change_g(state: &mut State, args: &[&mut Value]) -> Result {
     if let [Value::Number(amount)] = args {
         state.sprite.draw_color.y = (state.sprite.draw_color.y + *amount / 255.0).clamp(0.0, 1.0);
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("change_g() requires a single number argument".to_string())
     }
 }
 
-pub fn change_b(state: &mut State, args: &[Value]) -> Result {
+pub fn change_b(state: &mut State, args: &[&mut Value]) -> Result {
     if let [Value::Number(amount)] = args {
         state.sprite.draw_color.z = (state.sprite.draw_color.z + *amount / 255.0).clamp(0.0, 1.0);
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("change_b() requires a single number argument".to_string())
     }
 }
 
-pub fn change_a(state: &mut State, args: &[Value]) -> Result {
+pub fn change_a(state: &mut State, args: &[&mut Value]) -> Result {
     if let [Value::Number(amount)] = args {
         state.sprite.draw_color.w = (state.sprite.draw_color.w + *amount / 255.0).clamp(0.0, 1.0);
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("change_a() requires a single number argument".to_string())
     }
 }
 
-pub fn line(state: &State, args: &[Value]) -> Result {
+pub fn line(state: &State, args: &[&mut Value]) -> Result {
     if let [
         Value::Number(x1),
         Value::Number(y1),
@@ -67,13 +69,13 @@ pub fn line(state: &State, args: &[Value]) -> Result {
         let thickness = *thickness;
         let color = state.sprite.draw_color;
         draw_line(start, end, thickness, state.shader_program, color);
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("line() requires five number arguments: x1, y1, x2, y2, thickness".to_string())
     }
 }
 
-pub fn rect(state: &State, args: &[Value]) -> Result {
+pub fn rect(state: &State, args: &[&mut Value]) -> Result {
     if let [
         Value::Number(x),
         Value::Number(y),
@@ -84,13 +86,13 @@ pub fn rect(state: &State, args: &[Value]) -> Result {
         let start = Vec2::new(*x, *y);
         let end = Vec2::new(*width, *height) + start;
         draw_rectangle(start, end, state.shader_program, state.sprite.draw_color);
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("rect() requires four number arguments: x, y, width, height".to_string())
     }
 }
 
-pub fn hrect(state: &State, args: &[Value]) -> Result {
+pub fn hrect(state: &State, args: &[&mut Value]) -> Result {
     if let [
         Value::Number(x),
         Value::Number(y),
@@ -129,13 +131,13 @@ pub fn hrect(state: &State, args: &[Value]) -> Result {
             state.shader_program,
             state.sprite.draw_color,
         );
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("hrect() requires four number arguments: x, y, width, height".to_string())
     }
 }
 
-pub fn circle(state: &State, args: &[Value]) -> Result {
+pub fn circle(state: &State, args: &[&mut Value]) -> Result {
     if let [Value::Number(x), Value::Number(y), Value::Number(radius)] = args {
         const NUM_SEGMENTS: usize = 64;
         let mut xs = Vec::with_capacity(NUM_SEGMENTS);
@@ -146,13 +148,13 @@ pub fn circle(state: &State, args: &[Value]) -> Result {
             ys.push(*y + radius * angle.sin());
         }
         draw_convex_polygon(&xs, &ys, state.shader_program, state.sprite.draw_color);
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("circle() requires three number arguments: x, y, radius".to_string())
     }
 }
 
-pub fn hcircle(state: &State, args: &[Value]) -> Result {
+pub fn hcircle(state: &State, args: &[&mut Value]) -> Result {
     if let [
         Value::Number(x),
         Value::Number(y),
@@ -175,13 +177,13 @@ pub fn hcircle(state: &State, args: &[Value]) -> Result {
             state.shader_program,
             state.sprite.draw_color,
         );
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("hcircle() requires four number arguments: x, y, radius, thickness".to_string())
     }
 }
 
-pub fn ellipse(state: &State, args: &[Value]) -> Result {
+pub fn ellipse(state: &State, args: &[&mut Value]) -> Result {
     const NUM_SEGMENTS: usize = 64;
     match args {
         [
@@ -206,7 +208,7 @@ pub fn ellipse(state: &State, args: &[Value]) -> Result {
 
             draw_convex_polygon(&xs, &ys, state.shader_program, state.sprite.draw_color);
 
-            Ok(Value::Null)
+            Ok(Rc::new(RefCell::new(Value::Null)))
         }
         [
             Value::Number(x),
@@ -232,13 +234,13 @@ pub fn ellipse(state: &State, args: &[Value]) -> Result {
 
             draw_convex_polygon(&xs, &ys, state.shader_program, state.sprite.draw_color);
 
-            Ok(Value::Null)
+            Ok(Rc::new(RefCell::new(Value::Null)))
         }
         _ => Err("ellipse() requires four number arguments: x, y, rx, ry, [rotation]".to_string()),
     }
 }
 
-pub fn hellipse(state: &State, args: &[Value]) -> Result {
+pub fn hellipse(state: &State, args: &[&mut Value]) -> Result {
     const NUM_SEGMENTS: usize = 64;
     match args {
         [
@@ -270,7 +272,7 @@ pub fn hellipse(state: &State, args: &[Value]) -> Result {
                 state.sprite.draw_color,
             );
 
-            Ok(Value::Null)
+            Ok(Rc::new(RefCell::new(Value::Null)))
         }
         [
             Value::Number(x),
@@ -303,7 +305,7 @@ pub fn hellipse(state: &State, args: &[Value]) -> Result {
                 state.sprite.draw_color,
             );
 
-            Ok(Value::Null)
+            Ok(Rc::new(RefCell::new(Value::Null)))
         }
         _ => Err(
             "hellipse() requires four number arguments: x, y, rx, ry, thickness, [rotation]"
@@ -312,31 +314,43 @@ pub fn hellipse(state: &State, args: &[Value]) -> Result {
     }
 }
 
-pub fn polygon(state: &State, args: &[Value]) -> Result {
+pub fn polygon(state: &State, args: &[&mut Value]) -> Result {
     if let [Value::List(xs), Value::List(ys)] = args {
         if xs.len() != ys.len() {
             return Err(
                 "polygon() requires two lists of equal length: x and y coordinates".to_string(),
             );
         }
-        let xs = xs.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
-        let ys = ys.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
+        let xs = xs
+            .iter()
+            .map(|v| v.borrow().to_number())
+            .collect::<Vec<f32>>();
+        let ys = ys
+            .iter()
+            .map(|v| v.borrow().to_number())
+            .collect::<Vec<f32>>();
         draw_convex_polygon(&xs, &ys, state.shader_program, state.sprite.draw_color);
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("polygon() requires two lists of numbers: x and y coordinates".to_string())
     }
 }
 
-pub fn hpolygon(state: &State, args: &[Value]) -> Result {
+pub fn hpolygon(state: &State, args: &[&mut Value]) -> Result {
     if let [Value::Number(thickness), Value::List(xs), Value::List(ys)] = args {
         if xs.len() != ys.len() {
             return Err(
                 "hpolygon() requires two lists of equal length: x and y coordinates".to_string(),
             );
         }
-        let xs = xs.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
-        let ys = ys.iter().map(|v| v.to_number()).collect::<Vec<f32>>();
+        let xs = xs
+            .iter()
+            .map(|v| v.borrow().to_number())
+            .collect::<Vec<f32>>();
+        let ys = ys
+            .iter()
+            .map(|v| v.borrow().to_number())
+            .collect::<Vec<f32>>();
         draw_convex_polygon_lines(
             &xs,
             &ys,
@@ -344,7 +358,7 @@ pub fn hpolygon(state: &State, args: &[Value]) -> Result {
             state.shader_program,
             state.sprite.draw_color,
         );
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err(
             "hpolygon() requires two lists of numbers and a thickness: x and y coordinates"
@@ -353,7 +367,7 @@ pub fn hpolygon(state: &State, args: &[Value]) -> Result {
     }
 }
 
-pub fn text(state: &State, args: &[Value]) -> Result {
+pub fn text(state: &State, args: &[&mut Value]) -> Result {
     if let [
         Value::String(text),
         Value::Number(x),
@@ -373,13 +387,13 @@ pub fn text(state: &State, args: &[Value]) -> Result {
             italicised: false,
             ..TextParams::default_params(state.font, state.shader_program)
         });
-        Ok(Value::Null)
+        Ok(Rc::new(RefCell::new(Value::Null)))
     } else {
         Err("text() requires a string and two numbers: text, x, y".to_string())
     }
 }
 
-pub fn textured_tri(state: &State, args: &[Value]) -> Result {
+pub fn textured_tri(state: &State, args: &[&mut Value]) -> Result {
     if let [
         Value::List(parse_image_result),
         Value::List(xs),
@@ -388,6 +402,11 @@ pub fn textured_tri(state: &State, args: &[Value]) -> Result {
         Value::List(vs),
     ] = args
     {
+        let guards = parse_image_result
+            .iter()
+            .map(|v| v.borrow())
+            .collect::<Vec<_>>();
+        let parse_image_result = guards.iter().map(|v| &**v).collect::<Vec<_>>();
         if let [
             Value::Number(width),
             Value::Number(height),
@@ -407,10 +426,10 @@ pub fn textured_tri(state: &State, args: &[Value]) -> Result {
                 .map(|c| {
                     if c.len() == 4 {
                         U8Vec4::new(
-                            c[0].to_number() as u8,
-                            c[1].to_number() as u8,
-                            c[2].to_number() as u8,
-                            c[3].to_number() as u8,
+                            c[0].borrow().to_number() as u8,
+                            c[1].borrow().to_number() as u8,
+                            c[2].borrow().to_number() as u8,
+                            c[3].borrow().to_number() as u8,
                         )
                     } else {
                         U8Vec4::new(0, 0, 0, 0)
@@ -424,8 +443,8 @@ pub fn textured_tri(state: &State, args: &[Value]) -> Result {
                 .zip(us.iter())
                 .zip(vs.iter())
                 .map(|(((x, y), u), v)| Vertex {
-                    position: vec2(x.to_number(), y.to_number()),
-                    uv: vec2(u.to_number(), v.to_number()),
+                    position: vec2(x.borrow().to_number(), y.borrow().to_number()),
+                    uv: vec2(u.borrow().to_number(), v.borrow().to_number()),
                 })
                 .collect();
             let indices = [0, 1, 2];
@@ -445,7 +464,7 @@ pub fn textured_tri(state: &State, args: &[Value]) -> Result {
             state.shader_program.set_uniform("u_effects_count", 0);
             gpu_texture.bind();
             mesh.draw();
-            Ok(Value::Null)
+            Ok(Rc::new(RefCell::new(Value::Null)))
         } else {
             return Err(
                 "textured_tri() requires an image with width, height, and pixel data".to_string(),
@@ -474,26 +493,34 @@ pub fn stamp(state: &State) -> Result {
         state.font,
     );
     Framebuffer::unbind();
-    Ok(Value::Null)
+    Ok(Rc::new(RefCell::new(Value::Null)))
 }
 
 pub fn clear_all_stamps(state: &State) -> Result {
     state.project.stage.clear_stamps();
-    Ok(Value::Null)
+    Ok(Rc::new(RefCell::new(Value::Null)))
 }
 
 pub fn r(state: &State) -> Result {
-    Ok(Value::Number(state.sprite.draw_color.x * 255.0))
+    Ok(Rc::new(RefCell::new(Value::Number(
+        state.sprite.draw_color.x * 255.0,
+    ))))
 }
 
 pub fn g(state: &State) -> Result {
-    Ok(Value::Number(state.sprite.draw_color.y * 255.0))
+    Ok(Rc::new(RefCell::new(Value::Number(
+        state.sprite.draw_color.y * 255.0,
+    ))))
 }
 
 pub fn b(state: &State) -> Result {
-    Ok(Value::Number(state.sprite.draw_color.z * 255.0))
+    Ok(Rc::new(RefCell::new(Value::Number(
+        state.sprite.draw_color.z * 255.0,
+    ))))
 }
 
 pub fn a(state: &State) -> Result {
-    Ok(Value::Number(state.sprite.draw_color.w * 255.0))
+    Ok(Rc::new(RefCell::new(Value::Number(
+        state.sprite.draw_color.w * 255.0,
+    ))))
 }

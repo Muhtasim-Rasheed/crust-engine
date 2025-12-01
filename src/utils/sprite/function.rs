@@ -1,17 +1,19 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::utils::*;
 
-pub type Result = std::result::Result<Value, String>;
+pub type Result = std::result::Result<Rc<RefCell<Value>>, String>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     pub args: Vec<String>,
     pub body: Vec<Statement>,
     pub returns: Expression,
-    pub captured_vars: Vec<(String, Value)>,
+    pub captured_vars: Vec<(String, Rc<RefCell<Value>>)>,
 }
 
 impl Function {
-    fn call(&self, state: &mut State, args: &[Value]) -> Result {
+    fn call(&self, state: &mut State, args: &[Rc<RefCell<Value>>]) -> Result {
         if args.len() != self.args.len() {
             return Err(format!(
                 "Called with incorrect number of arguments: expected {}, got {}",
@@ -55,9 +57,16 @@ impl Function {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct BuiltinFunction {
-    pub inner: fn(&mut State, &[Value]) -> Result,
+    pub name: String,
+    pub inner: fn(&mut State, &[Rc<RefCell<Value>>]) -> Result,
+}
+
+impl PartialEq for BuiltinFunction {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -67,7 +76,7 @@ pub enum Callable {
 }
 
 impl Callable {
-    pub fn call(&self, state: &mut State, args: &[Value]) -> Result {
+    pub fn call(&self, state: &mut State, args: &[Rc<RefCell<Value>>]) -> Result {
         match self {
             Callable::Function(func) => func.call(state, args),
             Callable::Builtin(builtin) => (builtin.inner)(state, args),
