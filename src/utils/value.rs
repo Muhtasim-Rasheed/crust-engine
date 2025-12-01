@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::utils::Callable;
 
@@ -8,8 +8,8 @@ pub enum Value {
     Number(f32),
     String(String),
     Boolean(bool),
-    List(Vec<Value>),
-    Object(HashMap<String, Value>),
+    List(Vec<Rc<RefCell<Value>>>),
+    Object(HashMap<String, Rc<RefCell<Value>>>),
     Closure(Box<Callable>),
 }
 
@@ -23,7 +23,7 @@ impl std::fmt::Debug for Value {
             Value::List(l) => {
                 let mut string = String::new();
                 for (i, item) in l.iter().enumerate() {
-                    string.push_str(&item.to_string());
+                    string.push_str(&item.borrow().to_string());
                     if i < l.len() - 1 {
                         string.push_str(", ");
                     }
@@ -33,7 +33,7 @@ impl std::fmt::Debug for Value {
             Value::Object(o) => {
                 let mut string = String::new();
                 for (key, value) in o.iter() {
-                    string.push_str(&format!("{}: {}, ", key, value.to_string()));
+                    string.push_str(&format!("{}: {}, ", key, value.borrow().to_string()));
                 }
                 if !string.is_empty() {
                     string.pop();
@@ -92,7 +92,7 @@ impl Value {
                 let mut string = String::new();
                 string.push_str("[");
                 for (i, item) in l.iter().enumerate() {
-                    string.push_str(&item.to_string());
+                    string.push_str(&item.borrow().to_string());
                     if i < l.len() - 1 {
                         string.push_str(", ");
                     }
@@ -104,7 +104,7 @@ impl Value {
                 format!(
                     "{{ {} }}",
                     o.iter()
-                        .map(|(k, v)| format!("{}: {}", k, v.to_string()))
+                        .map(|(k, v)| format!("{}: {}", k, v.borrow().to_string()))
                         .collect::<Vec<_>>()
                         .join(", ")
                 )
@@ -139,20 +139,28 @@ impl Value {
         }
     }
 
-    pub fn to_list(&self) -> Vec<Value> {
+    pub fn to_list(&self) -> Vec<Rc<RefCell<Value>>> {
         match self {
             Value::Null => vec![],
             Value::List(l) => l.clone(),
-            Value::String(s) => s.chars().map(|c| Value::String(c.to_string())).collect(),
+            Value::String(s) => s
+                .chars()
+                .map(|c| Rc::new(RefCell::new(Value::String(c.to_string()))))
+                .collect(),
             Value::Object(o) => o
                 .iter()
-                .map(|(k, v)| Value::List(vec![Value::String(k.clone()), v.clone()]))
+                .map(|(k, v)| {
+                    Rc::new(RefCell::new(Value::List(vec![
+                        Rc::new(RefCell::new(Value::String(k.clone()))),
+                        v.clone(),
+                    ])))
+                })
                 .collect(),
-            _ => vec![self.clone()],
+            _ => vec![Rc::new(RefCell::new(self.clone()))],
         }
     }
 
-    pub fn to_object(&self) -> HashMap<String, Value> {
+    pub fn to_object(&self) -> HashMap<String, Rc<RefCell<Value>>> {
         match self {
             Value::Null => HashMap::new(),
             Value::Object(o) => o.clone(),

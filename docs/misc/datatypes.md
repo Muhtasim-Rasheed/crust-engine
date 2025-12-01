@@ -67,44 +67,42 @@ Returns a list with capacity for values.
 **Returns:** `List` - A list with capacity for values.
 
 ## `push(list, value)`
-Pushes the given value to the end of the list and returns the new list.
+Pushes the given value to the end of the list in place.
 
 **Properties:**
 
 - `list` (List): The list to push the value to.
 - `value` (Any): The value to push to the list.
 
-**Returns:** `List` - The new list with the value pushed to the end.
+**Returns:** `null`
 !!! example
     ```
     my_list = [1, 2, 3]
-    my_list = push(my_list, 4)
+    push(my_list, 4)
     assert my_list == [1, 2, 3, 4]
     ```
 
 ## `pop(list)`
-Pops the last value from the list and returns a list containing the new list and the popped value.
+Pops the last value from the list in place and returns the popped value.
 
 **Properties:**
 
 - `list` (List): The list to pop the value from.
 
-**Returns:** `List` - A list containing the new list and the popped value.
+**Returns:** `Any` - The popped value.
 !!! example
     ```
     my_list = [1, 2, 3, 4]
-    result = pop(my_list)
-    new_list = result[0]
-    popped_value = result[1]
-    assert new_list == [1, 2, 3]
+    popped_value = pop(my_list)
+    assert my_list == [1, 2, 3]
     assert popped_value == 4
     ```
 
 ## `insert(list, index, value)` / `insert(object, key, value)`
-Inserts a value into a list or an object.
+Inserts a value into a container in place.
 
 === "`insert(list, index, value)`"
-    Inserts the given value at the specified index in the list and returns the new list.
+    Inserts the given value at the specified index in the list in place.
 
     **Properties:**
 
@@ -112,16 +110,16 @@ Inserts a value into a list or an object.
     - `index` (Number): The index to insert the value at.
     - `value` (Any): The value to insert into the list.
 
-    **Returns:** `List` - The new list with the value inserted at the specified index.
+    **Returns:** `null`
     !!! example
         ```
         my_list = [1, 2, 4]
-        my_list = insert(my_list, 2, 3)
+        insert(my_list, 2, 3)
         assert my_list == [1, 2, 3, 4]
         ```
 
 === "`insert(object, key, value)`"
-    Inserts the given key-value pair into the object and returns the new object.
+    Inserts the given key-value pair into the object in place.
 
     **Properties:**
 
@@ -129,89 +127,66 @@ Inserts a value into a list or an object.
     - `key` (String): The key to insert into the object.
     - `value` (Any): The value to insert into the object.
 
-    **Returns:** `Object` - The new object with the key-value pair inserted.
+    **Returns:** `null`
     !!! example
         ```
         my_object = { "name": "Alice", "age": 30 }
-        my_object = insert(my_object, "city", "New York")
+        insert(my_object, "city", "New York")
         assert my_object == { "name": "Alice", "age": 30, "city": "New York" }
         ```
 
-<!-- ## `remove(list, index)` -->
-<!-- Removes the value at the specified index from the list and returns a list containing the new list and the removed value. -->
-
-<!-- **Properties:** -->
-
-<!-- - `list` (List): The list to remove the value from. -->
-<!-- - `index` (Number): The index of the value to remove. -->
-
-<!-- **Returns:** `List` - A list containing the new list and the removed value. -->
-<!-- !!! example -->
-<!--     ``` -->
-<!--     my_list = [1, 2, 3, 4] -->
-<!--     result = remove(my_list, 2) -->
-<!--     new_list = result[0] -->
-<!--     removed_value = result[1] -->
-<!--     assert new_list == [1, 2, 4] -->
-<!--     assert removed_value == 3 -->
-<!--     ``` -->
-
 ## `remove(list, index)` / `remove(object, key)`
-Removes a value from a container.
+Removes a value from a container in place.
 
 === "`remove(list, index)`"
-    Removes the value at the specified index from the list and returns a list containing the new list and the removed value.
+    Removes the value at the specified index from the list in place and returns the removed value.
 
     **Properties:**
 
     - `list` (List): The list to remove the value from.
     - `index` (Number): The index of the value to remove.
 
-    **Returns:** `List` - A list containing the new list and the removed value.
+    **Returns:** `Any` - The removed value.
     !!! example
         ```
         my_list = [1, 2, 3, 4]
-        result = remove(my_list, 2)
-        new_list = result[0]
-        removed_value = result[1]
+        removed_value = remove(my_list, 2)
         assert new_list == [1, 2, 4]
         assert removed_value == 3
         ```
 
 === "`remove(object, key)`"
-    Removes the value with the specified key from the object and returns a list containing the new object and the removed value.
+    Removes the value with the specified key from the object in place and returns the removed value.
 
     **Properties:**
 
     - `object` (Object): The object to remove the value from.
     - `key` (String): The key of the value to remove.
 
-    **Returns:** `List` - A list containing the new object and the removed value.
+    **Returns:** `Any` - The removed value.
     !!! example
         ```
         my_object = { "name": "Alice", "age": 30, "city": "New York" }
-        result = remove(my_object, "age")
-        new_object = result[0]
-        removed_value = result[1]
+        removed_value = remove(my_object, "age")
         assert new_object == { "name": "Alice", "city": "New York" }
         assert removed_value == 30
         ```
 
 ## `extend(list1, list2)`
-Extends the first list with the second list and returns the new list.
+Extends the first list with the second list in place.
 
 **Properties:**
 
 - `list1` (List): The first list to extend.
 - `list2` (List): The second list to extend the first list with.
 
-**Returns:** `List` - The new list with the elements of the second list appended to the first list.
+**Returns:** `null`
 !!! example
     ```
     list1 = [1, 2, 3]
     list2 = [4, 5, 6]
-    new_list = extend(list1, list2)
-    assert new_list == [1, 2, 3, 4, 5, 6]
+    extend(list1, list2)
+    assert list1 == [1, 2, 3, 4, 5, 6]
     ```
 
 ## `contains(list, value)` / `contains(object, key)`
@@ -250,23 +225,25 @@ Checks if a container contains a value or key.
         ```
 
 ## `sort(list, closure)`
-Sorts the list using the given closure as the comparison function. The closure should take two arguments and return a boolean.
+Sorts the list in place using the given closure as the comparison function. The closure should take two arguments and return a boolean.
 
 **Properties:**
 
 - `list` (List): The list to sort.
 - `closure` (Closure): The comparison function to use for sorting.
 
-**Returns:** `List` - The sorted list.
+**Returns:** `null`
 !!! example
     ```
     my_list = [5, 2, 4, 1, 3]
-    my_list = sort(my_list, fn (a, b) result { result = a < b })
+    sort(my_list, fn (a, b) result {
+        result = a < b
+    })
     assert my_list == [1, 2, 3, 4, 5]
     ```
 
 ## `filter(list, closure)`
-Filters the list using the given closure. The closure should take one argument and return a boolean.
+Filters the list in place using the given closure. The closure should take one argument and return a boolean.
 If the closure returns `true`, the element is included in the filtered list; otherwise, it is excluded.
 
 **Properties:**
@@ -274,27 +251,31 @@ If the closure returns `true`, the element is included in the filtered list; oth
 - `list` (List): The list to filter.
 - `closure` (Closure): The filtering function to use.
 
-**Returns:** `List` - The filtered list.
+**Returns:** `null`
 !!! example
     ```
     my_list = range(1, 6)
-    my_list = filter(my_list, fn (x) result { result = x % 2 == 0 })
+    filter(my_list, fn (x) result {
+        result = x % 2 == 0
+    })
     assert my_list == [2, 4]
     ```
 
 ## `map(list, closure)`
-Iterates over the list and applies the given closure to each element, returning a new list with the results. The closure should take one argument and return a value.
+Iterates over the list and applies the given closure to each element, and sets the list to the new list. The closure should take one argument and return a value.
 
 **Properties:**
 
 - `list` (List): The list to map over.
 - `closure` (Closure): The mapping function to apply to each element.
 
-**Returns:** `List` - A new list with the results of applying the closure to each element.
+**Returns:** `null`
 !!! example
     ```
     my_list = range(1, 6)
-    my_list = map(my_list, fn (x) result { result = x * x })
+    map(my_list, fn (x) result {
+        result = x * x
+    })
     assert my_list == [1, 4, 9, 16, 25]
     ```
 
@@ -424,6 +405,18 @@ Returns a list of numbers in a specified range.
         my_list = range(2, 10, 2)
         assert my_list == [2, 4, 6, 8]
         ```
+
+## `clone_value(value)`
+Creates a deep copy of the given value.
+
+!!! warning
+    This function performs a deep copy, meaning that all nested structures are also cloned. Be cautious when cloning large or complex structures, as it may impact performance.
+
+**Properties:**
+
+- `value` (Any): The value to clone.
+
+**Returns:** `Any` - A deep copy of the given value.
 
 ## `to_string(value)` / `to_string(number, base)`
 Converts a value to a string.

@@ -1,11 +1,20 @@
 use crate::utils::{sprite::builtins::*, *};
+use std::cell::RefMut;
 use std::collections::HashMap;
 
 macro_rules! builtin {
     ($map:ident, $name:literal, $func:expr) => {
         $map.insert(
             $name.to_string(),
-            Callable::Builtin(BuiltinFunction { inner: $func }),
+            Callable::Builtin(BuiltinFunction {
+                name: $name.to_string(),
+                inner: |st, ar| {
+                    let mut guards: Vec<RefMut<Value>> =
+                        ar.iter().map(|arg| arg.borrow_mut()).collect();
+                    let mut ar: Vec<&mut Value> = guards.iter_mut().map(|v| &mut **v).collect();
+                    $func(st, ar.as_mut_slice())
+                },
+            }),
         );
     };
 }
@@ -63,6 +72,7 @@ pub fn builtins() -> HashMap<String, Callable> {
     builtin!(builtins, "ends_with", |_, ar| misc::ends_with(ar));
     builtin!(builtins, "trim", |_, ar| misc::trim(ar));
     builtin!(builtins, "range", |_, ar| misc::range(ar));
+    builtin!(builtins, "clone_value", |_, ar| misc::clone_value(ar));
     builtin!(builtins, "to_string", |_, ar| misc::to(ar, "string"));
     builtin!(builtins, "to_number", |_, ar| misc::to(ar, "number"));
     builtin!(builtins, "to_boolean", |_, ar| misc::to(ar, "boolean"));

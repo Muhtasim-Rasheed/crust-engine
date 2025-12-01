@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use glfw::Window;
 
@@ -11,7 +11,7 @@ pub struct Broadcast {
 }
 
 pub struct Project {
-    pub global_variables: HashMap<String, Value>,
+    pub global_variables: HashMap<String, Rc<RefCell<Value>>>,
     pub broadcast_history: Vec<Broadcast>,
     pub sprites: Vec<Sprite>,
     pub stage: Stage,
